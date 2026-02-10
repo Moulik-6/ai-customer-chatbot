@@ -21,6 +21,7 @@ CORS(app)
 
 # Configuration
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
+MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
 MODEL_TYPE = os.getenv('MODEL_TYPE', 'generation')  # 'generation' or 'classification'
 HUGGINGFACE_MODEL = os.getenv('HUGGINGFACE_MODEL', 'gpt2')
 
@@ -47,11 +48,13 @@ MODEL_CONFIGS = {
 HUGGINGFACE_API_URL = f"https://api-inference.huggingface.co/models/{HUGGINGFACE_MODEL}"
 
 # Validate API key on startup
-if not HUGGINGFACE_API_KEY:
+if not HUGGINGFACE_API_KEY and not MOCK_MODE:
     logger.error("HUGGINGFACE_API_KEY not found in environment variables")
     raise ValueError("HUGGINGFACE_API_KEY environment variable is required")
 
-logger.info(f"Initialized with model: {HUGGINGFACE_MODEL} (Type: {MODEL_TYPE})")
+logger.info(
+    f"Initialized with model: {HUGGINGFACE_MODEL} (Type: {MODEL_TYPE}, Mock: {MOCK_MODE})"
+)
 
 
 def query_huggingface(prompt):
@@ -73,6 +76,9 @@ def query_huggingface(prompt):
         ValueError: If response format is invalid
         TimeoutError: If request times out
     """
+    if MOCK_MODE:
+        return _mock_response(prompt)
+
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
     
     # Build request payload based on model type
@@ -197,6 +203,28 @@ def _parse_classification_response(response):
         raise
 
 
+def _mock_response(prompt):
+    """
+    Return a deterministic local response when MOCK_MODE is enabled.
+    """
+    if MODEL_TYPE == 'generation':
+        return {
+            'type': 'generation',
+            'result': f"(mock) You said: {prompt}",
+            'model': 'mock'
+        }
+
+    return {
+        'type': 'classification',
+        'result': [
+            {'label': 'POSITIVE', 'score': 0.75},
+            {'label': 'NEGATIVE', 'score': 0.25}
+        ],
+        'top_label': 'POSITIVE',
+        'model': 'mock'
+    }
+
+
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """
@@ -204,7 +232,7 @@ def chat():
     
     Expected JSON payload:
     {
-        "message": "user message here"
+        "message": "hello"
     }
     
     Returns:
