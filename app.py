@@ -4,6 +4,8 @@ from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
 import logging
+import torch
+from transformers import pipeline
 
 # Load environment variables
 load_dotenv()
@@ -60,6 +62,21 @@ logger.info(
     f"Initialized with model: {HUGGINGFACE_MODEL} (Type: {MODEL_TYPE}, Mock: {MOCK_MODE})"
 )
 
+# Load local model if not in mock mode
+LOCAL_MODEL = None
+if not MOCK_MODE:
+    try:
+        logger.info(f"Loading local model: {HUGGINGFACE_MODEL}")
+        device = 0 if torch.cuda.is_available() else -1
+        if MODEL_TYPE == 'generation':
+            LOCAL_MODEL = pipeline('text-generation', model=HUGGINGFACE_MODEL, device=device)
+        else:  # classification
+            LOCAL_MODEL = pipeline('text-classification', model=HUGGINGFACE_MODEL, device=device)
+        logger.info(f"Local model loaded successfully on {'GPU' if device >= 0 else 'CPU'}")
+    except Exception as e:
+        logger.error(f"Failed to load local model: {str(e)}")
+        raise ValueError(f"Could not load local model: {str(e)}")
+
 
 def query_huggingface(prompt):
     """
@@ -82,6 +99,9 @@ def query_huggingface(prompt):
     """
     if MOCK_MODE:
         return _mock_response(prompt)
+
+    if LOCAL_MODEL:
+        return _local_model_response(prompt)
 
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
     
@@ -227,6 +247,39 @@ def _mock_response(prompt):
         'top_label': 'POSITIVE',
         'model': 'mock'
     }
+
+
+def _local_model_response(prompt):
+    """
+    Run inference using a locally loaded Hugging Face model.
+    """
+    try:
+        if MODEL_TYPE == 'generation':
+            result = LOCAL_MODEL(prompt, max_length=150, temperature=0.7, top_p=0.9, do_sample=True)
+            generated_text = result[0]['generated_text']
+            # Remove the original prompt from the generated text
+            if generated_text.startswith(prompt):
+                generated_text = generated_text[len(prompt):].strip()
+            
+            return {
+                'type': 'generation',
+                'result': generated_text,
+                'model': HUGGINGFACE_MODEL
+            }
+        else:  # classification
+            result = LOCAL_MODEL(prompt)
+            scores = [{'label': r['label'], 'score': round(r['score'], 4)} for r in result]
+            scores_sorted = sorted(scores, key=lambda x: x.get('score', 0), reverse=True)
+            
+            return {
+                'type': 'classification',
+                'result': scores_sorted,
+                'top_label': scores_sorted[0].get('label') if scores_sorted else 'unknown',
+                'model': HUGGINGFACE_MODEL
+            }
+    except Exception as e:
+        logger.error(f"Local model inference error: {str(e)}")
+        raise
 
 
 @app.route('/api/chat', methods=['POST'])
@@ -383,6 +436,6 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
+    port = int(os.getenv('PORT', 7860))
     debug = os.getenv('FLASK_ENV') == 'development'
     app.run(host='0.0.0.0', port=port, debug=debug)
