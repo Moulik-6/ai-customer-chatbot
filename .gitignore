@@ -16,6 +16,9 @@ dist/
 # Logs
 *.log
 
+# Environment variables
+.env
+
 # OS / editor
 .DS_Store
 Thumbs.db
