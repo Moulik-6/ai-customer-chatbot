@@ -1,0 +1,246 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "Hello",
+        "Hi",
+        "Hey",
+        "Good morning",
+        "Good afternoon",
+        "Good evening",
+        "Howdy",
+        "Greetings",
+        "What's up",
+        "Hello there"
+      ],
+      "responses": [
+        "Hello! How can I assist you today?",
+        "Hi there! Welcome to our customer service. What can I help you with?",
+        "Hey! Thanks for reaching out. How can I help?",
+        "Good to see you! What brings you here today?",
+        "Welcome! I'm here to help. What do you need?"
+      ]
+    },
+    {
+      "tag": "pricing",
+      "patterns": [
+        "How much does it cost",
+        "What's the price",
+        "Price of",
+        "How much is",
+        "Cost of",
+        "Pricing",
+        "Do you have any discounts",
+        "What are your prices",
+        "Price information",
+        "Tell me the rates"
+      ],
+      "responses": [
+        "Our pricing varies depending on the product. Could you tell me which product you're interested in?",
+        "I'd be happy to help with pricing! Which item would you like to know about?",
+        "For specific pricing, could you let me know which product you're inquiring about?",
+        "We offer competitive pricing. Which product can I get pricing information for?",
+        "I can help with pricing! What product are you interested in?"
+      ]
+    },
+    {
+      "tag": "order_status",
+      "patterns": [
+        "Where is my order",
+        "Track my order",
+        "Order status",
+        "When will my order arrive",
+        "Check my order",
+        "My order number is",
+        "What's happening with my order",
+        "Has my order shipped",
+        "When can I expect delivery",
+        "Order tracking"
+      ],
+      "responses": [
+        "I'd be happy to help track your order! Could you provide your order number?",
+        "To check your order status, I'll need your order number. Can you provide that?",
+        "Let me help you track that! What's your order number?",
+        "I can find your order details. Do you have your order number handy?",
+        "To track your order, I'll need the order number. What is it?"
+      ]
+    },
+    {
+      "tag": "returns",
+      "patterns": [
+        "How do I return",
+        "Return process",
+        "Can I return",
+        "Return policy",
+        "Returns",
+        "Money back",
+        "Refund",
+        "I want to return",
+        "How to send back",
+        "Return instructions"
+      ],
+      "responses": [
+        "We want you to be happy! Our return policy allows returns within 30 days of purchase. Would you like details on the return process?",
+        "We offer hassle-free returns within 30 days. What do you need help with?",
+        "You can return items within 30 days for a full refund. Would you like step-by-step instructions?",
+        "Returns are easy! We accept returns within 30 days of purchase. How can I help with yours?",
+        "Our 30-day return policy makes it simple. What would you like to return?"
+      ]
+    },
+    {
+      "tag": "shipping",
+      "patterns": [
+        "How much does shipping cost",
+        "What are shipping options",
+        "Shipping fees",
+        "Do you ship internationally",
+        "Shipping cost",
+        "Free shipping",
+        "How long shipping",
+        "Delivery time",
+        "Shipping address",
+        "Delivery options"
+      ],
+      "responses": [
+        "Shipping costs depend on your location and the items ordered. Standard shipping is free on orders over $50!",
+        "We offer multiple shipping options! Standard shipping is free for orders over $50. Would you like more details?",
+        "Yes, we ship nationwide! Free standard shipping on orders over $50. Express options available too.",
+        "Great question! We have free standard shipping for orders over $50, plus express options.",
+        "Our shipping is affordable! Orders over $50 get free standard shipping. Other options available."
+      ]
+    },
+    {
+      "tag": "payment",
+      "patterns": [
+        "Payment methods",
+        "Do you accept",
+        "Credit card",
+        "PayPal",
+        "How to pay",
+        "Payment options",
+        "Can I pay with",
+        "What payment",
+        "Accepted payments",
+        "Is it secure"
+      ],
+      "responses": [
+        "We accept all major credit cards, PayPal, Apple Pay, and Google Pay. Your payment is fully encrypted and secure.",
+        "We take credit cards, debit cards, PayPal, and digital wallets. All transactions are 100% secure.",
+        "Multiple payment options are available! Credit cards, PayPal, Apple Pay, and Google Pay are all accepted.",
+        "We support all major payment methods including cards, PayPal, and digital wallets for your convenience.",
+        "You can pay with any major credit card, PayPal, or digital payment methods. Checkout is secure."
+      ]
+    },
+    {
+      "tag": "help",
+      "patterns": [
+        "Help",
+        "I need help",
+        "Can you help me",
+        "Assistant",
+        "Support",
+        "Customer service",
+        "I have a question",
+        "Need assistance",
+        "Talk to someone",
+        "Speak with agent"
+      ],
+      "responses": [
+        "I'm here to help! What do you need assistance with?",
+        "Absolutely! I'm ready to help. What's your question?",
+        "Of course! I can help with orders, returns, shipping, pricing, and more. What do you need?",
+        "I'm your AI assistant. I can help with most common questions. What would you like to know?",
+        "Happy to assist! What can I help you with today?"
+      ]
+    },
+    {
+      "tag": "product_info",
+      "patterns": [
+        "Tell me about",
+        "Product information",
+        "What is",
+        "Details about",
+        "Features of",
+        "Specifications",
+        "What does",
+        "Product specs",
+        "Size",
+        "Materials"
+      ],
+      "responses": [
+        "I'd love to help with product information! Which product would you like to know more about?",
+        "Which product are you interested in? I can provide detailed information.",
+        "To give you the best product details, which item would you like to learn about?",
+        "I can help! What product would you like more information on?",
+        "What product would you like details about? I'm here to help!"
+      ]
+    },
+    {
+      "tag": "account",
+      "patterns": [
+        "My account",
+        "Login",
+        "Password",
+        "Sign up",
+        "Create account",
+        "Account settings",
+        "Profile",
+        "Update information",
+        "User account",
+        "Access my account"
+      ],
+      "responses": [
+        "I can help with account-related questions! What do you need help with?",
+        "For account issues, what specifically do you need assistance with?",
+        "I'm here to help with your account. What's the issue?",
+        "What's happening with your account? I can help troubleshoot.",
+        "Tell me what you need help with regarding your account."
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "Bye",
+        "Goodbye",
+        "See you",
+        "Take care",
+        "Thank you",
+        "Thanks",
+        "Appreciate it",
+        "Cheers",
+        "Talk soon",
+        "Catch you later"
+      ],
+      "responses": [
+        "Goodbye! Thanks for using our service. Have a great day!",
+        "Thanks for visiting! Feel free to come back anytime you need help.",
+        "Take care! We appreciate your business. Come back soon!",
+        "Bye! Thanks for reaching out. We're here whenever you need us.",
+        "See you later! Thank you for being a valued customer."
+      ]
+    },
+    {
+      "tag": "complaint",
+      "patterns": [
+        "I'm unhappy",
+        "Poor service",
+        "Bad experience",
+        "Complaint",
+        "Issue with order",
+        "Something is wrong",
+        "Defective",
+        "Damaged product",
+        "Not satisfied",
+        "Quality issue"
+      ],
+      "responses": [
+        "I'm sorry to hear that. We want to make it right. Can you tell me more about what happened?",
+        "We apologize for your experience. Please describe the issue so we can help.",
+        "I'm sorry you're experiencing an issue. Let's work together to resolve it. What's the problem?",
+        "We take complaints seriously. Please tell me what went wrong so we can fix it.",
+        "I'm sorry to hear about your problem. Can you give me more details so we can resolve this?"
+      ]
+    }
+  ]
+}
