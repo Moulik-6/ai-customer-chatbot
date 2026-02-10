@@ -45,7 +45,11 @@ MODEL_CONFIGS = {
     }
 }
 
-HUGGINGFACE_API_URL = f"https://api-inference.huggingface.co/models/{HUGGINGFACE_MODEL}"
+HUGGINGFACE_API_BASE = os.getenv(
+    'HUGGINGFACE_API_BASE',
+    'https://router.huggingface.co/hf-inference/models'
+)
+HUGGINGFACE_API_URL = f"{HUGGINGFACE_API_BASE}/{HUGGINGFACE_MODEL}"
 
 # Validate API key on startup
 if not HUGGINGFACE_API_KEY and not MOCK_MODE:
