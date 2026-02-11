@@ -30,16 +30,34 @@ A professional AI-powered customer service chatbot built with Flask, powered by 
 
 ```
 ai-customer-chatbot/
-├── app.py              # Flask backend — API routes, AI model, DB logic
-├── index.html          # Chat frontend — dark theme UI
-├── intents.json        # 26 customer service intent categories
-├── requirements.txt    # Python dependencies
-├── Dockerfile          # Docker config for HF Spaces (port 7860)
-├── SUPABASE_SETUP.md   # Full database schema & setup guide
-├── .env.example        # Environment variable template
-├── .gitignore          # Git ignore rules
-├── .gitattributes      # HF Spaces LFS config
-└── .dockerignore       # Docker build exclusions
+├── app.py                          # Slim entry point — Flask factory + blueprint registration
+├── config.py                       # Centralized env vars & constants
+├── database.py                     # Supabase client + SQLite fallback + conversation logging
+├── auth.py                         # Admin API-key decorator
+├── models/
+│   ├── __init__.py
+│   └── ai_model.py                 # FLAN-T5 loading, prompt building, inference
+├── services/
+│   ├── __init__.py
+│   ├── intent_service.py           # Load & match intents from intents.json
+│   ├── entity_service.py           # Regex extraction (order #, email, SKU, product name)
+│   ├── lookup_service.py           # Supabase queries (orders, products, customers)
+│   └── formatter_service.py        # Format DB rows into customer-friendly responses
+├── routes/
+│   ├── __init__.py
+│   ├── chat.py                     # /api/chat, /, /health — main chat + smart lookups
+│   ├── admin.py                    # /api/admin/* — logs, stats, debug
+│   ├── products.py                 # /api/products — CRUD
+│   └── orders.py                   # /api/orders — CRUD + status tracking
+├── index.html                      # Chat frontend — dark theme UI
+├── intents.json                    # 26 customer service intent categories
+├── requirements.txt                # Python dependencies
+├── Dockerfile                      # Docker config for HF Spaces (port 7860)
+├── SUPABASE_SETUP.md               # Full database schema & setup guide
+├── .env.example                    # Environment variable template
+├── .gitignore                      # Git ignore rules
+├── .gitattributes                  # HF Spaces LFS config
+└── .dockerignore                   # Docker build exclusions
 ```
 
 ## How the Chat Works
