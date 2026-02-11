@@ -241,6 +241,26 @@
         "We take complaints seriously. Please tell me what went wrong so we can fix it.",
         "I'm sorry to hear about your problem. Can you give me more details so we can resolve this?"
       ]
+    },
+    {
+      "tag": "order_tracking",
+      "patterns": [
+        "Where is my order",
+        "Track my order",
+        "Order status",
+        "Where is my package",
+        "When will my order arrive",
+        "Has my order shipped",
+        "What's the status of my order",
+        "I want to track my order",
+        "Track order",
+        "Order tracking"
+      ],
+      "responses": [
+        "I can help you track your order! Please provide your order number (e.g., ORD-2026-001).",
+        "To track your order, please share your order number with me.",
+        "I'd be happy to check the status of your order. What's your order number?"
+      ]
     }
   ]
 }
