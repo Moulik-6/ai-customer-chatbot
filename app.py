@@ -85,6 +85,7 @@ def _load_intents():
 
 
 INTENTS = _load_intents()
+logger.info(f"Loaded intents: {len(INTENTS)}")
 
 
 def _match_intent_response(message):
@@ -533,7 +534,11 @@ def health_check():
     """Health check endpoint."""
     return jsonify({
         "status": "healthy",
-        "service": "ai-customer-chatbot"
+        "service": "ai-customer-chatbot",
+        "model": HUGGINGFACE_MODEL,
+        "use_local_model": USE_LOCAL_MODEL,
+        "mock_mode": MOCK_MODE,
+        "intents_count": len(INTENTS)
     }), 200
 
 
