@@ -1,4 +1,6 @@
 import os
+import json
+import random
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
@@ -25,7 +27,7 @@ CORS(app)
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
 MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
 MODEL_TYPE = os.getenv('MODEL_TYPE', 'generation')  # 'generation' or 'classification'
-HUGGINGFACE_MODEL = os.getenv('HUGGINGFACE_MODEL', 'gpt2')
+HUGGINGFACE_MODEL = 'google/flan-t5-base'
 USE_LOCAL_MODEL = os.getenv('USE_LOCAL_MODEL', 'true').strip().lower() in ('1', 'true', 'yes')
 
 # Model configurations
@@ -59,9 +61,59 @@ if not HUGGINGFACE_API_KEY and not MOCK_MODE and not USE_LOCAL_MODEL:
     logger.error("HUGGINGFACE_API_KEY not found in environment variables")
     raise ValueError("HUGGINGFACE_API_KEY environment variable is required")
 
+if os.getenv('HUGGINGFACE_MODEL') and os.getenv('HUGGINGFACE_MODEL') != HUGGINGFACE_MODEL:
+    logger.warning("Overriding HUGGINGFACE_MODEL to google/flan-t5-base")
+
 logger.info(
     f"Initialized with model: {HUGGINGFACE_MODEL} (Type: {MODEL_TYPE}, Mock: {MOCK_MODE})"
 )
+
+INTENTS_PATH = os.path.join(os.path.dirname(__file__), 'intents.json')
+
+
+def _load_intents():
+    try:
+        with open(INTENTS_PATH, 'r', encoding='utf-8') as handle:
+            data = json.load(handle)
+        return data.get('intents', [])
+    except FileNotFoundError:
+        logger.warning("intents.json not found; intent matching disabled")
+        return []
+    except json.JSONDecodeError as exc:
+        logger.error(f"Failed to parse intents.json: {exc}")
+        return []
+
+
+INTENTS = _load_intents()
+
+
+def _match_intent_response(message):
+    if not INTENTS:
+        return None
+    normalized = message.lower().strip()
+    for intent in INTENTS:
+        patterns = intent.get('patterns', [])
+        responses = intent.get('responses', [])
+        if not patterns or not responses:
+            continue
+        for pattern in patterns:
+            if pattern.lower() in normalized:
+                return {
+                    'tag': intent.get('tag', 'unknown'),
+                    'response': random.choice(responses)
+                }
+    return None
+
+
+def _build_flan_prompt(message):
+    return (
+        "You are a professional, empathetic customer support assistant. "
+        "Answer clearly, ask for missing details, and avoid making up policies. "
+        "If the user asks about an order, request order number and email. "
+        "If you are unsure, say so and offer next steps.\n\n"
+        f"Customer: {message}\n"
+        "Assistant:"
+    )
 
 # Load local model if not in mock mode and enabled
 LOCAL_MODEL = None
@@ -275,8 +327,9 @@ def _local_model_response(prompt):
             model = LOCAL_MODEL['model']
             device = next(model.parameters()).device
             
+            prompt_text = _build_flan_prompt(prompt)
             # Tokenize input
-            inputs = tokenizer(prompt, return_tensors="pt", padding=True, max_length=512, truncation=True).to(device)
+            inputs = tokenizer(prompt_text, return_tensors="pt", padding=True, max_length=512, truncation=True).to(device)
             
             # Generate response
             with torch.no_grad():
@@ -387,6 +440,19 @@ def chat():
             }), 400
         
         logger.info(f"Processing {MODEL_TYPE} request: {message[:100]}...")
+
+        intent_match = _match_intent_response(message)
+        if intent_match:
+            response_data = {
+                "success": True,
+                "type": "intent",
+                "intent": intent_match['tag'],
+                "message": message,
+                "response": intent_match['response'],
+                "model": "intents"
+            }
+            logger.info(f"Intent matched: {intent_match['tag']}")
+            return jsonify(response_data), 200
         
         # Query Hugging Face
         api_response = query_huggingface(message)
