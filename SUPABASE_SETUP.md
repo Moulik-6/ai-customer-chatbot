@@ -79,6 +79,56 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
+### **Orders Table** (Customer Orders)
+
+```sql
+CREATE TABLE orders (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    order_number TEXT UNIQUE NOT NULL,
+    customer_name TEXT NOT NULL,
+    customer_email TEXT NOT NULL,
+    customer_phone TEXT,
+    shipping_address TEXT,
+    order_date TIMESTAMPTZ DEFAULT NOW(),
+    status TEXT DEFAULT 'pending',
+    total_amount DECIMAL(10, 2) NOT NULL,
+    tracking_number TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_orders_customer_email ON orders(customer_email);
+CREATE INDEX idx_orders_order_number ON orders(order_number);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_order_date ON orders(order_date);
+
+-- Auto-update updated_at timestamp
+CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+```
+
+### **Order Items Table** (Products in Orders)
+
+```sql
+CREATE TABLE order_items (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES products(id),
+    product_name TEXT NOT NULL,
+    product_sku TEXT,
+    quantity INTEGER NOT NULL DEFAULT 1,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX idx_order_items_product_id ON order_items(product_id);
+```
+
 ## 🔑 Step 3: Get Your Credentials
 
 1. Go to **Project Settings** (gear icon)

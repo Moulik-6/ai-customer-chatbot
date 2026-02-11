@@ -100,6 +100,55 @@ DELETE /api/products/<id>
 GET /api/products/duplicates
 ```
 
+### Order Management
+
+```bash
+# Get all orders
+GET /api/orders?customer_email=user@example.com&status=shipped
+
+# Get order by ID
+GET /api/orders/<id>
+
+# Get order by order number
+GET /api/orders/number/ORD-2026-001
+
+# Create order
+POST /api/orders
+{
+  "order_number": "ORD-2026-001",
+  "customer_name": "John Smith",
+  "customer_email": "john@example.com",
+  "customer_phone": "+1-555-0101",
+  "shipping_address": "123 Main St, New York, NY 10001",
+  "status": "pending",
+  "total_amount": 1299.98,
+  "items": [
+    {
+      "product_name": "iPhone 15 Pro",
+      "product_sku": "IPHONE-15-PRO",
+      "quantity": 1,
+      "unit_price": 999.99
+    },
+    {
+      "product_name": "AirPods Pro",
+      "product_sku": "AIRPODS-PRO-2",
+      "quantity": 1,
+      "unit_price": 249.99
+    }
+  ]
+}
+
+# Update order
+PUT /api/orders/<id>
+
+# Update order status
+PATCH /api/orders/<id>/status
+{
+  "status": "shipped",
+  "tracking_number": "1Z999AA10123456784"
+}
+```
+
 ### Analytics
 
 ```bash
