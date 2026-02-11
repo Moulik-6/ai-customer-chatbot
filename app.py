@@ -209,6 +209,80 @@ def _match_intent_response(message):
     return None
 
 
+def _extract_order_number(message):
+    """Extract order number from message (format: ORD-XXXX-XXX or similar)"""
+    import re
+    match = re.search(r'ORD[-\s]?\d{4}[-\s]?\d{3,4}', message, re.IGNORECASE)
+    if match:
+        return match.group(0).replace(' ', '-').upper()
+    return None
+
+
+def _lookup_order_status(order_number):
+    """Lookup order status from Supabase"""
+    try:
+        if not supabase:
+            return None
+        
+        # Query order by order_number
+        result = supabase.table('orders').select('*,order_items(*)').eq('order_number', order_number).execute()
+        
+        if result.data and len(result.data) > 0:
+            order = result.data[0]
+            return order
+        
+        return None
+    except Exception as e:
+        logger.error(f"Error looking up order: {e}")
+        return None
+
+
+def _format_order_response(order):
+    """Format order data into a customer-friendly response"""
+    if not order:
+        return None
+    
+    status = order.get('status', 'unknown').upper()
+    customer = order.get('customer_name', 'Customer')
+    total = order.get('total_amount', 0)
+    tracking = order.get('tracking_number')
+    order_date = order.get('order_date', '')
+    items = order.get('order_items', [])
+    
+    # Status emoji
+    status_emoji = {
+        'PENDING': '⏳',
+        'PROCESSING': '🔄',
+        'SHIPPED': '📦',
+        'DELIVERED': '✅',
+        'CANCELLED': '❌'
+    }.get(status, '📋')
+    
+    response = f"{status_emoji} **Order Status: {status}**\n"
+    response += f"Order #: {order['order_number']}\n"
+    response += f"Total: ${total:.2f}\n"
+    
+    if tracking:
+        response += f"Tracking: {tracking}\n"
+    
+    response += f"\n**Items ({len(items)}):**\n"
+    for item in items:
+        response += f"• {item['product_name']} x{item['quantity']} @ ${item['unit_price']:.2f}\n"
+    
+    if status == 'SHIPPED':
+        response += "\n📬 Your order is on the way! Use your tracking number to get delivery updates."
+    elif status == 'DELIVERED':
+        response += "\n🎉 Your order has been delivered!"
+    elif status == 'PROCESSING':
+        response += "\n⚙️ We're preparing your order for shipment. You'll receive tracking info soon."
+    elif status == 'PENDING':
+        response += "\n👀 Your order is confirmed and being prepared."
+    elif status == 'CANCELLED':
+        response += "\n✋ This order has been cancelled."
+    
+    return response
+
+
 def _build_flan_prompt(message):
     return (
         "You are a professional, empathetic customer support assistant. "
@@ -549,7 +623,89 @@ def chat():
         session_id = data.get('session_id', request.headers.get('X-Session-ID', 'unknown'))
         ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
+        # Check for order tracking intent
         intent_match = _match_intent_response(message)
+        if intent_match and intent_match['tag'] == 'order_tracking':
+            # Try to extract order number from message
+            order_number = _extract_order_number(message)
+            
+            if order_number:
+                # Look up order in database
+                order = _lookup_order_status(order_number)
+                if order:
+                    # Return formatted order status
+                    bot_response = _format_order_response(order)
+                    response_data = {
+                        "success": True,
+                        "type": "order_lookup",
+                        "intent": "order_tracking",
+                        "message": message,
+                        "response": bot_response,
+                        "model": "database",
+                        "order": order
+                    }
+                    logger.info(f"Order lookup: {order_number}")
+                    
+                    # Log to database
+                    log_conversation(
+                        session_id=session_id,
+                        user_message=message,
+                        bot_response=bot_response,
+                        intent="order_tracking",
+                        model_used="database",
+                        response_type="order_lookup",
+                        ip_address=ip_address
+                    )
+                    
+                    return jsonify(response_data), 200
+                else:
+                    # Order not found
+                    bot_response = f"❌ Sorry, I couldn't find order **{order_number}** in our system. Please check the order number and try again. Or contact support@company.com for assistance."
+                    response_data = {
+                        "success": True,
+                        "type": "intent",
+                        "intent": "order_tracking",
+                        "message": message,
+                        "response": bot_response,
+                        "model": "intents"
+                    }
+                    
+                    log_conversation(
+                        session_id=session_id,
+                        user_message=message,
+                        bot_response=bot_response,
+                        intent="order_tracking",
+                        model_used="intents",
+                        response_type="intent",
+                        ip_address=ip_address
+                    )
+                    
+                    return jsonify(response_data), 200
+            else:
+                # No order number provided, ask for it
+                response_data = {
+                    "success": True,
+                    "type": "intent",
+                    "intent": intent_match['tag'],
+                    "message": message,
+                    "response": intent_match['response'],
+                    "model": "intents"
+                }
+                logger.info(f"Intent matched: {intent_match['tag']}")
+                
+                log_conversation(
+                    session_id=session_id,
+                    user_message=message,
+                    bot_response=intent_match['response'],
+                    intent=intent_match['tag'],
+                    model_used="intents",
+                    response_type="intent",
+                    ip_address=ip_address
+                )
+                
+                return jsonify(response_data), 200
+        
+        # Check other intents
         if intent_match:
             response_data = {
                 "success": True,
