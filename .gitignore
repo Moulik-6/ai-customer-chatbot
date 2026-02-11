@@ -21,8 +21,13 @@ dist/
 
 # Database files (may contain PII)
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
+
+# Test / cache
+.pytest_cache/
 
 # OS / editor
 .DS_Store
