@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 PACKAGE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = PACKAGE_DIR.parent
 
-TEMPLATES_DIR = PACKAGE_DIR / 'templates'
 DATA_DIR = PACKAGE_DIR / 'data'
 DB_PATH = str(PROJECT_ROOT / 'chatbot.db')
 INTENTS_PATH = str(DATA_DIR / 'intents.json')

@@ -5,11 +5,11 @@ import logging
 import time
 
 import requests
-from flask import Blueprint, request, jsonify, send_from_directory
+from flask import Blueprint, request, jsonify, redirect
 
 from ..extensions import limiter
 from ..config import (
-    HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE, TEMPLATES_DIR,
+    HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE,
     CHAT_RATE_LIMIT,
 )
 from ..database import log_conversation
@@ -32,16 +32,17 @@ logger = logging.getLogger(__name__)
 chat_bp = Blueprint('chat', __name__)
 
 
-# ── Static pages ──────────────────────────────────────────
+FRONTEND_URL = 'https://ai-customer-chatbot-tau.vercel.app'
+
 
 @chat_bp.route('/', methods=['GET'])
 def index():
-    return send_from_directory(str(TEMPLATES_DIR), 'index.html')
+    return redirect(FRONTEND_URL)
 
 
 @chat_bp.route('/index.html', methods=['GET'])
 def index_html():
-    return send_from_directory(str(TEMPLATES_DIR), 'index.html')
+    return redirect(FRONTEND_URL)
 
 
 # ── Health check ──────────────────────────────────────────
