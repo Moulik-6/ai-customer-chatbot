@@ -157,4 +157,5 @@ def debug_db():
         }), 200
 
     except Exception as e:
-        return jsonify({"error": str(e), "db_path": DB_PATH}), 500
+        logger.error(f"Debug endpoint error: {e}")
+        return jsonify({"error": "Internal error checking database status", "code": "INTERNAL_ERROR"}), 500

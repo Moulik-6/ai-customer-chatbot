@@ -6,6 +6,7 @@ import logging
 import requests
 from flask import Blueprint, request, jsonify, send_from_directory, current_app
 
+from extensions import limiter
 from config import HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE, BASE_DIR
 from database import supabase, log_conversation
 from services.intent_service import match_intent, INTENTS
@@ -57,6 +58,7 @@ def health_check():
 # ── Main chat endpoint ───────────────────────────────────
 
 @chat_bp.route('/api/chat', methods=['POST'])
+@limiter.limit("30 per minute")
 def chat():
     """
     Main chat endpoint for customer service chatbot.

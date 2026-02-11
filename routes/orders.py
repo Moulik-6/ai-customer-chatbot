@@ -5,6 +5,7 @@ import logging
 
 from flask import Blueprint, request, jsonify
 
+from extensions import limiter
 from auth import require_admin_key
 from database import supabase
 
@@ -95,6 +96,7 @@ def get_order_by_number(order_number):
 
 
 @orders_bp.route('/api/orders', methods=['POST'])
+@limiter.limit("20 per minute")
 @require_admin_key
 def create_order():
     """Create a new order with items."""

@@ -5,8 +5,10 @@ import logging
 
 from flask import Blueprint, request, jsonify
 
+from extensions import limiter
 from auth import require_admin_key
 from database import supabase
+from services.sanitize import sanitize_search
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ def get_products():
 
     try:
         search = request.args.get('search', '').strip()
+        search = sanitize_search(search)
         category = request.args.get('category')
         limit = min(int(request.args.get('limit', 100)), 500)
         offset = int(request.args.get('offset', 0))
@@ -68,6 +71,7 @@ def get_product(product_id):
 
 
 @products_bp.route('/api/products', methods=['POST'])
+@limiter.limit("20 per minute")
 @require_admin_key
 def create_product():
     """Create a new product."""
