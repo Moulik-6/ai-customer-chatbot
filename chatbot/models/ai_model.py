@@ -81,7 +81,17 @@ def query_model(prompt):
         return _mock_response(prompt)
     if LOCAL_MODEL:
         return _local_inference(prompt)
-    return _remote_inference(prompt)
+
+    # Check if remote inference is actually available
+    if not HUGGINGFACE_API_KEY:
+        logger.warning("No HUGGINGFACE_API_KEY set — returning helpful fallback")
+        return _unavailable_fallback(prompt)
+
+    try:
+        return _remote_inference(prompt)
+    except (ValueError, requests.RequestException, TimeoutError) as e:
+        logger.warning(f"Remote inference failed ({e}) — returning fallback")
+        return _unavailable_fallback(prompt)
 
 
 # ── Private helpers ───────────────────────────────────────
@@ -177,6 +187,22 @@ def _remote_inference(prompt):
         raise
     except (ValueError, KeyError) as e:
         raise ValueError(f"Invalid response from Hugging Face API: {e}")
+
+
+def _unavailable_fallback(prompt):
+    """Friendly response when the AI backend is not available."""
+    return {
+        'type': 'generation',
+        'result': (
+            "I'm not sure I fully understood that. Here's what I can help with:\n"
+            "• **Order tracking** — just provide your order number or email\n"
+            "• **Product search** — ask about our products or categories\n"
+            "• **Shipping & returns** — policies and timelines\n"
+            "• **Account help** — questions about your account\n\n"
+            "Try rephrasing your question, or type **help** for more options!"
+        ),
+        'model': 'fallback',
+    }
 
 
 def _mock_response(prompt):
