@@ -8,3 +8,4 @@ python-dotenv==1.0.0
 transformers==4.36.2
 torch==2.1.2
 numpy<2
+supabase==2.3.4

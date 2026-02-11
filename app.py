@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import logging
 import torch
 from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+from supabase import create_client, Client
 
 # Load environment variables
 load_dotenv()
@@ -26,7 +27,21 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)
 
-# Database setup
+# Supabase setup
+SUPABASE_URL = os.getenv('SUPABASE_URL')
+SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+supabase: Client = None
+
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        logger.info("Supabase client initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Supabase: {e}")
+else:
+    logger.warning("Supabase credentials not found - database features disabled")
+
+# SQLite fallback for local development
 DB_PATH = os.path.join(os.path.dirname(__file__), 'chatbot.db')
 
 def init_database():
@@ -61,9 +76,26 @@ def init_database():
     logger.info("Database initialized successfully")
 
 def log_conversation(session_id, user_message, bot_response, intent=None, model_used=None, response_type=None, ip_address=None):
-    """Log a conversation to the database"""
+    """Log a conversation to the database (Supabase or SQLite fallback)"""
     try:
         logger.info(f"Attempting to log conversation - session: {session_id}, type: {response_type}")
+        
+        # Try Supabase first
+        if supabase:
+            data = {
+                "session_id": session_id,
+                "user_message": user_message,
+                "bot_response": bot_response,
+                "intent": intent,
+                "model_used": model_used,
+                "response_type": response_type,
+                "ip_address": ip_address
+            }
+            result = supabase.table('conversations').insert(data).execute()
+            logger.info(f"Successfully logged conversation to Supabase")
+            return
+        
+        # SQLite fallback
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
@@ -74,7 +106,7 @@ def log_conversation(session_id, user_message, bot_response, intent=None, model_
         ''', (session_id, user_message, bot_response, intent, model_used, response_type, ip_address))
         
         conn.commit()
-        logger.info(f"Successfully logged conversation - ID: {cursor.lastrowid}")
+        logger.info(f"Successfully logged conversation to SQLite - ID: {cursor.lastrowid}")
         conn.close()
     except Exception as e:
         logger.error(f"Failed to log conversation: {e}", exc_info=True)
@@ -830,6 +862,207 @@ def debug_db():
         return jsonify({
             "error": str(e),
             "db_path": DB_PATH
+        }), 500
+
+
+# ========== PRODUCT MANAGEMENT ENDPOINTS ==========
+
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    """Get all products or search/filter products"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Database not configured", "code": "DB_NOT_CONFIGURED"}), 500
+        
+        # Parse query parameters
+        search = request.args.get('search', '').strip()
+        category = request.args.get('category')
+        limit = min(int(request.args.get('limit', 100)), 500)
+        offset = int(request.args.get('offset', 0))
+        
+        # Build query
+        query = supabase.table('products').select('*')
+        
+        if search:
+            query = query.or_(f"name.ilike.%{search}%,description.ilike.%{search}%,sku.ilike.%{search}%")
+        
+        if category:
+            query = query.eq('category', category)
+        
+        query = query.range(offset, offset + limit - 1).order('created_at', desc=True)
+        
+        result = query.execute()
+        
+        return jsonify({
+            "success": True,
+            "count": len(result.data),
+            "products": result.data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching products: {e}")
+        return jsonify({
+            "error": "Failed to fetch products",
+            "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/products/<product_id>', methods=['GET'])
+def get_product(product_id):
+    """Get a specific product by ID"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Database not configured", "code": "DB_NOT_CONFIGURED"}), 500
+        
+        result = supabase.table('products').select('*').eq('id', product_id).execute()
+        
+        if not result.data:
+            return jsonify({
+                "error": "Product not found",
+                "code": "NOT_FOUND"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "product": result.data[0]
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching product: {e}")
+        return jsonify({
+            "error": "Failed to fetch product",
+            "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/products', methods=['POST'])
+def create_product():
+    """Create a new product"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Database not configured", "code": "DB_NOT_CONFIGURED"}), 500
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['name', 'price']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({
+                    "error": f"Missing required field: {field}",
+                    "code": "MISSING_FIELD"
+                }), 400
+        
+        # Prepare product data
+        product_data = {
+            "name": data['name'],
+            "description": data.get('description'),
+            "price": float(data['price']),
+            "category": data.get('category'),
+            "sku": data.get('sku'),
+            "stock": int(data.get('stock', 0)),
+            "image_url": data.get('image_url'),
+            "is_duplicate": data.get('is_duplicate', False),
+            "duplicate_of": data.get('duplicate_of')
+        }
+        
+        result = supabase.table('products').insert(product_data).execute()
+        
+        return jsonify({
+            "success": True,
+            "product": result.data[0]
+        }), 201
+        
+    except Exception as e:
+        logger.error(f"Error creating product: {e}")
+        return jsonify({
+            "error": "Failed to create product",
+            "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/products/<product_id>', methods=['PUT'])
+def update_product(product_id):
+    """Update an existing product"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Database not configured", "code": "DB_NOT_CONFIGURED"}), 500
+        
+        data = request.get_json()
+        
+        # Remove id from update data if present
+        data.pop('id', None)
+        data.pop('created_at', None)
+        
+        result = supabase.table('products').update(data).eq('id', product_id).execute()
+        
+        if not result.data:
+            return jsonify({
+                "error": "Product not found",
+                "code": "NOT_FOUND"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "product": result.data[0]
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error updating product: {e}")
+        return jsonify({
+            "error": "Failed to update product",
+            "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/products/<product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    """Delete a product"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Database not configured", "code": "DB_NOT_CONFIGURED"}), 500
+        
+        result = supabase.table('products').delete().eq('id', product_id).execute()
+        
+        if not result.data:
+            return jsonify({
+                "error": "Product not found",
+                "code": "NOT_FOUND"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "message": "Product deleted successfully"
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error deleting product: {e}")
+        return jsonify({
+            "error": "Failed to delete product",
+            "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/products/duplicates', methods=['GET'])
+def get_duplicate_products():
+    """Get all products marked as duplicates"""
+    try:
+        if not supabase:
+            return jsonify({"error": "Database not configured", "code": "DB_NOT_CONFIGURED"}), 500
+        
+        result = supabase.table('products').select('*').eq('is_duplicate', True).execute()
+        
+        return jsonify({
+            "success": True,
+            "count": len(result.data),
+            "duplicates": result.data
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching duplicates: {e}")
+        return jsonify({
+            "error": "Failed to fetch duplicates",
+            "code": "DB_ERROR"
         }), 500
 
 
