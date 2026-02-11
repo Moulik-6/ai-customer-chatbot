@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 from dotenv import load_dotenv
@@ -335,6 +335,15 @@ def _local_model_response(prompt):
     except Exception as e:
         logger.error(f"Local model inference error: {str(e)}")
         raise
+
+@app.route('/', methods=['GET'])
+def index():
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
+
+
+@app.route('/index.html', methods=['GET'])
+def index_html():
+    return send_from_directory(os.path.dirname(__file__), 'index.html')
 
 
 @app.route('/api/chat', methods=['POST'])
