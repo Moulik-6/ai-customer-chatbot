@@ -57,7 +57,12 @@
         "What's happening with my order",
         "Has my order shipped",
         "When can I expect delivery",
-        "Order tracking"
+        "Order tracking",
+        "Show me my orders",
+        "Show my orders",
+        "My orders",
+        "View my orders",
+        "List my orders"
       ],
       "responses": [
         "I'd be happy to help track your order! Could you provide your order number?",
@@ -207,7 +212,12 @@
         "Profile",
         "Update information",
         "User account",
-        "Access my account"
+        "Access my account",
+        "Who am I",
+        "My profile",
+        "My details",
+        "My information",
+        "Account info"
       ],
       "responses": [
         "I can help with account-related questions! What do you need help with?",
