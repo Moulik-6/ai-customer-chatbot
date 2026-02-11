@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import re
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
@@ -26,7 +27,7 @@ CORS(app)
 # Configuration
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
 MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
-MODEL_TYPE = os.getenv('MODEL_TYPE', 'generation')  # 'generation' or 'classification'
+MODEL_TYPE = 'generation'
 HUGGINGFACE_MODEL = 'google/flan-t5-base'
 USE_LOCAL_MODEL = os.getenv('USE_LOCAL_MODEL', 'true').strip().lower() in ('1', 'true', 'yes')
 
@@ -63,6 +64,8 @@ if not HUGGINGFACE_API_KEY and not MOCK_MODE and not USE_LOCAL_MODEL:
 
 if os.getenv('HUGGINGFACE_MODEL') and os.getenv('HUGGINGFACE_MODEL') != HUGGINGFACE_MODEL:
     logger.warning("Overriding HUGGINGFACE_MODEL to google/flan-t5-base")
+if os.getenv('MODEL_TYPE') and os.getenv('MODEL_TYPE') != MODEL_TYPE:
+    logger.warning("Overriding MODEL_TYPE to generation")
 
 logger.info(
     f"Initialized with model: {HUGGINGFACE_MODEL} (Type: {MODEL_TYPE}, Mock: {MOCK_MODE})"
@@ -88,17 +91,27 @@ INTENTS = _load_intents()
 logger.info(f"Loaded intents: {len(INTENTS)}")
 
 
+def _normalize_text(value):
+    normalized = value.lower()
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
 def _match_intent_response(message):
     if not INTENTS:
         return None
-    normalized = message.lower().strip()
+    normalized = _normalize_text(message)
     for intent in INTENTS:
         patterns = intent.get('patterns', [])
         responses = intent.get('responses', [])
         if not patterns or not responses:
             continue
         for pattern in patterns:
-            if pattern.lower() in normalized:
+            normalized_pattern = _normalize_text(pattern)
+            if not normalized_pattern:
+                continue
+            pattern_regex = r"\b" + re.escape(normalized_pattern) + r"\b"
+            if re.search(pattern_regex, normalized):
                 return {
                     'tag': intent.get('tag', 'unknown'),
                     'response': random.choice(responses)

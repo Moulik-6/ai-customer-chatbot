@@ -556,6 +556,8 @@
             // Handle different response types
             if (data.type === "generation") {
               addMessage(data.response, "bot");
+            } else if (data.type === "intent") {
+              addMessage(data.response, "bot");
             } else if (data.type === "classification") {
               const topLabel = data.classification.top_label;
               const confidence = (
