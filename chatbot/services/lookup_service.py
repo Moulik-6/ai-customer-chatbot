@@ -51,12 +51,12 @@ def lookup_product(query):
             if result.data:
                 return result.data
 
-        # Fuzzy name/description search
+        # Fuzzy name/description/category search
         safe_query = sanitize_search(query)
         result = (supabase.table('products')
                   .select('*')
-                  .or_(f"name.ilike.%{safe_query}%,description.ilike.%{safe_query}%,sku.ilike.%{safe_query}%")
-                  .limit(3)
+                  .or_(f"name.ilike.%{safe_query}%,description.ilike.%{safe_query}%,sku.ilike.%{safe_query}%,category.ilike.%{safe_query}%")
+                  .limit(5)
                   .execute())
         return result.data if result.data else None
     except Exception as e:
