@@ -937,7 +937,9 @@
           const data = await response.json();
 
           if (data.success) {
-            if (data.type === "generation" || data.type === "intent") {
+            // Handle any response that provides a direct 'response' field
+            // This covers: generation, intent, order_lookup, product_lookup, etc.
+            if (data.response) {
               addMessage(data.response, "bot");
             } else if (data.type === "classification") {
               const topLabel = data.classification.top_label;
