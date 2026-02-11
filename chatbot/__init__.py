@@ -30,8 +30,14 @@ def create_app():
     app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
 
     # CORS — restrict to known origins in production
-    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:7860').split(',')
-    CORS(app, origins=allowed_origins)
+    default_origins = ','.join([
+        'http://localhost:7860',
+        'http://localhost:3000',
+        'https://ai-customer-chatbot-tau.vercel.app',
+        'https://seyo009-ai-customer-chatbot.hf.space',
+    ])
+    allowed_origins = os.getenv('CORS_ORIGINS', default_origins).split(',')
+    CORS(app, origins=[o.strip() for o in allowed_origins])
 
     # Security headers
     @app.after_request
@@ -43,10 +49,10 @@ def create_app():
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data:; "
-            "font-src 'self'; "
-            "connect-src 'self'"
+            "font-src 'self' https://fonts.gstatic.com; "
+            "connect-src 'self' https://ai-customer-chatbot-tau.vercel.app https://seyo009-ai-customer-chatbot.hf.space"
         )
         return response
 

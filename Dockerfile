@@ -14,6 +14,7 @@ COPY . .
 ENV FLASK_ENV=production
 ENV MOCK_MODE=false
 ENV USE_LOCAL_MODEL=false
+ENV CORS_ORIGINS=https://ai-customer-chatbot-tau.vercel.app,https://seyo009-ai-customer-chatbot.hf.space,http://localhost:7860
 
 EXPOSE 7860
 
