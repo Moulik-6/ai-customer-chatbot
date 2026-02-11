@@ -21,7 +21,10 @@ A professional AI-powered customer service chatbot built with Flask, powered by 
 - 📦 **Order Management** — Order CRUD, status tracking, tracking numbers
 - 📊 **Conversation Logging** — All chats logged to Supabase (SQLite fallback)
 - 🎨 **Premium UI** — ChatGPT/Claude-inspired dark theme with session persistence
-- 🐳 **Docker Deployment** — Ready for Hugging Face Spaces
+- � **API Key Auth** — Admin/write endpoints protected with `X-API-Key` header
+- ⚡ **Rate Limiting** — 30 req/min on chat, 200 req/hr global default
+- 🛡️ **XSS Protection** — HTML-escaped bot responses with safe markdown rendering
+- 🐳 **Docker Deployment** — Ready for Hugging Face Spaces (model weights cached in image)
 
 ## Project Structure
 
@@ -67,6 +70,7 @@ Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to create the `orders`, `order_ite
 ```bash
 cp .env.example .env
 # Edit .env with your Supabase URL + key
+# Optionally set ADMIN_API_KEY to protect write/admin endpoints
 ```
 
 ### 4. Run
@@ -113,6 +117,15 @@ python app.py
 |--------|----------|-------------|
 | `GET` | `/api/admin/logs` | Conversation logs (`?limit=` & `?session_id=`) |
 | `GET` | `/api/admin/stats` | Usage statistics |
+
+> **Note**: POST/PUT/DELETE/PATCH endpoints and all `/api/admin/*` routes require an `X-API-Key` header when `ADMIN_API_KEY` is set in the environment.
+
+## Security & Rate Limiting
+
+- **Rate limiting**: `/api/chat` is limited to 30 requests/minute per IP. Write endpoints are limited to 20/min. Global default is 200/hr.
+- **Admin auth**: Set `ADMIN_API_KEY` in your `.env` to protect all write and admin endpoints. Pass the key via `X-API-Key` header.
+- **XSS protection**: Bot responses are HTML-escaped before rendering. Only safe markdown (`**bold**`, newlines) is rendered.
+- **Auto-detect API URL**: The frontend auto-detects the backend URL from `window.location`, so it works in local dev and production without changes.
 
 ## Tech Stack
 

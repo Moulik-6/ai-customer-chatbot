@@ -4,8 +4,11 @@ import random
 import re
 import sqlite3
 from datetime import datetime
+from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import requests
 from dotenv import load_dotenv
 import logging
@@ -26,6 +29,35 @@ logger = logging.getLogger(__name__)
 # Flask app setup
 app = Flask(__name__)
 CORS(app)
+
+# Rate limiting
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per hour"],
+    storage_uri="memory://",
+)
+
+# Admin API key for protected endpoints
+ADMIN_API_KEY = os.getenv('ADMIN_API_KEY')
+
+
+def require_admin_key(f):
+    """Decorator to protect admin/write endpoints with an API key."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not ADMIN_API_KEY:
+            # No key configured — allow access (dev mode)
+            return f(*args, **kwargs)
+        key = request.headers.get('X-API-Key') or request.args.get('api_key')
+        if key != ADMIN_API_KEY:
+            return jsonify({
+                "error": "Unauthorized. Provide a valid X-API-Key header.",
+                "code": "UNAUTHORIZED"
+            }), 401
+        return f(*args, **kwargs)
+    return decorated
+
 
 # Supabase setup
 SUPABASE_URL = os.getenv('SUPABASE_URL')
@@ -819,6 +851,7 @@ def index_html():
 
 
 @app.route('/api/chat', methods=['POST'])
+@limiter.limit("30 per minute")
 def chat():
     """
     Main chat endpoint for customer service chatbot.
@@ -1092,6 +1125,7 @@ def health_check():
 
 
 @app.route('/api/admin/logs', methods=['GET'])
+@require_admin_key
 def get_logs():
     """
     Admin endpoint to retrieve conversation logs
@@ -1166,6 +1200,7 @@ def get_logs():
 
 
 @app.route('/api/admin/stats', methods=['GET'])
+@require_admin_key
 def get_stats():
     """Get conversation statistics"""
     try:
@@ -1232,6 +1267,7 @@ def get_stats():
 
 
 @app.route('/api/admin/debug', methods=['GET'])
+@require_admin_key
 def debug_db():
     """Debug endpoint to check database status"""
     import os.path
@@ -1344,6 +1380,8 @@ def get_product(product_id):
 
 
 @app.route('/api/products', methods=['POST'])
+@require_admin_key
+@limiter.limit("20 per minute")
 def create_product():
     """Create a new product"""
     try:
@@ -1390,6 +1428,7 @@ def create_product():
 
 
 @app.route('/api/products/<product_id>', methods=['PUT'])
+@require_admin_key
 def update_product(product_id):
     """Update an existing product"""
     try:
@@ -1424,6 +1463,7 @@ def update_product(product_id):
 
 
 @app.route('/api/products/<product_id>', methods=['DELETE'])
+@require_admin_key
 def delete_product(product_id):
     """Delete a product"""
     try:
@@ -1587,6 +1627,8 @@ def get_order_by_number(order_number):
 
 
 @app.route('/api/orders', methods=['POST'])
+@require_admin_key
+@limiter.limit("20 per minute")
 def create_order():
     """Create a new order with items"""
     try:
@@ -1658,6 +1700,7 @@ def create_order():
 
 
 @app.route('/api/orders/<order_id>', methods=['PUT'])
+@require_admin_key
 def update_order(order_id):
     """Update order status or details"""
     try:
@@ -1694,6 +1737,7 @@ def update_order(order_id):
 
 
 @app.route('/api/orders/<order_id>/status', methods=['PATCH'])
+@require_admin_key
 def update_order_status(order_id):
     """Update order status and tracking"""
     try:

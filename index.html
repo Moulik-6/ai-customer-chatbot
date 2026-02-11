@@ -660,7 +660,19 @@
     </div>
 
     <script>
-      const API_URL = "https://seyo009-ai-customer-chatbot.hf.space/api/chat";
+      // Auto-detect API URL: use current origin for local/deployed, fallback for static hosting
+      const API_URL = (() => {
+        const loc = window.location;
+        if (loc.hostname === 'localhost' || loc.hostname === '127.0.0.1') {
+          return `${loc.protocol}//${loc.host}/api/chat`;
+        }
+        // If served from the Flask app itself (HF Spaces etc.)
+        if (loc.pathname === '/' || loc.pathname === '/index.html') {
+          return `${loc.protocol}//${loc.host}/api/chat`;
+        }
+        // Fallback for external static hosting (Vercel, GitHub Pages)
+        return 'https://seyo009-ai-customer-chatbot.hf.space/api/chat';
+      })();
       const MAX_RETRIES = 3;
       const RETRY_DELAY = 1000;
 
@@ -784,7 +796,14 @@
 
         const contentEl = document.createElement("div");
         contentEl.className = "message-content";
-        contentEl.textContent = sender === "error" ? "⚠️ " + text : text;
+
+        if (sender === "bot") {
+          // Render basic markdown safely for bot responses
+          contentEl.innerHTML = sanitizeAndRender(text);
+        } else {
+          // User and error messages: plain text only (XSS-safe)
+          contentEl.textContent = sender === "error" ? "⚠️ " + text : text;
+        }
 
         wrapperEl.appendChild(contentEl);
 
@@ -1047,6 +1066,24 @@
           // Could add a toast notification here
           console.log("Copied to clipboard");
         });
+      }
+
+      /**
+       * Escape HTML entities then render safe markdown subset.
+       * Supports: **bold**, newlines, and preserves emoji/unicode.
+       */
+      function sanitizeAndRender(text) {
+        // 1. Escape all HTML to prevent XSS
+        const escaped = text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+        // 2. Render safe markdown subset
+        return escaped
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")  // **bold**
+          .replace(/\n/g, "<br>");                             // newlines
       }
 
       function scrollToBottom() {
