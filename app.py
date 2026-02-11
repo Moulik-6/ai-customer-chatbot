@@ -63,6 +63,7 @@ def init_database():
 def log_conversation(session_id, user_message, bot_response, intent=None, model_used=None, response_type=None, ip_address=None):
     """Log a conversation to the database"""
     try:
+        logger.info(f"Attempting to log conversation - session: {session_id}, type: {response_type}")
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
@@ -73,9 +74,10 @@ def log_conversation(session_id, user_message, bot_response, intent=None, model_
         ''', (session_id, user_message, bot_response, intent, model_used, response_type, ip_address))
         
         conn.commit()
+        logger.info(f"Successfully logged conversation - ID: {cursor.lastrowid}")
         conn.close()
     except Exception as e:
-        logger.error(f"Failed to log conversation: {e}")
+        logger.error(f"Failed to log conversation: {e}", exc_info=True)
 
 # Initialize database on startup
 init_database()
@@ -786,6 +788,48 @@ def get_stats():
         return jsonify({
             "error": "Failed to fetch statistics",
             "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/admin/debug', methods=['GET'])
+def debug_db():
+    """Debug endpoint to check database status"""
+    import os.path
+    try:
+        db_exists = os.path.isfile(DB_PATH)
+        db_readable = os.access(DB_PATH, os.R_OK) if db_exists else False
+        db_writable = os.access(DB_PATH, os.W_OK) if db_exists else False
+        
+        if not db_exists:
+            return jsonify({
+                "db_path": DB_PATH,
+                "db_exists": False,
+                "message": "Database file doesn't exist"
+            }), 200
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM conversations")
+        count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT * FROM conversations ORDER BY timestamp DESC LIMIT 5")
+        recent = cursor.fetchall()
+        
+        conn.close()
+        
+        return jsonify({
+            "db_path": DB_PATH,
+            "db_exists": db_exists,
+            "db_readable": db_readable,
+            "db_writable": db_writable,
+            "record_count": count,
+            "recent_ids": [r[0] for r in recent] if recent else []
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "db_path": DB_PATH
         }), 500
 
 
