@@ -974,7 +974,23 @@ def chat():
                     bot_response = _format_product_response(products)
                     logger.info(f"Product lookup: {search_term} ({len(products)} found)")
                     return _db_response(bot_response, intent_tag, "product_lookup")
-            # No product found or no search term — fall through to intent response
+            else:
+                # No specific product mentioned — list available products
+                if supabase:
+                    try:
+                        result = supabase.table('products').select('name,price,category,sku').limit(10).order('created_at', desc=True).execute()
+                        if result.data:
+                            lines = ["Here are our available products:\n"]
+                            for p in result.data:
+                                price = f"${p['price']:.2f}" if p.get('price') else 'N/A'
+                                lines.append(f"• **{p['name']}** — {price}")
+                            if len(result.data) == 10:
+                                lines.append("\n...and more! Ask about a specific product for details.")
+                            bot_response = "\n".join(lines)
+                            return _db_response(bot_response, intent_tag, "product_list")
+                    except Exception as e:
+                        logger.error(f"Error listing products: {e}")
+            # No product found or DB not available — fall through to intent response
 
         # ========== 4. ORDER TRACKING (no order number provided) ==========
         if intent_tag == 'order_tracking':
