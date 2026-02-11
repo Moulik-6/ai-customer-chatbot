@@ -5,7 +5,7 @@ import requests
 from dotenv import load_dotenv
 import logging
 import torch
-from transformers import pipeline
+from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 
 # Load environment variables
 load_dotenv()
@@ -68,10 +68,23 @@ if not MOCK_MODE:
     try:
         logger.info(f"Loading local model: {HUGGINGFACE_MODEL}")
         device = 0 if torch.cuda.is_available() else -1
-        if MODEL_TYPE == 'generation':
-            LOCAL_MODEL = pipeline('text-generation', model=HUGGINGFACE_MODEL, device=device)
-        else:  # classification
+        
+        # Check if using a seq2seq model (like FLAN-T5)
+        is_seq2seq = 'flan' in HUGGINGFACE_MODEL.lower() or 't5' in HUGGINGFACE_MODEL.lower()
+        
+        if is_seq2seq:
+            # For seq2seq models like FLAN-T5, load directly with model class
+            logger.info(f"Loading seq2seq model: {HUGGINGFACE_MODEL}")
+            tokenizer = AutoTokenizer.from_pretrained(HUGGINGFACE_MODEL)
+            model = AutoModelForSeq2SeqLM.from_pretrained(HUGGINGFACE_MODEL)
+            if device >= 0:
+                model = model.cuda()
+            LOCAL_MODEL = {'tokenizer': tokenizer, 'model': model, 'type': 'seq2seq'}
+        elif MODEL_TYPE == 'classification':
             LOCAL_MODEL = pipeline('text-classification', model=HUGGINGFACE_MODEL, device=device)
+        else:  # text-generation
+            LOCAL_MODEL = pipeline('text-generation', model=HUGGINGFACE_MODEL, device=device)
+        
         logger.info(f"Local model loaded successfully on {'GPU' if device >= 0 else 'CPU'}")
     except Exception as e:
         logger.error(f"Failed to load local model: {str(e)}")
@@ -254,7 +267,48 @@ def _local_model_response(prompt):
     Run inference using a locally loaded Hugging Face model.
     """
     try:
-        if MODEL_TYPE == 'generation':
+        # Check if using a seq2seq model (like FLAN-T5)
+        if isinstance(LOCAL_MODEL, dict) and LOCAL_MODEL.get('type') == 'seq2seq':
+            # For seq2seq models like FLAN-T5
+            tokenizer = LOCAL_MODEL['tokenizer']
+            model = LOCAL_MODEL['model']
+            device = next(model.parameters()).device
+            
+            # Tokenize input
+            inputs = tokenizer(prompt, return_tensors="pt", padding=True, max_length=512, truncation=True).to(device)
+            
+            # Generate response
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_length=150,
+                    temperature=0.7,
+                    top_p=0.9,
+                    do_sample=True
+                )
+            
+            # Decode output
+            generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            return {
+                'type': 'generation',
+                'result': generated_text,
+                'model': HUGGINGFACE_MODEL
+            }
+        elif isinstance(LOCAL_MODEL, dict) and LOCAL_MODEL.get('type') == 'classification':
+            # For classification models
+            result = LOCAL_MODEL(prompt)
+            scores = [{'label': r['label'], 'score': round(r['score'], 4)} for r in result]
+            scores_sorted = sorted(scores, key=lambda x: x.get('score', 0), reverse=True)
+            
+            return {
+                'type': 'classification',
+                'result': scores_sorted,
+                'top_label': scores_sorted[0].get('label') if scores_sorted else 'unknown',
+                'model': HUGGINGFACE_MODEL
+            }
+        elif MODEL_TYPE == 'generation':
+            # For causal language models like GPT-2
             result = LOCAL_MODEL(prompt, max_length=150, temperature=0.7, top_p=0.9, do_sample=True)
             generated_text = result[0]['generated_text']
             # Remove the original prompt from the generated text
@@ -438,4 +492,4 @@ def internal_error(error):
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 7860))
     debug = os.getenv('FLASK_ENV') == 'development'
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(host='0.0.0.0', port=port, debug=False)  # Disable debug mode to avoid memory issues
