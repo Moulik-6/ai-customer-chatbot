@@ -8,7 +8,7 @@
 - Replaces local SQLite with cloud database
 - Automatic backups and scaling
 
-### ✅ Two Main Tables
+### ✅ Four Main Tables
 
 #### 1. **conversations** - Auto-logged chat data
 
@@ -23,6 +23,20 @@
 - Category filtering
 - Duplicate product detection
 - Stock management
+
+#### 3. **orders** - Customer order management
+
+- Track all customer orders
+- Filter by customer email, status, date
+- Order status tracking (pending, processing, shipped, delivered, cancelled)
+- Tracking number management
+- Customer details and shipping addresses
+
+#### 4. **order_items** - Products in each order
+
+- Links orders to products
+- Tracks quantity, pricing, subtotals
+- Product snapshot (preserves product details at time of order)
 
 ## Setup in 3 Steps
 
@@ -92,6 +106,50 @@ POST /api/products
   "is_duplicate": true,
   "duplicate_of": "original-product-id"
 }
+```
+
+### Create Order
+
+```bash
+POST /api/orders
+{
+  "order_number": "ORD-2026-001",
+  "customer_name": "John Smith",
+  "customer_email": "john@email.com",
+  "total_amount": 1299.98,
+  "status": "pending",
+  "items": [
+    {
+      "product_name": "iPhone 15",
+      "product_sku": "IPHONE-15",
+      "quantity": 1,
+      "unit_price": 999.99
+    }
+  ]
+}
+```
+
+### Get Order by Number
+
+```bash
+GET /api/orders/number/ORD-2026-001
+```
+
+### Update Order Status
+
+```bash
+PATCH /api/orders/<id>/status
+{
+  "status": "shipped",
+  "tracking_number": "1Z999AA10123456784"
+}
+```
+
+### Filter Orders
+
+```bash
+GET /api/orders?customer_email=john@email.com
+GET /api/orders?status=shipped
 ```
 
 ### Get All Duplicates
