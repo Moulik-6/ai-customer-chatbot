@@ -2,9 +2,9 @@
 Database lookups — query orders, products, and customers from Supabase.
 """
 import logging
-from database import supabase
-from services.sanitize import sanitize_search
-from services.entity_service import extract_sku
+from ..database import supabase
+from .sanitize import sanitize_search
+from .entity_service import extract_sku
 
 logger = logging.getLogger(__name__)
 
@@ -103,4 +103,3 @@ def list_products(limit=10):
         return result.data if result.data else None
     except Exception as e:
         logger.error(f"Error listing products: {e}")
-        return None

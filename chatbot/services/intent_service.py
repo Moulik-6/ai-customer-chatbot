@@ -5,7 +5,7 @@ import json
 import re
 import random
 import logging
-from config import INTENTS_PATH
+from ..config import INTENTS_PATH
 
 logger = logging.getLogger(__name__)
 
