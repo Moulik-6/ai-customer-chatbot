@@ -1,4 +1,5 @@
 {
+  "_description": "Comprehensive Customer Service Chatbot Intents - 26 categories covering all common customer service scenarios",
   "intents": [
     {
       "tag": "greeting",
@@ -260,6 +261,297 @@
         "I can help you track your order! Please provide your order number (e.g., ORD-2026-001).",
         "To track your order, please share your order number with me.",
         "I'd be happy to check the status of your order. What's your order number?"
+      ]
+    },
+    {
+      "tag": "account_help",
+      "patterns": [
+        "Account help",
+        "Can't login",
+        "Forgot password",
+        "Reset password",
+        "Create account",
+        "Update profile",
+        "Account issue",
+        "Sign up",
+        "Log in",
+        "My account",
+        "Access account"
+      ],
+      "responses": [
+        "I can help with account issues! Are you trying to reset your password or create a new account?",
+        "What account issue can I help you with?",
+        "I'm here to help with login and account problems. What's going on?",
+        "Let me assist. Are you having trouble signing in?"
+      ]
+    },
+    {
+      "tag": "payment_methods",
+      "patterns": [
+        "What payment methods",
+        "Do you accept credit card",
+        "Payment options",
+        "How to pay",
+        "Accepted payment",
+        "Can I pay with",
+        "PayPal",
+        "Apple Pay",
+        "Google Pay",
+        "Debit card",
+        "Visa",
+        "MasterCard"
+      ],
+      "responses": [
+        "We accept credit cards, debit cards, PayPal, Apple Pay, and Google Pay. Any other payment questions?",
+        "We accept most major payment methods including Visa, MasterCard, PayPal, and mobile wallets.",
+        "We support multiple payment options. What would work best for you?"
+      ]
+    },
+    {
+      "tag": "promo_codes",
+      "patterns": [
+        "Do you have a discount code",
+        "Promo code",
+        "Coupon",
+        "Discount",
+        "Promotional offer",
+        "How to apply coupon",
+        "Discount code",
+        "Coupon code",
+        "Current sale"
+      ],
+      "responses": [
+        "Great question! We regularly have promotions. Visit our website or subscribe to our newsletter for the latest codes.",
+        "We offer seasonal discounts and promo codes. Would you like info on current offers?",
+        "Check our website homepage for current promotional codes. We also email exclusive deals to subscribers!"
+      ]
+    },
+    {
+      "tag": "hours_location",
+      "patterns": [
+        "What are your hours",
+        "When are you open",
+        "Are you open",
+        "Hours of operation",
+        "Where are you located",
+        "Do you have a store",
+        "Physical location",
+        "Store hours",
+        "Business hours"
+      ],
+      "responses": [
+        "We're available online 24/7! For specific support hours or store location, please visit our website.",
+        "Our website is available 24/7. For customer support hours, check our contact page.",
+        "You can shop anytime! Our support team is available during business hours. What do you need?"
+      ]
+    },
+    {
+      "tag": "contact_info",
+      "patterns": [
+        "Contact us",
+        "How can I reach you",
+        "Phone number",
+        "Email address",
+        "Customer service",
+        "Talk to someone",
+        "Get in touch",
+        "Contact support",
+        "Support email"
+      ],
+      "responses": [
+        "You can reach us via email at support@company.com or phone at 1-800-COMPANY. You can also chat with us here!",
+        "We're available via email, phone, and this chat. What's the best way to help you?",
+        "Visit our contact page for phone and email options. I'm also here to help right now!",
+        "I can help! Or you can contact support@company.com for more complex issues."
+      ]
+    },
+    {
+      "tag": "live_agent",
+      "patterns": [
+        "Talk to a human",
+        "Speak with agent",
+        "Customer service representative",
+        "Live chat",
+        "Connect me to someone",
+        "I want to talk to a person",
+        "Need human help",
+        "Real person"
+      ],
+      "responses": [
+        "I'm happy to help! But if you'd prefer to speak with someone, our team is available during business hours. Would you like contact info?",
+        "You can request a live agent during business hours. Let me know if I can solve this for you first!",
+        "Our live agents are available 9AM-9PM EST. For now, tell me what you need and I'll do my best to help."
+      ]
+    },
+    {
+      "tag": "warranty",
+      "patterns": [
+        "Warranty",
+        "Is it under warranty",
+        "How long is warranty",
+        "Warranty period",
+        "Extended warranty",
+        "Defective product",
+        "Covered",
+        "Warranty claim"
+      ],
+      "responses": [
+        "Most products come with a 1-year limited warranty. Would you like details on coverage?",
+        "Warranty details vary by product. Which item are you asking about?",
+        "We offer standard coverage on most items. What product do you need info on?"
+      ]
+    },
+    {
+      "tag": "bulk_order",
+      "patterns": [
+        "Bulk order",
+        "Large quantity",
+        "Wholesale",
+        "Business order",
+        "Volume discount",
+        "Corporate purchase",
+        "Bulk buy"
+      ],
+      "responses": [
+        "For bulk or wholesale orders, please contact our business team at sales@company.com or call 1-800-COMPANY ext. 102.",
+        "We do offer volume discounts! Contact our sales team for a custom quote.",
+        "Great! For large orders, our sales team can provide special pricing."
+      ]
+    },
+    {
+      "tag": "faq_general",
+      "patterns": [
+        "FAQ",
+        "Frequently asked questions",
+        "General questions",
+        "How does this work",
+        "Common issues",
+        "Common questions"
+      ],
+      "responses": [
+        "Check our FAQ section on the website for common questions and answers.",
+        "I can answer most questions! What would you like to know?",
+        "What's your question? I can probably help!"
+      ]
+    },
+    {
+      "tag": "exchange",
+      "patterns": [
+        "Exchange",
+        "Do you do exchanges",
+        "Can I exchange this",
+        "Different size",
+        "Different color",
+        "Wrong item",
+        "Swap",
+        "Exchange item"
+      ],
+      "responses": [
+        "Yes, we can exchange items! Do you have the wrong size or color? Let me help.",
+        "We absolutely offer exchanges. What would you like to exchange it for?",
+        "I can help with an exchange. What's wrong with the current item?"
+      ]
+    },
+    {
+      "tag": "stock_availability",
+      "patterns": [
+        "Is it in stock",
+        "Stock availability",
+        "Out of stock",
+        "Will it be back in stock",
+        "When will you restock",
+        "Pre-order",
+        "Available",
+        "In stock"
+      ],
+      "responses": [
+        "I can check availability. Which product are you interested in?",
+        "Let me look that up for you. What item are you asking about?",
+        "I can help with stock info. What product would you like to check?"
+      ]
+    },
+    {
+      "tag": "gift_card",
+      "patterns": [
+        "Gift card",
+        "Do you sell gift cards",
+        "How to use gift card",
+        "Gift card balance",
+        "Buy gift card",
+        "Check balance"
+      ],
+      "responses": [
+        "Yes! We offer digital and physical gift cards. Would you like to purchase one or check a balance?",
+        "We have gift cards available in various amounts. Interested?",
+        "You can purchase a gift card on our website or check your balance there."
+      ]
+    },
+    {
+      "tag": "newsletter_signup",
+      "patterns": [
+        "Newsletter",
+        "Email list",
+        "Subscribe",
+        "Sign me up",
+        "Mailing list",
+        "Stay updated",
+        "Get updates"
+      ],
+      "responses": [
+        "Great! Subscribing to our newsletter gives you first access to sales and new products. You can sign up on our website!",
+        "Subscribers get exclusive deals and early access. Visit our website to sign up!",
+        "Love the idea! Head to our website's footer to subscribe to our newsletter."
+      ]
+    },
+    {
+      "tag": "shipping_address",
+      "patterns": [
+        "Change shipping address",
+        "Update address",
+        "Shipping address",
+        "Wrong address",
+        "Delivery address",
+        "Address change"
+      ],
+      "responses": [
+        "If your order hasn't shipped yet, we can update the address. Do you have your order number?",
+        "I can help change your shipping address if the order hasn't left our warehouse. What's your order number?",
+        "Let me check if we can still modify your address. Please provide your order number."
+      ]
+    },
+    {
+      "tag": "installation_setup",
+      "patterns": [
+        "How do I install",
+        "Setup instructions",
+        "Assembly",
+        "Instructions",
+        "How to set up",
+        "Installation guide",
+        "Put together"
+      ],
+      "responses": [
+        "I can help with setup! Which product are you setting up? I can provide instructions.",
+        "Setup guides are usually included. Which product do you need help with?",
+        "I'd be happy to help! What product needs assembly?"
+      ]
+    },
+    {
+      "tag": "size_fitting",
+      "patterns": [
+        "What size should I get",
+        "Size chart",
+        "Sizing",
+        "Does it fit",
+        "How do I know what size",
+        "Too big",
+        "Too small",
+        "Fit guide"
+      ],
+      "responses": [
+        "I can help with sizing! Do you have the product dimensions or need a size chart?",
+        "Let me find the size chart for you. Which product are you asking about?",
+        "We have detailed sizing information. What item are you looking at?"
       ]
     }
   ]
