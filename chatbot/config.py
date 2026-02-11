@@ -71,8 +71,7 @@ CHAT_RATE_LIMIT = os.getenv('CHAT_RATE_LIMIT', '30 per minute')
 
 # ── Startup validation ────────────────────────────────────
 if not HUGGINGFACE_API_KEY and not MOCK_MODE and not USE_LOCAL_MODEL:
-    logger.error("HUGGINGFACE_API_KEY not found in environment variables")
-    raise ValueError("HUGGINGFACE_API_KEY environment variable is required")
+    logger.warning("HUGGINGFACE_API_KEY not set — AI responses will fail unless MOCK_MODE is enabled")
 
 logger.info(
     f"Config loaded — model: {HUGGINGFACE_MODEL}, type: {MODEL_TYPE}, "
