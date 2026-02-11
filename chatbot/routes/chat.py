@@ -6,22 +6,24 @@ import logging
 import requests
 from flask import Blueprint, request, jsonify, send_from_directory, current_app
 
-from extensions import limiter
-from config import HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE, BASE_DIR
-from database import supabase, log_conversation
-from services.intent_service import match_intent, INTENTS
-from services.entity_service import (
+from ..extensions import limiter
+from ..config import (
+    HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE, TEMPLATES_DIR,
+)
+from ..database import supabase, log_conversation
+from ..services.intent_service import match_intent, INTENTS
+from ..services.entity_service import (
     extract_order_number, extract_email, extract_sku, extract_product_name,
 )
-from services.lookup_service import (
+from ..services.lookup_service import (
     lookup_order_status, lookup_orders_by_email,
     lookup_product, lookup_customer_by_email,
 )
-from services.formatter_service import (
+from ..services.formatter_service import (
     format_order, format_orders_list, format_product,
     format_product_list, format_customer,
 )
-from models.ai_model import query_model
+from ..models.ai_model import query_model
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +34,12 @@ chat_bp = Blueprint('chat', __name__)
 
 @chat_bp.route('/', methods=['GET'])
 def index():
-    return send_from_directory(BASE_DIR, 'index.html')
+    return send_from_directory(str(TEMPLATES_DIR), 'index.html')
 
 
 @chat_bp.route('/index.html', methods=['GET'])
 def index_html():
-    return send_from_directory(BASE_DIR, 'index.html')
+    return send_from_directory(str(TEMPLATES_DIR), 'index.html')
 
 
 # ── Health check ──────────────────────────────────────────

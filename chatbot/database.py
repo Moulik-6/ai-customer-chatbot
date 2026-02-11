@@ -3,7 +3,7 @@ Database layer — Supabase client + SQLite fallback + conversation logging.
 """
 import sqlite3
 import logging
-from config import SUPABASE_URL, SUPABASE_KEY, DB_PATH
+from .config import SUPABASE_URL, SUPABASE_KEY, DB_PATH
 
 logger = logging.getLogger(__name__)
 

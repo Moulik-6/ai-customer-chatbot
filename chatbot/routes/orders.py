@@ -5,9 +5,9 @@ import logging
 
 from flask import Blueprint, request, jsonify
 
-from extensions import limiter
-from auth import require_admin_key
-from database import supabase
+from ..extensions import limiter
+from ..auth import require_admin_key
+from ..database import supabase
 
 logger = logging.getLogger(__name__)
 

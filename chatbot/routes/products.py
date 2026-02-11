@@ -5,10 +5,10 @@ import logging
 
 from flask import Blueprint, request, jsonify
 
-from extensions import limiter
-from auth import require_admin_key
-from database import supabase
-from services.sanitize import sanitize_search
+from ..extensions import limiter
+from ..auth import require_admin_key
+from ..database import supabase
+from ..services.sanitize import sanitize_search
 
 logger = logging.getLogger(__name__)
 

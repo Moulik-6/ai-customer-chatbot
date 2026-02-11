@@ -1,22 +1,23 @@
 """
-AI Customer Service Chatbot — Flask application entry point.
+AI Customer Service Chatbot — Flask application factory.
 
-This is a slim orchestrator that wires together:
-  config     — environment variables & constants
-  database   — Supabase + SQLite clients
-  auth       — admin API-key decorator
-  models     — AI model loading & inference
-  services   — intent matching, entity extraction, lookups, formatters
-  routes     — Flask Blueprints for chat, admin, products, orders
+This package wires together:
+  config      — environment variables & constants
+  database    — Supabase + SQLite clients
+  auth        — admin API-key decorator
+  models      — AI model loading & inference
+  services    — intent matching, entity extraction, lookups, formatters
+  routes      — Flask Blueprints for chat, admin, products, orders
 """
 import os
 import secrets
 import logging
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 
-from config import PORT
-from extensions import limiter
+from .config import PORT
+from .extensions import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +53,11 @@ def create_app():
     # Attach rate limiter to app
     limiter.init_app(app)
 
-    # Register blueprints
-    from routes.chat import chat_bp
-    from routes.admin import admin_bp
-    from routes.products import products_bp
-    from routes.orders import orders_bp
+    # Register blueprints (deferred imports to avoid circular deps)
+    from .routes.chat import chat_bp
+    from .routes.admin import admin_bp
+    from .routes.products import products_bp
+    from .routes.orders import orders_bp
 
     app.register_blueprint(chat_bp)
     app.register_blueprint(admin_bp)
@@ -78,9 +79,3 @@ def create_app():
         return jsonify({"error": "Internal server error", "code": "INTERNAL_ERROR"}), 500
 
     return app
-
-
-app = create_app()
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=PORT, debug=False)

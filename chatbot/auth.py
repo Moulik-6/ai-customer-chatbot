@@ -4,7 +4,7 @@ Auth utilities — admin API-key decorator.
 import hmac
 from functools import wraps
 from flask import request, jsonify
-from config import ADMIN_API_KEY
+from .config import ADMIN_API_KEY
 
 
 def require_admin_key(f):

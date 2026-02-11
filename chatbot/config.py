@@ -3,6 +3,7 @@ Centralized configuration — loads environment variables and defines constants.
 """
 import os
 import logging
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,6 +14,17 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# ── Paths ─────────────────────────────────────────────────
+# PACKAGE_DIR  → .../chatbot/
+# PROJECT_ROOT → .../ai-customer-chatbot/
+PACKAGE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = PACKAGE_DIR.parent
+
+TEMPLATES_DIR = PACKAGE_DIR / 'templates'
+DATA_DIR = PACKAGE_DIR / 'data'
+DB_PATH = str(PROJECT_ROOT / 'chatbot.db')
+INTENTS_PATH = str(DATA_DIR / 'intents.json')
 
 # ── Supabase ──────────────────────────────────────────────
 SUPABASE_URL = os.getenv('SUPABASE_URL')
@@ -52,11 +64,6 @@ MODEL_CONFIGS = {
         }
     }
 }
-
-# ── Paths ─────────────────────────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'chatbot.db')
-INTENTS_PATH = os.path.join(BASE_DIR, 'intents.json')
 
 # ── Flask ─────────────────────────────────────────────────
 PORT = int(os.getenv('PORT', 7860))

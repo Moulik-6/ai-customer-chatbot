@@ -22,4 +22,4 @@ ENV MOCK_MODE=false
 
 EXPOSE 7860
 
-CMD ["python", "app.py"]
+CMD ["python", "run.py"]

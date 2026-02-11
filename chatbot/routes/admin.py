@@ -7,8 +7,8 @@ import sqlite3
 
 from flask import Blueprint, request, jsonify
 
-from auth import require_admin_key
-from config import DB_PATH
+from ..auth import require_admin_key
+from ..config import DB_PATH
 
 logger = logging.getLogger(__name__)
 

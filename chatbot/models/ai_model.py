@@ -4,7 +4,7 @@ AI model — load FLAN-T5 (or other HF models), build prompts, run inference.
 import logging
 import requests
 
-from config import (
+from ..config import (
     HUGGINGFACE_MODEL, HUGGINGFACE_API_KEY, HUGGINGFACE_API_URL,
     MODEL_TYPE, MODEL_CONFIGS, MOCK_MODE, USE_LOCAL_MODEL,
 )
