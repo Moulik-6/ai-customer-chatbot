@@ -2,9 +2,10 @@
 Chat routes — main chat endpoint, index page, health check.
 """
 import logging
+import time
 
 import requests
-from flask import Blueprint, request, jsonify, send_from_directory, current_app
+from flask import Blueprint, request, jsonify, send_from_directory
 
 from ..extensions import limiter
 from ..config import (
@@ -67,8 +68,7 @@ def chat():
 
     Expected JSON payload: { "message": "hello" }
     """
-    # Access the limiter from the app
-    limiter = current_app.extensions.get('limiter')
+    start_time = time.monotonic()
 
     try:
         data = request.get_json()
@@ -95,6 +95,9 @@ def chat():
         intent_match = match_intent(message)
         intent_tag = intent_match['tag'] if intent_match else None
 
+        def _elapsed_ms():
+            return int((time.monotonic() - start_time) * 1000)
+
         # Helper — build & return a DB-backed response
         def _db_response(bot_response, intent, response_type, extra=None):
             resp = {
@@ -108,7 +111,7 @@ def chat():
                 session_id=session_id, user_message=message,
                 bot_response=bot_response, intent=intent,
                 model_used="database", response_type=response_type,
-                ip_address=ip_address,
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
             return jsonify(resp), 200
 
@@ -176,7 +179,7 @@ def chat():
                 session_id=session_id, user_message=message,
                 bot_response=bot_response, intent=intent_tag,
                 model_used="intents", response_type="intent",
-                ip_address=ip_address,
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
             return jsonify({
                 "success": True, "type": "intent", "intent": intent_tag,
@@ -191,7 +194,7 @@ def chat():
                 bot_response=intent_match['response'],
                 intent=intent_match['tag'],
                 model_used="intents", response_type="intent",
-                ip_address=ip_address,
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
             return jsonify({
                 "success": True, "type": "intent",
@@ -212,7 +215,7 @@ def chat():
                 session_id=session_id, user_message=message,
                 bot_response=api_response['result'], intent=None,
                 model_used=api_response['model'], response_type="generation",
-                ip_address=ip_address,
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
         else:
             response_data = {
@@ -229,6 +232,7 @@ def chat():
                 bot_response=f"Classification: {api_response['top_label']}",
                 intent=None, model_used=api_response['model'],
                 response_type="classification", ip_address=ip_address,
+                response_time_ms=_elapsed_ms(),
             )
 
         logger.info(f"Response generated successfully (type: {api_response['type']})")
