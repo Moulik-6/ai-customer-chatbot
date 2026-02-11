@@ -67,6 +67,7 @@ MODEL_CONFIGS = {
 
 # ── Flask ─────────────────────────────────────────────────
 PORT = int(os.getenv('PORT', 7860))
+CHAT_RATE_LIMIT = os.getenv('CHAT_RATE_LIMIT', '30 per minute')
 
 # ── Startup validation ────────────────────────────────────
 if not HUGGINGFACE_API_KEY and not MOCK_MODE and not USE_LOCAL_MODEL:

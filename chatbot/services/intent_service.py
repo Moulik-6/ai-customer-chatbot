@@ -60,15 +60,28 @@ logger.info(f"Precompiled {len(_COMPILED_INTENTS)} intent patterns")
 
 # ── Public API ────────────────────────────────────────────
 def match_intent(message):
-    """Return {'tag': ..., 'response': ...} or None."""
+    """
+    Return {'tag': ..., 'response': ...} or None.
+
+    When multiple intents match, prefer the one whose pattern is longest
+    (most specific).  This prevents broad intents like "shipping" from
+    shadowing narrow ones like "shipping_address".
+    """
     if not _COMPILED_INTENTS:
         return None
     normalized = _normalize_text(message)
+    best = None          # (pattern_length, intent_dict)
     for intent in _COMPILED_INTENTS:
         for pat in intent['patterns']:
-            if pat.search(normalized):
-                return {
-                    'tag': intent['tag'],
-                    'response': random.choice(intent['responses']),
-                }
-    return None
+            m = pat.search(normalized)
+            if m:
+                length = m.end() - m.start()
+                if best is None or length > best[0]:
+                    best = (length, intent)
+                break                    # one match per intent is enough
+    if best is None:
+        return None
+    return {
+        'tag': best[1]['tag'],
+        'response': random.choice(best[1]['responses']),
+    }

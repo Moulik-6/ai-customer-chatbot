@@ -10,6 +10,7 @@ from flask import Blueprint, request, jsonify, send_from_directory
 from ..extensions import limiter
 from ..config import (
     HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE, TEMPLATES_DIR,
+    CHAT_RATE_LIMIT,
 )
 from ..database import log_conversation
 from ..services.intent_service import match_intent, INTENTS
@@ -61,7 +62,7 @@ def health_check():
 # ── Main chat endpoint ───────────────────────────────────
 
 @chat_bp.route('/api/chat', methods=['POST'])
-@limiter.limit("30 per minute")
+@limiter.limit(CHAT_RATE_LIMIT)
 def chat():
     """
     Main chat endpoint for customer service chatbot.
@@ -71,7 +72,7 @@ def chat():
     start_time = time.monotonic()
 
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         if not data:
             return jsonify({"error": "Request body must be valid JSON", "code": "INVALID_REQUEST"}), 400
 
