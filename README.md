@@ -25,18 +25,23 @@ A professional AI-powered customer service chatbot built with Flask, powered by 
 ## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 2. Setup Supabase (Free Database)
+
 Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to:
+
 - Create free Supabase account
 - Create `conversations` and `products` tables
 - Get your credentials
 
 ### 3. Configure Environment
+
 Create `.env` file:
+
 ```bash
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-anon-key-here
@@ -44,6 +49,7 @@ HUGGINGFACE_API_KEY=optional
 ```
 
 ### 4. Run Locally
+
 ```bash
 python app.py
 ```
@@ -51,6 +57,7 @@ python app.py
 ## API Endpoints
 
 ### Chat API
+
 ```bash
 # Send message
 POST /api/chat
@@ -64,6 +71,7 @@ GET /health
 ```
 
 ### Product Management
+
 ```bash
 # Get all products
 GET /api/products?search=iphone&category=electronics
@@ -93,6 +101,7 @@ GET /api/products/duplicates
 ```
 
 ### Analytics
+
 ```bash
 # View conversation logs
 GET /api/admin/logs?limit=50&session_id=user-123

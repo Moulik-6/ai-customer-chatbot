@@ -3,6 +3,7 @@
 ## What Was Added
 
 ### ✅ Database Integration
+
 - **Supabase PostgreSQL** (free tier - 500MB storage)
 - Replaces local SQLite with cloud database
 - Automatic backups and scaling
@@ -10,11 +11,13 @@
 ### ✅ Two Main Tables
 
 #### 1. **conversations** - Auto-logged chat data
+
 - Every chat interaction is automatically saved
 - Includes: session_id, timestamps, intent, model used, IP addresses
 - Great for analytics and improving the bot
 
 #### 2. **products** - Product catalog with duplicate tracking
+
 - Full CRUD operations (Create, Read, Update, Delete)
 - Search by name/description/SKU
 - Category filtering
@@ -24,6 +27,7 @@
 ## Setup in 3 Steps
 
 ### 1️⃣ Create Supabase Account (5 min)
+
 ```
 1. Go to supabase.com
 2. Sign up (free)
@@ -32,6 +36,7 @@
 ```
 
 ### 2️⃣ Create Tables (2 min)
+
 ```
 1. Open SQL Editor in Supabase
 2. Copy/paste SQL from SUPABASE_SETUP.md
@@ -39,6 +44,7 @@
 ```
 
 ### 3️⃣ Add Credentials (1 min)
+
 ```
 HF Spaces > Settings > Secrets:
 - SUPABASE_URL = your project URL
@@ -52,12 +58,14 @@ HF Spaces > Settings > Secrets:
 ## API Examples
 
 ### Chat (auto-logs to DB)
+
 ```bash
 POST /api/chat
 {"message": "hello", "session_id": "user-123"}
 ```
 
 ### Create Product
+
 ```bash
 POST /api/products
 {
@@ -69,11 +77,13 @@ POST /api/products
 ```
 
 ### Search Products
+
 ```bash
 GET /api/products?search=iphone&category=Electronics
 ```
 
 ### Mark as Duplicate
+
 ```bash
 POST /api/products
 {
@@ -85,11 +95,13 @@ POST /api/products
 ```
 
 ### Get All Duplicates
+
 ```bash
 GET /api/products/duplicates
 ```
 
 ### View Chat Logs
+
 ```bash
 GET /api/admin/logs?limit=50
 GET /api/admin/stats
