@@ -26,6 +26,7 @@ HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
 MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
 MODEL_TYPE = os.getenv('MODEL_TYPE', 'generation')  # 'generation' or 'classification'
 HUGGINGFACE_MODEL = os.getenv('HUGGINGFACE_MODEL', 'gpt2')
+USE_LOCAL_MODEL = os.getenv('USE_LOCAL_MODEL', 'true').strip().lower() in ('1', 'true', 'yes')
 
 # Model configurations
 MODEL_CONFIGS = {
@@ -53,8 +54,8 @@ HUGGINGFACE_API_BASE = os.getenv(
 )
 HUGGINGFACE_API_URL = f"{HUGGINGFACE_API_BASE}/{HUGGINGFACE_MODEL}"
 
-# Validate API key on startup
-if not HUGGINGFACE_API_KEY and not MOCK_MODE:
+# Validate API key on startup (required only for remote API usage)
+if not HUGGINGFACE_API_KEY and not MOCK_MODE and not USE_LOCAL_MODEL:
     logger.error("HUGGINGFACE_API_KEY not found in environment variables")
     raise ValueError("HUGGINGFACE_API_KEY environment variable is required")
 
@@ -62,9 +63,9 @@ logger.info(
     f"Initialized with model: {HUGGINGFACE_MODEL} (Type: {MODEL_TYPE}, Mock: {MOCK_MODE})"
 )
 
-# Load local model if not in mock mode
+# Load local model if not in mock mode and enabled
 LOCAL_MODEL = None
-if not MOCK_MODE:
+if not MOCK_MODE and USE_LOCAL_MODEL:
     try:
         logger.info(f"Loading local model: {HUGGINGFACE_MODEL}")
         device = 0 if torch.cuda.is_available() else -1
