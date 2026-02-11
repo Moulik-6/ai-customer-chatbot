@@ -9,13 +9,14 @@ This is a slim orchestrator that wires together:
   services   — intent matching, entity extraction, lookups, formatters
   routes     — Flask Blueprints for chat, admin, products, orders
 """
+import os
+import secrets
 import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
 from config import PORT
+from extensions import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +24,33 @@ logger = logging.getLogger(__name__)
 def create_app():
     """Application factory — build and return the Flask app."""
     app = Flask(__name__)
-    CORS(app)
 
-    # Rate limiting
-    Limiter(
-        get_remote_address,
-        app=app,
-        default_limits=["200 per hour"],
-        storage_uri="memory://",
-    )
+    # Secret key for session signing (generate if not set)
+    app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
+
+    # CORS — restrict to known origins in production
+    allowed_origins = os.getenv('CORS_ORIGINS', 'http://localhost:7860').split(',')
+    CORS(app, origins=allowed_origins)
+
+    # Security headers
+    @app.after_request
+    def set_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'"
+        )
+        return response
+
+    # Attach rate limiter to app
+    limiter.init_app(app)
 
     # Register blueprints
     from routes.chat import chat_bp

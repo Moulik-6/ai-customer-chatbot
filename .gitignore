@@ -19,6 +19,11 @@ dist/
 # Environment variables
 .env
 
+# Database files (may contain PII)
+*.db
+*.sqlite
+*.sqlite3
+
 # OS / editor
 .DS_Store
 Thumbs.db
