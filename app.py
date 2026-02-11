@@ -28,7 +28,7 @@ CORS(app)
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
 MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
 MODEL_TYPE = 'generation'
-HUGGINGFACE_MODEL = 'google/flan-t5-base'
+HUGGINGFACE_MODEL = 'google/flan-t5-large'  # Upgraded from base (250M) to large (780M params) for better quality
 USE_LOCAL_MODEL = os.getenv('USE_LOCAL_MODEL', 'true').strip().lower() in ('1', 'true', 'yes')
 
 # Model configurations
