@@ -2,6 +2,8 @@ import os
 import json
 import random
 import re
+import sqlite3
+from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
@@ -23,6 +25,60 @@ logger = logging.getLogger(__name__)
 # Flask app setup
 app = Flask(__name__)
 CORS(app)
+
+# Database setup
+DB_PATH = os.path.join(os.path.dirname(__file__), 'chatbot.db')
+
+def init_database():
+    """Initialize SQLite database for conversation logging"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS conversations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            user_message TEXT NOT NULL,
+            bot_response TEXT NOT NULL,
+            intent TEXT,
+            model_used TEXT,
+            response_type TEXT,
+            ip_address TEXT
+        )
+    ''')
+    
+    # Create index for faster queries
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_timestamp ON conversations(timestamp)
+    ''')
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_session ON conversations(session_id)
+    ''')
+    
+    conn.commit()
+    conn.close()
+    logger.info("Database initialized successfully")
+
+def log_conversation(session_id, user_message, bot_response, intent=None, model_used=None, response_type=None, ip_address=None):
+    """Log a conversation to the database"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO conversations 
+            (session_id, user_message, bot_response, intent, model_used, response_type, ip_address)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (session_id, user_message, bot_response, intent, model_used, response_type, ip_address))
+        
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to log conversation: {e}")
+
+# Initialize database on startup
+init_database()
 
 # Configuration
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
@@ -454,6 +510,10 @@ def chat():
             }), 400
         
         logger.info(f"Processing {MODEL_TYPE} request: {message[:100]}...")
+        
+        # Get session ID and IP address
+        session_id = data.get('session_id', request.headers.get('X-Session-ID', 'unknown'))
+        ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
         intent_match = _match_intent_response(message)
         if intent_match:
@@ -466,6 +526,18 @@ def chat():
                 "model": "intents"
             }
             logger.info(f"Intent matched: {intent_match['tag']}")
+            
+            # Log to database
+            log_conversation(
+                session_id=session_id,
+                user_message=message,
+                bot_response=intent_match['response'],
+                intent=intent_match['tag'],
+                model_used="intents",
+                response_type="intent",
+                ip_address=ip_address
+            )
+            
             return jsonify(response_data), 200
         
         # Query Hugging Face
@@ -480,6 +552,17 @@ def chat():
                 "response": api_response['result'],
                 "model": api_response['model']
             }
+            
+            # Log to database
+            log_conversation(
+                session_id=session_id,
+                user_message=message,
+                bot_response=api_response['result'],
+                intent=None,
+                model_used=api_response['model'],
+                response_type="generation",
+                ip_address=ip_address
+            )
         else:  # classification
             response_data = {
                 "success": True,
@@ -491,6 +574,17 @@ def chat():
                 },
                 "model": api_response['model']
             }
+            
+            # Log to database
+            log_conversation(
+                session_id=session_id,
+                user_message=message,
+                bot_response=f"Classification: {api_response['top_label']}",
+                intent=None,
+                model_used=api_response['model'],
+                response_type="classification",
+                ip_address=ip_address
+            )
         
         logger.info(f"Response generated successfully (type: {api_response['type']})")
         return jsonify(response_data), 200
@@ -553,6 +647,146 @@ def health_check():
         "mock_mode": MOCK_MODE,
         "intents_count": len(INTENTS)
     }), 200
+
+
+@app.route('/api/admin/logs', methods=['GET'])
+def get_logs():
+    """
+    Admin endpoint to retrieve conversation logs
+    
+    Query parameters:
+    - limit: Number of records to return (default: 50, max: 500)
+    - offset: Number of records to skip (default: 0)
+    - session_id: Filter by specific session
+    - since: Filter by date (YYYY-MM-DD format)
+    """
+    try:
+        # Parse query parameters
+        limit = min(int(request.args.get('limit', 50)), 500)
+        offset = int(request.args.get('offset', 0))
+        session_id = request.args.get('session_id')
+        since_date = request.args.get('since')
+        
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row  # Return rows as dictionaries
+        cursor = conn.cursor()
+        
+        # Build query
+        query = "SELECT * FROM conversations WHERE 1=1"
+        params = []
+        
+        if session_id:
+            query += " AND session_id = ?"
+            params.append(session_id)
+        
+        if since_date:
+            query += " AND DATE(timestamp) >= ?"
+            params.append(since_date)
+        
+        query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        
+        # Get total count
+        count_query = "SELECT COUNT(*) as total FROM conversations WHERE 1=1"
+        count_params = []
+        if session_id:
+            count_query += " AND session_id = ?"
+            count_params.append(session_id)
+        if since_date:
+            count_query += " AND DATE(timestamp) >= ?"
+            count_params.append(since_date)
+        
+        cursor.execute(count_query, count_params)
+        total = cursor.fetchone()['total']
+        
+        # Convert rows to dict
+        logs = [dict(row) for row in rows]
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "logs": logs
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching logs: {e}")
+        return jsonify({
+            "error": "Failed to fetch logs",
+            "code": "DB_ERROR"
+        }), 500
+
+
+@app.route('/api/admin/stats', methods=['GET'])
+def get_stats():
+    """Get conversation statistics"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Total conversations
+        cursor.execute("SELECT COUNT(*) as total FROM conversations")
+        total = cursor.fetchone()[0]
+        
+        # By intent
+        cursor.execute("""
+            SELECT intent, COUNT(*) as count 
+            FROM conversations 
+            WHERE intent IS NOT NULL 
+            GROUP BY intent 
+            ORDER BY count DESC
+        """)
+        by_intent = [{"intent": row[0], "count": row[1]} for row in cursor.fetchall()]
+        
+        # By model
+        cursor.execute("""
+            SELECT model_used, COUNT(*) as count 
+            FROM conversations 
+            WHERE model_used IS NOT NULL 
+            GROUP BY model_used 
+            ORDER BY count DESC
+        """)
+        by_model = [{"model": row[0], "count": row[1]} for row in cursor.fetchall()]
+        
+        # By date (last 7 days)
+        cursor.execute("""
+            SELECT DATE(timestamp) as date, COUNT(*) as count 
+            FROM conversations 
+            WHERE timestamp >= datetime('now', '-7 days')
+            GROUP BY DATE(timestamp) 
+            ORDER BY date DESC
+        """)
+        by_date = [{"date": row[0], "count": row[1]} for row in cursor.fetchall()]
+        
+        # Unique sessions
+        cursor.execute("SELECT COUNT(DISTINCT session_id) as count FROM conversations")
+        unique_sessions = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            "success": True,
+            "stats": {
+                "total_conversations": total,
+                "unique_sessions": unique_sessions,
+                "by_intent": by_intent,
+                "by_model": by_model,
+                "last_7_days": by_date
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error fetching stats: {e}")
+        return jsonify({
+            "error": "Failed to fetch statistics",
+            "code": "DB_ERROR"
+        }), 500
 
 
 @app.errorhandler(404)
