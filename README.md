@@ -10,17 +10,45 @@ pinned: false
 
 # AI Customer Chatbot
 
-A professional AI-powered customer service chatbot built with Flask, powered by Google's FLAN-T5-XL model (3B parameters), with Supabase database integration.
+A professional AI-powered customer service chatbot built with Flask, powered by Google's FLAN-T5-XL model (3B parameters), with Supabase database integration and smart multi-table lookups.
 
 ## Features
 
-- 🤖 **AI Responses**: Google FLAN-T5-XL (3B parameters) for intelligent customer service
-- 💬 **Intent Matching**: Fast keyword-based responses for common queries
-- 📊 **Database Logging**: All conversations logged to Supabase for analytics
-- 🛍️ **Product Management**: Full CRUD API for product catalog with duplicate detection
-- 🎨 **Premium UI**: ChatGPT/Claude-inspired dark theme interface
-- 🐳 **Containerized**: Docker deployment ready
-- 🌐 **CORS-enabled**: Easy web integration
+- 🤖 **AI Responses** — Google FLAN-T5-XL (3B params) with few-shot prompting & beam search
+- 🔍 **Smart DB Lookups** — Automatically queries orders, customers, and products based on user input
+- 💬 **Intent Matching** — 26 precompiled intent patterns for instant responses
+- 🛍️ **Product Management** — Full CRUD API with search, category filter, duplicate detection
+- 📦 **Order Management** — Order CRUD, status tracking, tracking numbers
+- 📊 **Conversation Logging** — All chats logged to Supabase (SQLite fallback)
+- 🎨 **Premium UI** — ChatGPT/Claude-inspired dark theme with session persistence
+- 🐳 **Docker Deployment** — Ready for Hugging Face Spaces
+
+## Project Structure
+
+```
+ai-customer-chatbot/
+├── app.py              # Flask backend — API routes, AI model, DB logic
+├── index.html          # Chat frontend — dark theme UI
+├── intents.json        # 26 customer service intent categories
+├── requirements.txt    # Python dependencies
+├── Dockerfile          # Docker config for HF Spaces (port 7860)
+├── SUPABASE_SETUP.md   # Full database schema & setup guide
+├── .env.example        # Environment variable template
+├── .gitignore          # Git ignore rules
+├── .gitattributes      # HF Spaces LFS config
+└── .dockerignore       # Docker build exclusions
+```
+
+## How the Chat Works
+
+When a user sends a message, the chatbot follows a **6-level priority system**:
+
+1. **Order by number** — Detects `ORD-XXXX` patterns → queries `orders` table
+2. **Customer/Orders by email** — Detects email addresses → queries orders or customer info based on intent
+3. **Product by SKU/name** — For product/pricing/stock intents → queries `products` table
+4. **Order tracking prompt** — Order intent but no order number → asks user for it
+5. **Intent match** — Matches against 26 keyword patterns → returns canned response
+6. **AI fallback** — Sends to FLAN-T5-XL for a generated response
 
 ## Quick Start
 
@@ -30,137 +58,74 @@ A professional AI-powered customer service chatbot built with Flask, powered by 
 pip install -r requirements.txt
 ```
 
-### 2. Setup Supabase (Free Database)
+### 2. Setup Supabase
 
-Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to:
-
-- Create free Supabase account
-- Create `conversations` and `products` tables
-- Get your credentials
+Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to create the `orders`, `order_items`, `products`, and `conversations` tables.
 
 ### 3. Configure Environment
 
-Create `.env` file:
-
 ```bash
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key-here
-HUGGINGFACE_API_KEY=optional
+cp .env.example .env
+# Edit .env with your Supabase URL + key
 ```
 
-### 4. Run Locally
+### 4. Run
 
 ```bash
 python app.py
+# Runs on http://localhost:7860
 ```
 
 ## API Endpoints
 
-### Chat API
+### Chat
 
-```bash
-# Send message
-POST /api/chat
-{
-  "message": "I need help with my order",
-  "session_id": "user-123"
-}
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/chat` | Send a message and get a response |
+| `GET` | `/health` | Health check |
 
-# Health check
-GET /health
-```
+### Products
 
-### Product Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/products` | List products (`?search=` & `?category=`) |
+| `GET` | `/api/products/<id>` | Get product by ID |
+| `POST` | `/api/products` | Create product |
+| `PUT` | `/api/products/<id>` | Update product |
+| `DELETE` | `/api/products/<id>` | Delete product |
+| `GET` | `/api/products/duplicates` | List duplicate products |
 
-```bash
-# Get all products
-GET /api/products?search=iphone&category=electronics
+### Orders
 
-# Get product by ID
-GET /api/products/<id>
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/orders` | List orders (`?customer_email=` & `?status=`) |
+| `GET` | `/api/orders/<id>` | Get order by ID |
+| `GET` | `/api/orders/number/<num>` | Get order by order number |
+| `POST` | `/api/orders` | Create order with items |
+| `PUT` | `/api/orders/<id>` | Update order |
+| `PATCH` | `/api/orders/<id>/status` | Update order status + tracking |
 
-# Create product
-POST /api/products
-{
-  "name": "iPhone 15 Pro",
-  "price": 999.99,
-  "category": "Electronics",
-  "sku": "IPHONE-15-PRO",
-  "stock": 50,
-  "is_duplicate": false
-}
+### Admin
 
-# Update product
-PUT /api/products/<id>
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/admin/logs` | Conversation logs (`?limit=` & `?session_id=`) |
+| `GET` | `/api/admin/stats` | Usage statistics |
 
-# Delete product
-DELETE /api/products/<id>
+## Tech Stack
 
-# Get duplicates
-GET /api/products/duplicates
-```
-
-### Order Management
-
-```bash
-# Get all orders
-GET /api/orders?customer_email=user@example.com&status=shipped
-
-# Get order by ID
-GET /api/orders/<id>
-
-# Get order by order number
-GET /api/orders/number/ORD-2026-001
-
-# Create order
-POST /api/orders
-{
-  "order_number": "ORD-2026-001",
-  "customer_name": "John Smith",
-  "customer_email": "john@example.com",
-  "customer_phone": "+1-555-0101",
-  "shipping_address": "123 Main St, New York, NY 10001",
-  "status": "pending",
-  "total_amount": 1299.98,
-  "items": [
-    {
-      "product_name": "iPhone 15 Pro",
-      "product_sku": "IPHONE-15-PRO",
-      "quantity": 1,
-      "unit_price": 999.99
-    },
-    {
-      "product_name": "AirPods Pro",
-      "product_sku": "AIRPODS-PRO-2",
-      "quantity": 1,
-      "unit_price": 249.99
-    }
-  ]
-}
-
-# Update order
-PUT /api/orders/<id>
-
-# Update order status
-PATCH /api/orders/<id>/status
-{
-  "status": "shipped",
-  "tracking_number": "1Z999AA10123456784"
-}
-```
-
-### Analytics
-
-```bash
-# View conversation logs
-GET /api/admin/logs?limit=50&session_id=user-123
-
-# View statistics
-GET /api/admin/stats
-```
+| Layer | Technology |
+|-------|------------|
+| Backend | Flask 2.3, Python 3.11 |
+| AI Model | Google FLAN-T5-XL (3B params, local) |
+| Database | Supabase (PostgreSQL) / SQLite fallback |
+| Frontend | Vanilla HTML/CSS/JS, dark theme |
+| Deployment | Docker on Hugging Face Spaces |
 
 ## Deployment
 
-Deployed on Hugging Face Spaces with automatic Docker build and deployment.
+Deployed on Hugging Face Spaces with Docker.
 
-Visit: https://huggingface.co/spaces/Seyo009/ai-customer-chatbot
+**Live**: https://huggingface.co/spaces/Seyo009/ai-customer-chatbot

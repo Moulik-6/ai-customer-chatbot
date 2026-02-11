@@ -236,6 +236,9 @@ def _match_intent_response(message):
 
 # Precompile order number regex
 _RE_ORDER_NUMBER = re.compile(r'ORD[-\s]?\d{4}[-\s]?\d{3,4}', re.IGNORECASE)
+_RE_EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
+_RE_SKU = re.compile(r'\b[A-Z]{2,}[-][A-Z0-9][-A-Z0-9]{2,}\b')
+_RE_PHONE = re.compile(r'(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}')
 
 
 def _extract_order_number(message):
@@ -246,24 +249,134 @@ def _extract_order_number(message):
     return None
 
 
+def _extract_email(message):
+    """Extract email address from message"""
+    match = _RE_EMAIL.search(message)
+    return match.group(0).lower() if match else None
+
+
+def _extract_sku(message):
+    """Extract product SKU from message (e.g., IPHONE-15-PRO)"""
+    match = _RE_SKU.search(message.upper())
+    return match.group(0) if match else None
+
+
+def _extract_product_name(message):
+    """Extract potential product name from message using keyword hints"""
+    # Look for phrases after common product-inquiry triggers
+    triggers = [
+        r'(?:about|for|on|called|named)\s+["\']?(.{3,40}?)["\']?\s*(?:\?|$|\.)',
+        r'(?:price of|cost of|details on|info on|stock of)\s+["\']?(.{3,40}?)["\']?\s*(?:\?|$|\.)',
+        r'(?:do you (?:have|sell|carry))\s+["\']?(.{3,40}?)["\']?\s*(?:\?|$|\.)',
+    ]
+    for pattern in triggers:
+        match = re.search(pattern, message, re.IGNORECASE)
+        if match:
+            return match.group(1).strip().strip('"\'')
+    return None
+
+
+# ========== DATABASE LOOKUP FUNCTIONS ==========
+
 def _lookup_order_status(order_number):
-    """Lookup order status from Supabase"""
+    """Lookup order status from Supabase by order number"""
     try:
         if not supabase:
             return None
         
-        # Query order by order_number
         result = supabase.table('orders').select('*,order_items(*)').eq('order_number', order_number).execute()
         
         if result.data and len(result.data) > 0:
-            order = result.data[0]
-            return order
+            return result.data[0]
         
         return None
     except Exception as e:
         logger.error(f"Error looking up order: {e}")
         return None
 
+
+def _lookup_orders_by_email(email):
+    """Lookup all orders for a customer by email"""
+    try:
+        if not supabase:
+            return None
+        
+        result = (supabase.table('orders')
+                  .select('*,order_items(*)')
+                  .eq('customer_email', email)
+                  .order('order_date', desc=True)
+                  .limit(5)
+                  .execute())
+        
+        if result.data and len(result.data) > 0:
+            return result.data
+        
+        return None
+    except Exception as e:
+        logger.error(f"Error looking up orders by email: {e}")
+        return None
+
+
+def _lookup_product(query):
+    """Lookup product by name (fuzzy) or SKU (exact)"""
+    try:
+        if not supabase:
+            return None
+        
+        # Try exact SKU match first
+        sku = _extract_sku(query) if query == query.upper() else _extract_sku(query.upper())
+        if sku:
+            result = supabase.table('products').select('*').eq('sku', sku).execute()
+            if result.data and len(result.data) > 0:
+                return result.data
+        
+        # Fuzzy name search
+        result = (supabase.table('products')
+                  .select('*')
+                  .or_(f"name.ilike.%{query}%,description.ilike.%{query}%,sku.ilike.%{query}%")
+                  .limit(3)
+                  .execute())
+        
+        if result.data and len(result.data) > 0:
+            return result.data
+        
+        return None
+    except Exception as e:
+        logger.error(f"Error looking up product: {e}")
+        return None
+
+
+def _lookup_customer_by_email(email):
+    """Lookup customer info by finding their orders"""
+    try:
+        if not supabase:
+            return None
+        
+        result = (supabase.table('orders')
+                  .select('customer_name, customer_email, customer_phone, shipping_address, status, order_number, total_amount, order_date')
+                  .eq('customer_email', email)
+                  .order('order_date', desc=True)
+                  .limit(10)
+                  .execute())
+        
+        if result.data and len(result.data) > 0:
+            customer = {
+                'name': result.data[0].get('customer_name'),
+                'email': email,
+                'phone': result.data[0].get('customer_phone'),
+                'address': result.data[0].get('shipping_address'),
+                'total_orders': len(result.data),
+                'orders': result.data
+            }
+            return customer
+        
+        return None
+    except Exception as e:
+        logger.error(f"Error looking up customer: {e}")
+        return None
+
+
+# ========== RESPONSE FORMATTERS ==========
 
 def _format_order_response(order):
     """Format order data into a customer-friendly response"""
@@ -307,6 +420,87 @@ def _format_order_response(order):
         response += "\n👀 Your order is confirmed and being prepared."
     elif status == 'CANCELLED':
         response += "\n✋ This order has been cancelled."
+    
+    return response
+
+
+def _format_orders_list_response(orders, email):
+    """Format multiple orders for a customer"""
+    if not orders:
+        return None
+    
+    status_emoji = {
+        'pending': '⏳', 'processing': '🔄', 'shipped': '📦',
+        'delivered': '✅', 'cancelled': '❌'
+    }
+    
+    response = f"📋 **Orders for {email}** ({len(orders)} found):\n\n"
+    for order in orders:
+        status = order.get('status', 'unknown')
+        emoji = status_emoji.get(status, '📋')
+        total = order.get('total_amount', 0)
+        date = order.get('order_date', '')[:10]
+        response += f"{emoji} **{order['order_number']}** — {status.upper()} — ${total:.2f} ({date})\n"
+    
+    response += "\nTo see details for a specific order, provide the order number (e.g., ORD-2026-001)."
+    return response
+
+
+def _format_product_response(products):
+    """Format product data into a customer-friendly response"""
+    if not products:
+        return None
+    
+    if len(products) == 1:
+        p = products[0]
+        stock_status = "✅ In Stock" if p.get('stock', 0) > 0 else "❌ Out of Stock"
+        response = f"🛍️ **{p['name']}**\n"
+        if p.get('description'):
+            response += f"{p['description']}\n"
+        response += f"💰 Price: ${p['price']:.2f}\n"
+        response += f"📦 {stock_status}"
+        if p.get('stock', 0) > 0:
+            response += f" ({p['stock']} available)"
+        response += "\n"
+        if p.get('sku'):
+            response += f"SKU: {p['sku']}\n"
+        if p.get('category'):
+            response += f"Category: {p['category']}\n"
+        return response
+    
+    # Multiple products
+    response = f"🔍 **Found {len(products)} products:**\n\n"
+    for p in products:
+        stock_status = "In Stock" if p.get('stock', 0) > 0 else "Out of Stock"
+        response += f"• **{p['name']}** — ${p['price']:.2f} ({stock_status})\n"
+    
+    response += "\nWould you like more details about any of these products?"
+    return response
+
+
+def _format_customer_response(customer):
+    """Format customer data into a response"""
+    if not customer:
+        return None
+    
+    response = f"👤 **Customer: {customer['name']}**\n"
+    response += f"📧 Email: {customer['email']}\n"
+    if customer.get('phone'):
+        response += f"📱 Phone: {customer['phone']}\n"
+    if customer.get('address'):
+        response += f"📍 Address: {customer['address']}\n"
+    response += f"🛒 Total Orders: {customer['total_orders']}\n"
+    
+    if customer['orders']:
+        response += "\n**Recent Orders:**\n"
+        status_emoji = {
+            'pending': '⏳', 'processing': '🔄', 'shipped': '📦',
+            'delivered': '✅', 'cancelled': '❌'
+        }
+        for order in customer['orders'][:3]:
+            status = order.get('status', 'unknown')
+            emoji = status_emoji.get(status, '📋')
+            response += f"{emoji} {order['order_number']} — {status.upper()} — ${order['total_amount']:.2f}\n"
     
     return response
 
@@ -670,89 +864,101 @@ def chat():
         session_id = data.get('session_id', request.headers.get('X-Session-ID', 'unknown'))
         ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
 
-        # Check for order tracking intent
-        intent_match = _match_intent_response(message)
-        if intent_match and intent_match['tag'] == 'order_tracking':
-            # Try to extract order number from message
-            order_number = _extract_order_number(message)
-            
-            if order_number:
-                # Look up order in database
-                order = _lookup_order_status(order_number)
-                if order:
-                    # Return formatted order status
-                    bot_response = _format_order_response(order)
-                    response_data = {
-                        "success": True,
-                        "type": "order_lookup",
-                        "intent": "order_tracking",
-                        "message": message,
-                        "response": bot_response,
-                        "model": "database",
-                        "order": order
-                    }
-                    logger.info(f"Order lookup: {order_number}")
-                    
-                    # Log to database
-                    log_conversation(
-                        session_id=session_id,
-                        user_message=message,
-                        bot_response=bot_response,
-                        intent="order_tracking",
-                        model_used="database",
-                        response_type="order_lookup",
-                        ip_address=ip_address
-                    )
-                    
-                    return jsonify(response_data), 200
-                else:
-                    # Order not found
-                    bot_response = f"❌ Sorry, I couldn't find order **{order_number}** in our system. Please check the order number and try again. Or contact support@company.com for assistance."
-                    response_data = {
-                        "success": True,
-                        "type": "intent",
-                        "intent": "order_tracking",
-                        "message": message,
-                        "response": bot_response,
-                        "model": "intents"
-                    }
-                    
-                    log_conversation(
-                        session_id=session_id,
-                        user_message=message,
-                        bot_response=bot_response,
-                        intent="order_tracking",
-                        model_used="intents",
-                        response_type="intent",
-                        ip_address=ip_address
-                    )
-                    
-                    return jsonify(response_data), 200
-            else:
-                # No order number provided, ask for it
-                response_data = {
-                    "success": True,
-                    "type": "intent",
-                    "intent": intent_match['tag'],
-                    "message": message,
-                    "response": intent_match['response'],
-                    "model": "intents"
-                }
-                logger.info(f"Intent matched: {intent_match['tag']}")
-                
-                log_conversation(
-                    session_id=session_id,
-                    user_message=message,
-                    bot_response=intent_match['response'],
-                    intent=intent_match['tag'],
-                    model_used="intents",
-                    response_type="intent",
-                    ip_address=ip_address
-                )
-                
-                return jsonify(response_data), 200
+        # ========== SMART ENTITY EXTRACTION ==========
+        # Extract all identifiers from the message upfront
+        order_number = _extract_order_number(message)
+        email = _extract_email(message)
+        sku = _extract_sku(message)
+        product_name = _extract_product_name(message)
         
-        # Check other intents
+        intent_match = _match_intent_response(message)
+        intent_tag = intent_match['tag'] if intent_match else None
+        
+        # Helper to build and return a database-backed response
+        def _db_response(bot_response, intent, response_type, extra=None):
+            response_data = {
+                "success": True,
+                "type": response_type,
+                "intent": intent,
+                "message": message,
+                "response": bot_response,
+                "model": "database"
+            }
+            if extra:
+                response_data.update(extra)
+            log_conversation(
+                session_id=session_id, user_message=message,
+                bot_response=bot_response, intent=intent,
+                model_used="database", response_type=response_type,
+                ip_address=ip_address
+            )
+            return jsonify(response_data), 200
+
+        # ========== 1. ORDER LOOKUP (by order number) ==========
+        if order_number:
+            order = _lookup_order_status(order_number)
+            if order:
+                bot_response = _format_order_response(order)
+                logger.info(f"Order lookup: {order_number}")
+                return _db_response(bot_response, "order_tracking", "order_lookup", {"order": order})
+            else:
+                bot_response = (
+                    f"❌ Sorry, I couldn't find order **{order_number}** in our system. "
+                    "Please check the order number and try again. Or contact support@company.com for assistance."
+                )
+                return _db_response(bot_response, "order_tracking", "order_not_found")
+
+        # ========== 2. CUSTOMER LOOKUP (by email) ==========
+        if email:
+            # Determine what the user is asking about
+            if intent_tag in ('order_tracking', 'order_status', 'shipping'):
+                # Looking up orders by email
+                orders = _lookup_orders_by_email(email)
+                if orders:
+                    bot_response = _format_orders_list_response(orders, email)
+                    logger.info(f"Orders lookup by email: {email} ({len(orders)} found)")
+                    return _db_response(bot_response, "order_tracking", "orders_by_email")
+                else:
+                    bot_response = f"I couldn't find any orders associated with **{email}**. Please check the email address or provide an order number."
+                    return _db_response(bot_response, "order_tracking", "customer_not_found")
+            else:
+                # General customer lookup
+                customer = _lookup_customer_by_email(email)
+                if customer:
+                    bot_response = _format_customer_response(customer)
+                    logger.info(f"Customer lookup: {email}")
+                    return _db_response(bot_response, "account", "customer_lookup")
+                else:
+                    bot_response = f"I couldn't find an account associated with **{email}**. Would you like help creating one?"
+                    return _db_response(bot_response, "account", "customer_not_found")
+
+        # ========== 3. PRODUCT LOOKUP (by SKU or name) ==========
+        if intent_tag in ('product_info', 'pricing', 'stock_availability', 'size_fitting'):
+            search_term = sku or product_name
+            if search_term:
+                products = _lookup_product(search_term)
+                if products:
+                    bot_response = _format_product_response(products)
+                    logger.info(f"Product lookup: {search_term} ({len(products)} found)")
+                    return _db_response(bot_response, intent_tag, "product_lookup")
+            # No product found or no search term — fall through to intent response
+
+        # ========== 4. ORDER TRACKING (no order number provided) ==========
+        if intent_tag == 'order_tracking':
+            bot_response = intent_match['response']
+            response_data = {
+                "success": True, "type": "intent", "intent": intent_tag,
+                "message": message, "response": bot_response, "model": "intents"
+            }
+            log_conversation(
+                session_id=session_id, user_message=message,
+                bot_response=bot_response, intent=intent_tag,
+                model_used="intents", response_type="intent",
+                ip_address=ip_address
+            )
+            return jsonify(response_data), 200
+
+        # ========== 5. OTHER INTENT MATCHES ==========
         if intent_match:
             response_data = {
                 "success": True,
@@ -764,7 +970,6 @@ def chat():
             }
             logger.info(f"Intent matched: {intent_match['tag']}")
             
-            # Log to database
             log_conversation(
                 session_id=session_id,
                 user_message=message,
@@ -777,7 +982,7 @@ def chat():
             
             return jsonify(response_data), 200
         
-        # Query Hugging Face
+        # ========== 6. FALLBACK: AI MODEL ==========
         api_response = query_huggingface(message)
         
         # Format response based on model type
