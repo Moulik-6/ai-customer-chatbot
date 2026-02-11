@@ -44,6 +44,14 @@ else:
 # SQLite fallback for local development
 DB_PATH = os.path.join(os.path.dirname(__file__), 'chatbot.db')
 
+
+def _get_db():
+    """Get a SQLite connection with row factory enabled. Uses check_same_thread=False for Flask."""
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging for better concurrency
+    return conn
+
 def init_database():
     """Initialize SQLite database for conversation logging"""
     conn = sqlite3.connect(DB_PATH)
@@ -118,7 +126,7 @@ init_database()
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
 MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
 MODEL_TYPE = 'generation'
-HUGGINGFACE_MODEL = 'google/flan-t5-large'  # Upgraded from base (250M) to large (780M params) for better quality
+HUGGINGFACE_MODEL = 'google/flan-t5-xl'  # 3B params for high-quality customer service responses
 USE_LOCAL_MODEL = os.getenv('USE_LOCAL_MODEL', 'true').strip().lower() in ('1', 'true', 'yes')
 
 # Model configurations
@@ -180,39 +188,59 @@ def _load_intents():
 INTENTS = _load_intents()
 logger.info(f"Loaded intents: {len(INTENTS)}")
 
+# Precompile normalization regex patterns (avoid recompiling per message)
+_RE_NON_ALNUM = re.compile(r"[^a-z0-9\s]")
+_RE_MULTI_SPACE = re.compile(r"\s+")
+
 
 def _normalize_text(value):
     normalized = value.lower()
-    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
-    return re.sub(r"\s+", " ", normalized).strip()
+    normalized = _RE_NON_ALNUM.sub(" ", normalized)
+    return _RE_MULTI_SPACE.sub(" ", normalized).strip()
+
+
+# Precompile intent patterns at startup for O(1) regex matching per pattern
+_COMPILED_INTENTS = []
+for _intent in INTENTS:
+    _patterns = _intent.get('patterns', [])
+    _responses = _intent.get('responses', [])
+    if not _patterns or not _responses:
+        continue
+    _compiled_patterns = []
+    for _p in _patterns:
+        _norm = _normalize_text(_p)
+        if _norm:
+            _compiled_patterns.append(re.compile(r"\b" + re.escape(_norm) + r"\b"))
+    if _compiled_patterns:
+        _COMPILED_INTENTS.append({
+            'tag': _intent.get('tag', 'unknown'),
+            'responses': _responses,
+            'patterns': _compiled_patterns
+        })
+logger.info(f"Precompiled {len(_COMPILED_INTENTS)} intent patterns")
 
 
 def _match_intent_response(message):
-    if not INTENTS:
+    if not _COMPILED_INTENTS:
         return None
     normalized = _normalize_text(message)
-    for intent in INTENTS:
-        patterns = intent.get('patterns', [])
-        responses = intent.get('responses', [])
-        if not patterns or not responses:
-            continue
-        for pattern in patterns:
-            normalized_pattern = _normalize_text(pattern)
-            if not normalized_pattern:
-                continue
-            pattern_regex = r"\b" + re.escape(normalized_pattern) + r"\b"
-            if re.search(pattern_regex, normalized):
+    for intent in _COMPILED_INTENTS:
+        for pattern_re in intent['patterns']:
+            if pattern_re.search(normalized):
                 return {
-                    'tag': intent.get('tag', 'unknown'),
-                    'response': random.choice(responses)
+                    'tag': intent['tag'],
+                    'response': random.choice(intent['responses'])
                 }
     return None
 
 
+# Precompile order number regex
+_RE_ORDER_NUMBER = re.compile(r'ORD[-\s]?\d{4}[-\s]?\d{3,4}', re.IGNORECASE)
+
+
 def _extract_order_number(message):
     """Extract order number from message (format: ORD-XXXX-XXX or similar)"""
-    import re
-    match = re.search(r'ORD[-\s]?\d{4}[-\s]?\d{3,4}', message, re.IGNORECASE)
+    match = _RE_ORDER_NUMBER.search(message)
     if match:
         return match.group(0).replace(' ', '-').upper()
     return None
@@ -284,11 +312,24 @@ def _format_order_response(order):
 
 
 def _build_flan_prompt(message):
+    """Build a structured few-shot prompt for FLAN-T5 to produce professional responses."""
     return (
-        "You are a professional, empathetic customer support assistant. "
-        "Answer clearly, ask for missing details, and avoid making up policies. "
-        "If the user asks about an order, request order number and email. "
-        "If you are unsure, say so and offer next steps.\n\n"
+        "You are a professional, friendly customer support assistant for an online store. "
+        "Rules: Be concise (2-3 sentences max). Be helpful and empathetic. "
+        "Never invent policies, prices, or order details. "
+        "If you need more information, ask the customer politely.\n\n"
+        "Example 1:\n"
+        "Customer: I want to return my purchase\n"
+        "Assistant: I'd be happy to help with your return! Our return policy allows returns within 30 days of purchase. "
+        "Could you please provide your order number so I can look into this for you?\n\n"
+        "Example 2:\n"
+        "Customer: My package hasn't arrived yet\n"
+        "Assistant: I'm sorry to hear about the delay. To check the status of your delivery, "
+        "could you share your order number? I'll look into it right away.\n\n"
+        "Example 3:\n"
+        "Customer: Do you have any discounts?\n"
+        "Assistant: We regularly offer promotions and seasonal discounts! "
+        "I'd recommend checking our website or subscribing to our newsletter for the latest deals.\n\n"
         f"Customer: {message}\n"
         "Assistant:"
     )
@@ -496,6 +537,7 @@ def _mock_response(prompt):
 def _local_model_response(prompt):
     """
     Run inference using a locally loaded Hugging Face model.
+    Uses inference_mode for faster execution and tuned params for coherent output.
     """
     try:
         # Check if using a seq2seq model (like FLAN-T5)
@@ -509,14 +551,19 @@ def _local_model_response(prompt):
             # Tokenize input
             inputs = tokenizer(prompt_text, return_tensors="pt", padding=True, max_length=512, truncation=True).to(device)
             
-            # Generate response
-            with torch.no_grad():
+            # Generate response — inference_mode is faster than no_grad
+            with torch.inference_mode():
                 outputs = model.generate(
                     **inputs,
-                    max_length=150,
-                    temperature=0.7,
-                    top_p=0.9,
-                    do_sample=True
+                    max_new_tokens=200,
+                    temperature=0.3,
+                    top_p=0.85,
+                    top_k=40,
+                    do_sample=True,
+                    repetition_penalty=1.3,
+                    no_repeat_ngram_size=3,
+                    early_stopping=True,
+                    num_beams=2,
                 )
             
             # Decode output
