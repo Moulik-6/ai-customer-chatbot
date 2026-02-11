@@ -10,11 +10,11 @@ pinned: false
 
 # AI Customer Chatbot
 
-A professional AI-powered customer service chatbot built with Flask, powered by Google's FLAN-T5-large model, with Supabase database integration.
+A professional AI-powered customer service chatbot built with Flask, powered by Google's FLAN-T5-XL model (3B parameters), with Supabase database integration.
 
 ## Features
 
-- 🤖 **AI Responses**: Google FLAN-T5-large (780M parameters) for intelligent customer service
+- 🤖 **AI Responses**: Google FLAN-T5-XL (3B parameters) for intelligent customer service
 - 💬 **Intent Matching**: Fast keyword-based responses for common queries
 - 📊 **Database Logging**: All conversations logged to Supabase for analytics
 - 🛍️ **Product Management**: Full CRUD API for product catalog with duplicate detection
