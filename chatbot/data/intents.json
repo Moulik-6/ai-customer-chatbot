@@ -179,7 +179,16 @@
         "Browse products",
         "Show me products",
         "What items",
-        "What can I buy"
+        "What can I buy",
+        "Products",
+        "Product",
+        "Shop",
+        "Store",
+        "Catalog",
+        "Inventory",
+        "Electronics",
+        "Clothing",
+        "Accessories"
       ],
       "responses": [
         "I'd love to help with product information! Which product would you like to know more about?",

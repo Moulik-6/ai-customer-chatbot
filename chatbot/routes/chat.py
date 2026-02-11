@@ -11,14 +11,14 @@ from ..extensions import limiter
 from ..config import (
     HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE, TEMPLATES_DIR,
 )
-from ..database import supabase, log_conversation
+from ..database import log_conversation
 from ..services.intent_service import match_intent, INTENTS
 from ..services.entity_service import (
     extract_order_number, extract_email, extract_sku, extract_product_name,
 )
 from ..services.lookup_service import (
     lookup_order_status, lookup_orders_by_email,
-    lookup_product, lookup_customer_by_email,
+    lookup_product, lookup_customer_by_email, list_products,
 )
 from ..services.formatter_service import (
     format_order, format_orders_list, format_product,
@@ -156,20 +156,20 @@ def chat():
                     bot_response = format_product(products)
                     logger.info(f"Product lookup: {search_term} ({len(products)} found)")
                     return _db_response(bot_response, intent_tag, "product_lookup")
-            else:
-                # No specific product — list available products
-                if supabase:
-                    try:
-                        result = (supabase.table('products')
-                                  .select('name,price,category,sku')
-                                  .limit(10)
-                                  .order('created_at', desc=True)
-                                  .execute())
-                        if result.data:
-                            bot_response = format_product_list(result.data)
-                            return _db_response(bot_response, intent_tag, "product_list")
-                    except Exception as e:
-                        logger.error(f"Error listing products: {e}")
+
+            # No entity extracted — try the raw message as a search term
+            if not search_term:
+                products = lookup_product(message)
+                if products:
+                    bot_response = format_product(products)
+                    logger.info(f"Product search (raw message): {message[:50]} ({len(products)} found)")
+                    return _db_response(bot_response, intent_tag, "product_lookup")
+
+                # Still nothing — list available products
+                all_products = list_products()
+                if all_products:
+                    bot_response = format_product_list(all_products)
+                    return _db_response(bot_response, intent_tag, "product_list")
             # Fall through to intent response
 
         # ========== 4. ORDER TRACKING (no order number) ==========
@@ -201,6 +201,15 @@ def chat():
                 "intent": intent_match['tag'], "message": message,
                 "response": intent_match['response'], "model": "intents",
             }), 200
+
+        # ========== 5.5 PRODUCT SEARCH FALLBACK ==========
+        # Short messages without intent might be product/category names
+        if len(message.split()) <= 4 and not intent_match:
+            products = lookup_product(message)
+            if products:
+                bot_response = format_product(products)
+                logger.info(f"Product fallback search: {message[:50]} ({len(products)} found)")
+                return _db_response(bot_response, "product_info", "product_lookup")
 
         # ========== 6. FALLBACK: AI MODEL ==========
         api_response = query_model(message)
