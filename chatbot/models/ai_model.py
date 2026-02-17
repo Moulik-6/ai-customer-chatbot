@@ -13,8 +13,15 @@ logger = logging.getLogger(__name__)
 
 # ── Prompt builder ────────────────────────────────────────
 
-def _build_flan_prompt(message):
-    """Build a structured few-shot prompt for FLAN-T5."""
+def _build_flan_prompt(message, context=None):
+    """Build a structured few-shot prompt for FLAN-T5 with optional conversation history."""
+    history_block = ""
+    if context:
+        history_block = "Recent conversation:\n"
+        for turn in context[-5:]:  # last 5 exchanges
+            history_block += f"Customer: {turn['user']}\nAssistant: {turn['bot']}\n"
+        history_block += "\n"
+
     return (
         "You are a professional, friendly customer support assistant for an online store. "
         "Rules: Be concise (2-3 sentences max). Be helpful and empathetic. "
@@ -32,6 +39,7 @@ def _build_flan_prompt(message):
         "Customer: Do you have any discounts?\n"
         "Assistant: We regularly offer promotions and seasonal discounts! "
         "I'd recommend checking our website or subscribing to our newsletter for the latest deals.\n\n"
+        f"{history_block}"
         f"Customer: {message}\n"
         "Assistant:"
     )
@@ -72,15 +80,18 @@ if not MOCK_MODE and USE_LOCAL_MODEL:
 
 # ── Public API ────────────────────────────────────────────
 
-def query_model(prompt):
+def query_model(prompt, context=None):
     """
     Route to the right inference backend and return a standardized dict:
       {'type': 'generation'|'classification', 'result': ..., 'model': ...}
+
+    *context* is an optional list of {'user': ..., 'bot': ...} dicts
+    representing recent conversation history.
     """
     if MOCK_MODE:
         return _mock_response(prompt)
     if LOCAL_MODEL:
-        return _local_inference(prompt)
+        return _local_inference(prompt, context=context)
 
     # Check if remote inference is actually available
     if not HUGGINGFACE_API_KEY:
@@ -88,7 +99,7 @@ def query_model(prompt):
         return _unavailable_fallback(prompt)
 
     try:
-        return _remote_inference(prompt)
+        return _remote_inference(prompt, context=context)
     except (ValueError, requests.RequestException, TimeoutError) as e:
         logger.warning(f"Remote inference failed ({e}) — returning fallback")
         return _unavailable_fallback(prompt)
@@ -96,7 +107,7 @@ def query_model(prompt):
 
 # ── Private helpers ───────────────────────────────────────
 
-def _local_inference(prompt):
+def _local_inference(prompt, context=None):
     """Run inference on the locally loaded model."""
     import torch
 
@@ -106,7 +117,7 @@ def _local_inference(prompt):
             model = LOCAL_MODEL['model']
             device = next(model.parameters()).device
 
-            prompt_text = _build_flan_prompt(prompt)
+            prompt_text = _build_flan_prompt(prompt, context=context)
             inputs = tokenizer(prompt_text, return_tensors="pt", padding=True,
                                max_length=512, truncation=True).to(device)
 
@@ -148,11 +159,17 @@ def _local_inference(prompt):
         raise
 
 
-def _remote_inference(prompt):
+def _remote_inference(prompt, context=None):
     """Call the Hugging Face Inference API."""
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
     params_key = 'generation' if MODEL_TYPE == 'generation' else 'classification'
-    payload = {"inputs": prompt, "parameters": MODEL_CONFIGS[params_key]['params']}
+
+    # For generation models, use the full prompt with context
+    input_text = prompt
+    if MODEL_TYPE == 'generation':
+        input_text = _build_flan_prompt(prompt, context=context)
+
+    payload = {"inputs": input_text, "parameters": MODEL_CONFIGS[params_key]['params']}
 
     try:
         response = requests.post(HUGGINGFACE_API_URL, headers=headers, json=payload, timeout=30)

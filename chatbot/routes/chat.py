@@ -3,6 +3,7 @@ Chat routes — main chat endpoint, index page, health check.
 """
 import logging
 import time
+from collections import defaultdict
 
 import requests
 from flask import Blueprint, request, jsonify, redirect
@@ -25,6 +26,7 @@ from ..services.formatter_service import (
     format_order, format_orders_list, format_product,
     format_product_list, format_customer,
 )
+from ..services.sanitize import sanitize_chat_input
 from ..models.ai_model import query_model
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,11 @@ chat_bp = Blueprint('chat', __name__)
 
 
 FRONTEND_URL = 'https://ai-customer-chatbot-tau.vercel.app'
+
+# ── Conversation context (in-memory, per session) ────────
+# Stores last MAX_CONTEXT_TURNS exchanges per session_id.
+MAX_CONTEXT_TURNS = 5
+_conversation_context = defaultdict(list)  # session_id -> [{user, bot}, ...]
 
 
 @chat_bp.route('/', methods=['GET'])
@@ -60,6 +67,33 @@ def health_check():
     }), 200
 
 
+# ── Feedback endpoint ─────────────────────────────────────
+
+@chat_bp.route('/api/feedback', methods=['POST'])
+@limiter.limit("30 per minute")
+def feedback():
+    """
+    Record user satisfaction rating for a bot response.
+
+    Expected JSON: { "message_id": "...", "rating": "up"|"down" }
+    """
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    rating = data.get('rating', '')
+    if rating not in ('up', 'down'):
+        return jsonify({"error": "rating must be 'up' or 'down'"}), 400
+
+    message_text = data.get('message', '')[:200]
+    session_id = data.get('session_id', request.headers.get('X-Session-ID', 'unknown'))
+
+    logger.info(f"Feedback: {rating} | session={session_id} | msg={message_text[:60]}")
+
+    # TODO: persist to DB when a feedback table is ready
+    return jsonify({"success": True, "rating": rating}), 200
+
+
 # ── Main chat endpoint ───────────────────────────────────
 
 @chat_bp.route('/api/chat', methods=['POST'])
@@ -83,6 +117,9 @@ def chat():
         if len(message) > 2000:
             return jsonify({"error": "Message must not exceed 2000 characters", "code": "MESSAGE_TOO_LONG"}), 400
 
+        # Sanitize input (strip HTML tags, escape entities)
+        message = sanitize_chat_input(message)
+
         logger.info(f"Processing {MODEL_TYPE} request: {message[:100]}...")
 
         session_id = data.get('session_id', request.headers.get('X-Session-ID', 'unknown'))
@@ -100,6 +137,13 @@ def chat():
         def _elapsed_ms():
             return int((time.monotonic() - start_time) * 1000)
 
+        def _store_context(bot_response):
+            """Append the exchange to the session's conversation history."""
+            ctx = _conversation_context[session_id]
+            ctx.append({'user': message, 'bot': bot_response})
+            if len(ctx) > MAX_CONTEXT_TURNS:
+                _conversation_context[session_id] = ctx[-MAX_CONTEXT_TURNS:]
+
         # Helper — build & return a DB-backed response
         def _db_response(bot_response, intent, response_type, extra=None):
             resp = {
@@ -115,6 +159,7 @@ def chat():
                 model_used="database", response_type=response_type,
                 ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
+            _store_context(bot_response)
             return jsonify(resp), 200
 
         # ========== 1. ORDER LOOKUP (by order number) ==========
@@ -183,6 +228,7 @@ def chat():
                 model_used="intents", response_type="intent",
                 ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
+            _store_context(bot_response)
             return jsonify({
                 "success": True, "type": "intent", "intent": intent_tag,
                 "message": message, "response": bot_response, "model": "intents",
@@ -198,6 +244,7 @@ def chat():
                 model_used="intents", response_type="intent",
                 ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
+            _store_context(intent_match['response'])
             return jsonify({
                 "success": True, "type": "intent",
                 "intent": intent_match['tag'], "message": message,
@@ -214,7 +261,8 @@ def chat():
                 return _db_response(bot_response, "product_info", "product_lookup")
 
         # ========== 6. FALLBACK: AI MODEL ==========
-        api_response = query_model(message)
+        context = _conversation_context.get(session_id, [])
+        api_response = query_model(message, context=context)
 
         if api_response['type'] == 'generation':
             response_data = {
@@ -247,6 +295,7 @@ def chat():
             )
 
         logger.info(f"Response generated successfully (type: {api_response['type']})")
+        _store_context(response_data.get('response', ''))
         return jsonify(response_data), 200
 
     except TimeoutError:

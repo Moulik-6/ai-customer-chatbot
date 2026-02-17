@@ -2,8 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>AI Assistant — Customer Support</title>
+    <meta name="description" content="AI-powered customer support assistant. Get help with orders, products, shipping, returns, and more." />
+    <meta property="og:title" content="AI Support Assistant" />
+    <meta property="og:description" content="AI-powered customer support — track orders, browse products, get shipping info instantly." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ai-customer-chatbot-tau.vercel.app/" />
+    <meta name="theme-color" content="#05050a" />
+
+    <!-- Inline SVG Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23a855f7'/></linearGradient></defs><rect width='100' height='100' rx='20' fill='url(%23g)'/><text x='50' y='68' font-size='50' text-anchor='middle' fill='white'>&#10022;</text></svg>" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -38,6 +48,7 @@
         background-color: var(--bg-body);
         color: var(--text-primary);
         height: 100vh;
+        height: 100dvh;
         overflow: hidden;
         display: flex;
         justify-content: center;
@@ -130,18 +141,63 @@
       .message-row.user { flex-direction: row-reverse; }
       .avatar { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex-shrink: 0; font-size: 18px; }
       .bot-avatar { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--bg-glass-border); }
-      .message-bubble { padding: 14px 20px; border-radius: 18px; font-size: 15px; line-height: 1.6; max-width: 600px; word-wrap: break-word; }
+      .msg-content { display: flex; flex-direction: column; gap: 6px; max-width: 600px; }
+      .message-bubble { padding: 14px 20px; border-radius: 18px; font-size: 15px; line-height: 1.6; word-wrap: break-word; }
       .message-row.bot .message-bubble { background: var(--bot-msg-bg); border: 1px solid var(--bot-msg-border); border-top-left-radius: 4px; }
       .message-row.user .message-bubble { background: var(--user-msg-gradient); color: white; border-top-right-radius: 4px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+
+      /* Feedback (thumbs) */
+      .feedback-row { display: flex; gap: 4px; padding-left: 4px; }
+      .feedback-btn {
+        background: none; border: 1px solid transparent; color: var(--text-tertiary);
+        width: 28px; height: 28px; border-radius: 8px; cursor: pointer;
+        display: grid; place-items: center; font-size: 14px; transition: all 0.2s;
+      }
+      .feedback-btn:hover { background: rgba(255,255,255,0.05); border-color: var(--bg-glass-border); color: var(--text-secondary); }
+      .feedback-btn.selected { color: #a855f7; border-color: rgba(168,85,247,0.3); background: rgba(168,85,247,0.08); }
+
+      /* Quick reply chips */
+      .quick-replies { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 4px; }
+      .quick-chip {
+        background: rgba(255,255,255,0.04); border: 1px solid var(--bg-glass-border);
+        color: var(--text-secondary); font-size: 13px; font-family: var(--font-family);
+        padding: 6px 14px; border-radius: 20px; cursor: pointer; transition: all 0.2s;
+      }
+      .quick-chip:hover { background: rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.3); color: var(--text-primary); }
 
       /* Input */
       .input-zone { padding: 20px 30px; background: rgba(10, 10, 15, 0.6); backdrop-filter: blur(10px); border-top: 1px solid var(--bg-glass-border); }
       .input-wrapper { position: relative; max-width: 800px; margin: 0 auto; }
-      #messageInput { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--bg-glass-border); border-radius: 16px; padding: 16px 50px 16px 20px; color: white; font-size: 16px; font-family: inherit; outline: none; transition: all 0.2s; resize: none; height: 56px; line-height: 24px; }
+      #messageInput { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--bg-glass-border); border-radius: 16px; padding: 16px 50px 16px 20px; color: white; font-size: 16px; font-family: inherit; outline: none; transition: all 0.2s; resize: none; height: 56px; max-height: 120px; line-height: 24px; }
       #messageInput:focus { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
       #sendBtn { position: absolute; right: 8px; top: 8px; width: 40px; height: 40px; background: var(--primary-gradient); border: none; border-radius: 12px; color: white; cursor: pointer; display: grid; place-items: center; transition: all 0.2s; }
       #sendBtn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 0 15px var(--primary-glow); }
       #sendBtn:disabled { opacity: 0.5; cursor: default; background: #333; }
+
+      /* Modal overlay */
+      .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+        display: flex; align-items: center; justify-content: center; z-index: 100;
+        opacity: 0; transition: opacity 0.2s; pointer-events: none;
+      }
+      .modal-overlay.active { opacity: 1; pointer-events: auto; }
+      .modal-card {
+        background: rgba(25,25,35,0.95); border: 1px solid var(--bg-glass-border);
+        border-radius: 20px; padding: 32px; max-width: 360px; width: 90%;
+        text-align: center; transform: scale(0.95); transition: transform 0.2s;
+      }
+      .modal-overlay.active .modal-card { transform: scale(1); }
+      .modal-card h3 { font-size: 18px; margin-bottom: 8px; }
+      .modal-card p { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+      .modal-actions { display: flex; gap: 12px; justify-content: center; }
+      .modal-actions button {
+        padding: 10px 24px; border-radius: 12px; font-family: var(--font-family);
+        font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
+      }
+      .modal-cancel { background: rgba(255,255,255,0.06); color: var(--text-secondary); border: 1px solid var(--bg-glass-border) !important; }
+      .modal-cancel:hover { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+      .modal-confirm { background: var(--primary-gradient); color: white; }
+      .modal-confirm:hover { box-shadow: 0 0 15px var(--primary-glow); }
 
       /* Utilities */
       .typing-indicator span { display: inline-block; width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; margin: 0 2px; animation: typing 1.4s infinite; }
@@ -156,6 +212,19 @@
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
       ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+      /* Mobile adjustments */
+      @media (max-width: 767px) {
+        body { align-items: stretch; }
+        .app-container { height: 100vh; height: 100dvh; border-radius: 0; }
+        .header { padding: 14px 16px; }
+        .input-zone { padding: 12px 16px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+        #messageInput { font-size: 16px; /* prevents iOS zoom */ }
+        .welcome-state h2 { font-size: 24px; }
+        .prompt-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+        .prompt-card { padding: 14px; }
+        .message-bubble { max-width: 85vw; }
+      }
     </style>
   </head>
   <body>
@@ -163,14 +232,14 @@
 
       <header class="header">
         <div class="brand">
-          <div class="brand-logo">✨</div>
+          <div class="brand-logo">&#10024;</div>
           <div class="brand-info">
             <h1>AI Support</h1>
             <p><span class="status-dot" id="statusDot"></span> <span id="statusText">Connecting...</span></p>
           </div>
         </div>
         <div class="header-controls">
-          <button onclick="clearChat()" title="Reset Chat">
+          <button onclick="showClearModal()" title="Reset Chat">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12" /><path d="M3 3v9h9" /></svg>
           </button>
         </div>
@@ -182,16 +251,16 @@
           <p>I can assist with order tracking, product information, shipping policies, and returns.</p>
           <div class="prompt-grid">
             <div class="prompt-card" onclick="usePrompt('Where is my order?')">
-              <i>📦</i><span>Track my order</span>
+              <i>&#128230;</i><span>Track my order</span>
             </div>
             <div class="prompt-card" onclick="usePrompt('What is your return policy?')">
-              <i>↩️</i><span>Return item</span>
+              <i>&#8617;&#65039;</i><span>Return item</span>
             </div>
             <div class="prompt-card" onclick="usePrompt('Show me trending products')">
-              <i>🔥</i><span>Trending products</span>
+              <i>&#128293;</i><span>Trending products</span>
             </div>
             <div class="prompt-card" onclick="usePrompt('Do you ship internationally?')">
-              <i>🌍</i><span>Shipping info</span>
+              <i>&#127757;</i><span>Shipping info</span>
             </div>
           </div>
         </div>
@@ -200,7 +269,7 @@
 
       <footer class="input-zone">
         <div class="input-wrapper">
-          <textarea id="messageInput" placeholder="Type your message..." rows="1" onkeydown="handleKey(event)"></textarea>
+          <textarea id="messageInput" placeholder="Type your message..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
           <button id="sendBtn" onclick="sendMessage()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
@@ -209,14 +278,27 @@
 
     </div>
 
+    <!-- Clear chat confirmation modal -->
+    <div class="modal-overlay" id="clearModal">
+      <div class="modal-card">
+        <h3>Start fresh?</h3>
+        <p>This will clear the entire conversation history. You can't undo this.</p>
+        <div class="modal-actions">
+          <button class="modal-cancel" onclick="hideClearModal()">Cancel</button>
+          <button class="modal-confirm" onclick="confirmClear()">Clear chat</button>
+        </div>
+      </div>
+    </div>
+
     <script>
       // ═══════════════════════════════════════════════════════
-      // CONFIGURATION — Point to your HF Space backend
+      // CONFIGURATION
       // ═══════════════════════════════════════════════════════
       const API_BASE = 'https://seyo009-ai-customer-chatbot.hf.space';
       const API_URL  = `${API_BASE}/api/chat`;
 
       const STORAGE_KEY = 'chat_history_v2';
+      const SESSION_KEY = 'chat_session_id';
       const welcomeScreen = document.getElementById('welcomeScreen');
       const messagesList = document.getElementById('messagesList');
       const messageInput = document.getElementById('messageInput');
@@ -224,17 +306,43 @@
       const messagesWrapper = document.getElementById('messagesWrapper');
       const statusDot = document.getElementById('statusDot');
       const statusText = document.getElementById('statusText');
+      const clearModal = document.getElementById('clearModal');
 
       let isLoading = false;
+
+      // Generate a persistent session ID
+      function getSessionId() {
+        let sid = localStorage.getItem(SESSION_KEY);
+        if (!sid) { sid = crypto.randomUUID(); localStorage.setItem(SESSION_KEY, sid); }
+        return sid;
+      }
+      const sessionId = getSessionId();
+
+      // ── Quick reply suggestions by intent ───────────────
+      const QUICK_REPLIES = {
+        order_tracking: ['Check another order', 'Return an item', 'Shipping policy'],
+        return_policy:  ['Track my order', 'Contact support'],
+        shipping:       ['Track my order', 'Return policy', 'International shipping'],
+        product_info:   ['Show all products', 'Track my order'],
+        pricing:        ['Show all products', 'Shipping costs'],
+        greeting:       ['Track my order', 'Browse products', 'Shipping info'],
+        _default:       ['Track my order', 'Browse products', 'Shipping info', 'Return policy'],
+      };
 
       // ── Initialization ──────────────────────────────────
       window.addEventListener('DOMContentLoaded', () => {
         loadHistory();
         checkBackendHealth();
         messageInput.focus();
-        // Periodically check backend health
         setInterval(checkBackendHealth, 30000);
       });
+
+      // Handle mobile viewport resize (keyboard open/close)
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          document.documentElement.style.setProperty('--vh', window.visualViewport.height + 'px');
+        });
+      }
 
       async function checkBackendHealth() {
         try {
@@ -256,59 +364,117 @@
         const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
         if (history.length > 0) {
           welcomeScreen.classList.add('hidden');
-          history.forEach(msg => renderMessage(msg.text, msg.sender, false));
+          history.forEach(msg => renderMessage(msg.text, msg.sender, false, { intent: msg.intent }));
           scrollToBottom();
         }
       }
 
-      function saveMessage(text, sender) {
+      function saveMessage(text, sender, intent) {
         const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        history.push({ text, sender, timestamp: new Date().toISOString() });
+        history.push({ text, sender, intent: intent || null, timestamp: new Date().toISOString() });
         localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
       }
 
-      function clearChat() {
-        if (confirm('Start a new conversation?')) {
-          localStorage.removeItem(STORAGE_KEY);
-          messagesList.innerHTML = '';
-          welcomeScreen.classList.remove('hidden');
-          messageInput.value = '';
-          messageInput.focus();
-        }
+      // ── Clear modal ─────────────────────────────────────
+      function showClearModal() { clearModal.classList.add('active'); }
+      function hideClearModal() { clearModal.classList.remove('active'); }
+      function confirmClear() {
+        hideClearModal();
+        localStorage.removeItem(STORAGE_KEY);
+        messagesList.innerHTML = '';
+        welcomeScreen.classList.remove('hidden');
+        messageInput.value = '';
+        messageInput.style.height = '56px';
+        messageInput.focus();
       }
+      // Close modal on backdrop click
+      clearModal.addEventListener('click', e => { if (e.target === clearModal) hideClearModal(); });
 
       // ── Rendering ───────────────────────────────────────
-      function renderMessage(text, sender, save = true) {
+      function renderMessage(text, sender, save = true, meta = {}) {
         welcomeScreen.classList.add('hidden');
         const row = document.createElement('div');
         row.className = `message-row ${sender}`;
 
         const avatar = document.createElement('div');
         avatar.className = `avatar ${sender}-avatar`;
-        avatar.innerHTML = sender === 'bot' ? '🤖' : '👤';
+        avatar.innerHTML = sender === 'bot' ? '&#129302;' : '&#128100;';
+
+        const content = document.createElement('div');
+        content.className = 'msg-content';
 
         const bubble = document.createElement('div');
         bubble.className = 'message-bubble';
         bubble.innerHTML = formatText(text);
+        content.appendChild(bubble);
 
-        if (sender === 'user') { row.appendChild(bubble); }
-        else { row.appendChild(avatar); row.appendChild(bubble); }
+        // Bot messages: add feedback + quick replies
+        if (sender === 'bot') {
+          // Thumbs up / down
+          const fbRow = document.createElement('div');
+          fbRow.className = 'feedback-row';
+          fbRow.innerHTML =
+            '<button class="feedback-btn" data-rating="up" title="Helpful" onclick="sendFeedback(this,\'up\')">&#128077;</button>' +
+            '<button class="feedback-btn" data-rating="down" title="Not helpful" onclick="sendFeedback(this,\'down\')">&#128078;</button>';
+          content.appendChild(fbRow);
+
+          // Quick reply chips (only for newly sent messages)
+          if (save) {
+            const intent = meta.intent || '_default';
+            const chips = QUICK_REPLIES[intent] || QUICK_REPLIES._default;
+            const qr = document.createElement('div');
+            qr.className = 'quick-replies';
+            chips.forEach(label => {
+              const chip = document.createElement('button');
+              chip.className = 'quick-chip';
+              chip.textContent = label;
+              chip.onclick = () => { qr.remove(); usePrompt(label); };
+              qr.appendChild(chip);
+            });
+            content.appendChild(qr);
+          }
+
+          row.appendChild(avatar);
+          row.appendChild(content);
+        } else {
+          row.appendChild(content);
+        }
 
         messagesList.appendChild(row);
         scrollToBottom();
-        if (save) saveMessage(text, sender);
+        if (save) saveMessage(text, sender, meta.intent);
       }
 
       function showTyping() {
         const row = document.createElement('div');
         row.className = 'message-row bot'; row.id = 'typingIndicator';
-        row.innerHTML = `<div class="avatar bot-avatar">🤖</div><div class="message-bubble" style="padding:12px 18px"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+        row.innerHTML = '<div class="avatar bot-avatar">&#129302;</div><div class="message-bubble" style="padding:12px 18px"><div class="typing-indicator"><span></span><span></span><span></span></div></div>';
         messagesList.appendChild(row);
         scrollToBottom();
       }
 
       function removeTyping() { const el = document.getElementById('typingIndicator'); if (el) el.remove(); }
       function scrollToBottom() { messagesWrapper.scrollTop = messagesWrapper.scrollHeight; }
+
+      // ── Feedback ────────────────────────────────────────
+      function sendFeedback(btn, rating) {
+        const row = btn.parentElement;
+        row.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        // Fire-and-forget POST to backend
+        fetch(`${API_BASE}/api/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating, session_id: sessionId }),
+        }).catch(() => {});
+      }
+
+      // ── Auto-resize textarea ────────────────────────────
+      function autoResize(el) {
+        el.style.height = '56px';
+        if (el.scrollHeight > 56) el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+      }
 
       // ── Interaction ─────────────────────────────────────
       function usePrompt(text) { messageInput.value = text; sendMessage(); }
@@ -323,31 +489,48 @@
         isLoading = true;
         sendBtn.disabled = true;
 
+        // Remove any existing quick-reply chips
+        document.querySelectorAll('.quick-replies').forEach(el => el.remove());
+
         renderMessage(text, 'user');
         showTyping();
+
+        const startTime = Date.now();
 
         try {
           const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify({ message: text, session_id: sessionId }),
           });
 
           const data = await response.json();
+
+          // Enforce a minimum typing delay of 600ms
+          const elapsed = Date.now() - startTime;
+          if (elapsed < 600) await new Promise(r => setTimeout(r, 600 - elapsed));
+
           removeTyping();
 
-          if (!response.ok) throw new Error(data.error || 'Network error');
+          if (!response.ok) {
+            // Rate limit specific message
+            if (response.status === 429) {
+              renderMessage('Please slow down \u2014 you\'re sending messages too quickly. Try again in a moment.', 'bot');
+              return;
+            }
+            throw new Error(data.error || 'Network error');
+          }
 
           if (data.success) {
             const reply = data.response ||
               (data.classification ? `Category: ${data.classification.top_label}` : 'I did not understand that.');
-            renderMessage(reply, 'bot');
+            renderMessage(reply, 'bot', true, { intent: data.intent || null });
           } else {
             renderMessage(`Error: ${data.error}`, 'bot');
           }
         } catch (err) {
           removeTyping();
-          renderMessage('❌ Sorry, something went wrong. Please try again.', 'bot');
+          renderMessage('Sorry, something went wrong. Please try again.', 'bot');
           console.error(err);
         } finally {
           isLoading = false;
@@ -361,7 +544,7 @@
         if (!text) return '';
         let clean = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         clean = clean.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        clean = clean.replace(/^\s*[-•]\s+(.*)$/gm, '<li>$1</li>');
+        clean = clean.replace(/^\s*[-\u2022]\s+(.*)$/gm, '<li>$1</li>');
         if (clean.includes('<li>')) clean = clean.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
         return clean.replace(/\n/g, '<br>');
       }
