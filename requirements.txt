@@ -8,6 +8,9 @@ requests>=2.31,<3
 python-dotenv>=1.0,<2
 supabase>=2.3,<3
 
+# NLP — spaCy for semantic intent matching
+spacy>=3.7,<4
+
 # Optional — only needed if USE_LOCAL_MODEL=true (requires ~12GB RAM)
 # transformers>=4.36
 # torch>=2.1
