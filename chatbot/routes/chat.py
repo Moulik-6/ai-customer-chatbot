@@ -78,7 +78,7 @@ def feedback():
     Expected JSON: { "message_id": "...", "rating": "up"|"down" }
     """
     data = request.get_json(silent=True)
-    if not data:
+    if not data or not isinstance(data, dict):
         return jsonify({"error": "Invalid JSON"}), 400
 
     rating = data.get('rating', '')
@@ -108,7 +108,7 @@ def chat():
 
     try:
         data = request.get_json(silent=True)
-        if not data:
+        if not data or not isinstance(data, dict):
             return jsonify({"error": "Request body must be valid JSON", "code": "INVALID_REQUEST"}), 400
 
         message = data.get('message', '').strip()
