@@ -188,23 +188,23 @@ def match_intent(message):
     Return {'tag': ..., 'response': ...} or None.
 
     Pipeline:
-      1. Regex exact match (fast, deterministic)
-      2. spaCy semantic similarity (handles synonyms & rephrasings)
+      1. spaCy semantic similarity (primary — handles synonyms & rephrasings)
+      2. Regex exact match (fallback — when spaCy is unavailable)
     """
     if not _COMPILED_INTENTS and not _SPACY_INTENTS:
         return None
 
-    # --- Pass 1: regex ---
-    normalized = _normalize_text(message)
-    result = _regex_match(normalized)
+    # --- Pass 1: spaCy similarity (primary) ---
+    result = _spacy_match(message)
     if result:
         return {
             "tag": result["tag"],
             "response": random.choice(result["responses"]),
         }
 
-    # --- Pass 2: spaCy similarity ---
-    result = _spacy_match(message)
+    # --- Pass 2: regex (fallback when spaCy unavailable or below threshold) ---
+    normalized = _normalize_text(message)
+    result = _regex_match(normalized)
     if result:
         return {
             "tag": result["tag"],
