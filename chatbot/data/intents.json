@@ -151,6 +151,9 @@
       "tag": "help",
       "patterns": [
         "Help",
+        "Help me",
+        "Help me please",
+        "Please help",
         "I need help",
         "Can you help me",
         "Assistant",
@@ -159,7 +162,9 @@
         "I have a question",
         "Need assistance",
         "Talk to someone",
-        "Speak with agent"
+        "Speak with agent",
+        "What can you help with",
+        "What can you do"
       ],
       "responses": [
         "I'm here to help! What do you need assistance with?",
@@ -242,11 +247,17 @@
         "Bye",
         "Goodbye",
         "See you",
+        "See you later",
+        "Goodbye see you later",
         "Take care",
         "Talk soon",
         "Catch you later",
         "I'm done",
-        "That's all"
+        "That's all",
+        "Good night",
+        "Bye bye",
+        "I'm leaving",
+        "Farewell"
       ],
       "responses": [
         "Goodbye! Thanks for using our service. Have a great day!",
@@ -284,12 +295,17 @@
         "Poor service",
         "Bad experience",
         "Complaint",
+        "File a complaint",
+        "I want to complain",
+        "I want to file a complaint",
         "Issue with order",
         "Something is wrong",
         "Defective",
         "Damaged product",
         "Not satisfied",
-        "Quality issue"
+        "Quality issue",
+        "Terrible experience",
+        "Very disappointed"
       ],
       "responses": [
         "I'm sorry to hear that. We want to make it right. Can you tell me more about what happened?",
