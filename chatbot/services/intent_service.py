@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # ── Configuration ─────────────────────────────────────────
 SPACY_MODEL = "en_core_web_md"
 SIMILARITY_THRESHOLD = 0.80   # minimum cosine similarity to accept
+SIMILARITY_MARGIN = 0.04      # top score must beat 2nd-best by this margin
 
 # ── Normalization helpers (shared by regex path) ──────────
 _RE_NON_ALNUM = re.compile(r"[^a-z0-9\s]")
@@ -157,6 +158,7 @@ def _spacy_match(message):
         return None
 
     best_score = 0.0
+    second_best = 0.0
     best_intent = None
 
     for intent in _SPACY_INTENTS:
@@ -165,10 +167,17 @@ def _spacy_match(message):
                 continue
             score = msg_doc.similarity(pat_doc)
             if score > best_score:
+                second_best = best_score
                 best_score = score
                 best_intent = intent
+            elif score > second_best:
+                second_best = score
 
-    if best_intent and best_score >= SIMILARITY_THRESHOLD:
+    if (
+        best_intent
+        and best_score >= SIMILARITY_THRESHOLD
+        and (best_score - second_best) >= SIMILARITY_MARGIN
+    ):
         logger.info(
             f"spaCy match: '{message[:50]}' → {best_intent['tag']} "
             f"(score={best_score:.3f})"
@@ -177,7 +186,8 @@ def _spacy_match(message):
 
     logger.debug(
         f"spaCy no match: '{message[:50]}' "
-        f"(best={best_score:.3f}, threshold={SIMILARITY_THRESHOLD})"
+        f"(best={best_score:.3f}, second={second_best:.3f}, "
+        f"threshold={SIMILARITY_THRESHOLD}, margin={SIMILARITY_MARGIN})"
     )
     return None
 
@@ -188,23 +198,23 @@ def match_intent(message):
     Return {'tag': ..., 'response': ...} or None.
 
     Pipeline:
-      1. spaCy semantic similarity (primary — handles synonyms & rephrasings)
-      2. Regex exact match (fallback — when spaCy is unavailable)
+      1. Regex exact match (primary, deterministic)
+      2. spaCy semantic similarity (fallback for rephrasings)
     """
     if not _COMPILED_INTENTS and not _SPACY_INTENTS:
         return None
 
-    # --- Pass 1: spaCy similarity (primary) ---
-    result = _spacy_match(message)
+    # --- Pass 1: regex (primary, deterministic) ---
+    normalized = _normalize_text(message)
+    result = _regex_match(normalized)
     if result:
         return {
             "tag": result["tag"],
             "response": random.choice(result["responses"]),
         }
 
-    # --- Pass 2: regex (fallback when spaCy unavailable or below threshold) ---
-    normalized = _normalize_text(message)
-    result = _regex_match(normalized)
+    # --- Pass 2: spaCy similarity (fallback when regex finds no explicit match) ---
+    result = _spacy_match(message)
     if result:
         return {
             "tag": result["tag"],
