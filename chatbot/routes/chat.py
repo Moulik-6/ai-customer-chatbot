@@ -40,6 +40,14 @@ _RE_PRODUCT_HINT = re.compile(
     r'\b(product|products|catalog|inventory|stock|price|pricing|cost|electronics|phone|laptop|ipad|apple)\b',
     re.IGNORECASE,
 )
+_RE_PRODUCT_LIST_REQUEST = re.compile(
+    r'\b(list all products|list products|show products|show me products|show me your products|what products do you have|product catalog)\b',
+    re.IGNORECASE,
+)
+_RE_STOCK_LIST_REQUEST = re.compile(
+    r'\b(what is in stock|what products are in stock|in stock|available now)\b',
+    re.IGNORECASE,
+)
 
 # ── Conversation context (in-memory, per session) ────────
 # Stores last MAX_CONTEXT_TURNS exchanges per session_id.
@@ -171,6 +179,29 @@ def chat():
             )
             _store_context(bot_response)
             return jsonify(resp), 200
+
+        # ========== 0. EXPLICIT PRODUCT LIST REQUESTS (DB-first) ==========
+        if _RE_STOCK_LIST_REQUEST.search(message):
+            stock_products = list_products(in_stock_only=True)
+            if stock_products:
+                bot_response = format_product_list(stock_products)
+                return _db_response(bot_response, "stock_availability", "product_list")
+            bot_response = (
+                "I couldn't fetch in-stock products right now. "
+                "Please try again in a moment, or ask for a specific product name or SKU."
+            )
+            return _db_response(bot_response, "stock_availability", "product_catalog_unavailable")
+
+        if _RE_PRODUCT_LIST_REQUEST.search(message):
+            all_products = list_products()
+            if all_products:
+                bot_response = format_product_list(all_products)
+                return _db_response(bot_response, "product_info", "product_list")
+            bot_response = (
+                "I couldn't fetch the product catalog right now. "
+                "Please try again in a moment, or ask for a specific product name or SKU."
+            )
+            return _db_response(bot_response, "product_info", "product_catalog_unavailable")
 
         # ========== 1. ORDER LOOKUP (by order number) ==========
         if order_number:
