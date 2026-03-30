@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Orbit Model Studio</title>
-    <meta name="description" content="Orbit Model Studio: test, download, and tailor FLAN-based support models for your organization." />
-    <meta property="og:title" content="Orbit Model Studio" />
-    <meta property="og:description" content="Run a live demo, then adapt the model to your domain using a simple dataset." />
+    <title>AI Customer Chatbot</title>
+    <meta name="description" content="AI Customer Chatbot: get help with orders, products, shipping, returns, and account questions." />
+    <meta property="og:title" content="AI Customer Chatbot" />
+    <meta property="og:description" content="Track orders, check products, and get fast customer support answers." />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#081018" />
 
@@ -502,10 +502,10 @@
       <aside class="left-rail">
         <section class="brand">
           <div class="brand-top">
-            <h1>Orbit Model Studio</h1>
+            <h1>AI Customer Chatbot</h1>
             <div class="pulse" id="statusPulse"></div>
           </div>
-          <p>Live model demo for organizations. Test responses, then fine-tune for your own support workflows.</p>
+          <p>Your customer support assistant for orders, products, shipping, returns, and account help.</p>
         </section>
 
         <section class="telemetry">
@@ -518,27 +518,27 @@
             <strong id="sessionPreview">-</strong>
           </div>
           <div class="telemetry-card">
-            <span>Last Route</span>
+            <span>Last Intent</span>
             <strong id="lastIntent">-</strong>
           </div>
         </section>
 
         <section class="prompt-stack">
-          <button onclick="usePrompt('How do I adapt this model for healthcare support?')">Healthcare adaptation</button>
-          <button onclick="usePrompt('How do I adapt this model for banking support?')">Banking adaptation</button>
-          <button onclick="usePrompt('What dataset format is needed for fine-tuning?')">Dataset format</button>
-          <button onclick="usePrompt('Where can I download the model?')">Download model</button>
+          <button onclick="usePrompt('where is my order ORD-234')">Order status check</button>
+          <button onclick="usePrompt('what is your return policy?')">Returns and refunds</button>
+          <button onclick="usePrompt('show me your products')">Browse products</button>
+          <button onclick="usePrompt('do you ship internationally?')">Shipping options</button>
         </section>
 
         <div class="rail-footer">
-          Build: web client v4. Model repo: seyo009/ai-customer-chatbot-flan-small-ft
+          Build: web client v4, tuned for customer support.
         </div>
       </aside>
 
       <section class="chat-shell">
         <header class="chat-header">
           <div>
-            <h2>Model Demo Chat</h2>
+            <h2>Live Conversation</h2>
             <p class="status">API endpoint active: <span id="apiHost"></span></p>
           </div>
           <button class="action-btn" onclick="showClearModal()">Clear Chat</button>
@@ -546,13 +546,13 @@
 
         <main class="chat-scroll" id="messagesWrapper">
           <section id="welcomeScreen" class="welcome">
-            <h3>Model ready.</h3>
-            <p>Run a live demo now. Then download and tailor this model with a simple dataset for your organization.</p>
+            <h3>Support ready.</h3>
+            <p>Ask about order tracking, returns, product availability, shipping, and account support.</p>
             <div class="welcome-grid">
-              <button onclick="usePrompt('How can this model be customized for telecom support?')">Telecom customization</button>
-              <button onclick="usePrompt('Show me a dataset example for fine-tuning')">Dataset example</button>
-              <button onclick="usePrompt('How do I deploy this model in my company?')">Deployment path</button>
-              <button onclick="usePrompt('What metrics should I track after fine-tuning?')">Evaluation metrics</button>
+              <button onclick="usePrompt('track my order')">Track my order</button>
+              <button onclick="usePrompt('i want to return my item')">Return item</button>
+              <button onclick="usePrompt('show me your products')">Show products</button>
+              <button onclick="usePrompt('how long does shipping take?')">Shipping time</button>
             </div>
           </section>
 
@@ -605,12 +605,12 @@
       let isLoading = false;
 
       const QUICK_REPLIES = {
-        order_tracking: ['How do I adapt this intent for my business?', 'Show dataset format', 'Fine-tuning steps'],
-        shipping: ['Custom domain examples', 'Fine-tuning command', 'Evaluation tips'],
-        pricing: ['Model download link', 'Inference API usage'],
-        product_info: ['How to add organization FAQs', 'How to improve retrieval quality'],
-        greeting: ['How can I customize this model?', 'Show onboarding steps'],
-        _default: ['How to customize for my org', 'Required dataset schema', 'How to deploy', 'Download model']
+        order_tracking: ['Check another order', 'Return policy', 'Shipping details'],
+        shipping: ['International shipping', 'Track order', 'Delivery estimates'],
+        pricing: ['Show all products', 'Any discounts?'],
+        product_info: ['What is in stock?', 'Show related products'],
+        greeting: ['Track my order', 'Show me your products'],
+        _default: ['Track my order', 'Return item', 'Shipping policy', 'Show products']
       };
 
       function fallbackSessionId() {
