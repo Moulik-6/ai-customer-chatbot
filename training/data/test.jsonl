@@ -1,0 +1,1003 @@
+{"input": "I can't access my account.", "output": "Classified as: 44"}
+{"input": "I transferred money but the recipient does not see the funds in their account?", "output": "Classified as: 66"}
+{"input": "Am I charged a fee to transfer funds?", "output": "Classified as: 64"}
+{"input": "What is your age limit?", "output": "Classified as: 1"}
+{"input": "What am I going to need in order to verify my identity?", "output": "Classified as: 69"}
+{"input": "I need to move money to another beneficiary. Why is it not working?", "output": "Classified as: 7"}
+{"input": "How do I change to AUD from GBP?", "output": "Classified as: 33"}
+{"input": "What is the process for activating a new card.", "output": "Classified as: 0"}
+{"input": "How can I dispute a debit transaction?", "output": "Classified as: 28"}
+{"input": "Why is it required to verify my identity?", "output": "Classified as: 74"}
+{"input": "how long does it take to get my card i am in a rush", "output": "Classified as: 12"}
+{"input": "Why on earth is the exchange rate so bad?   Can I get a rate closer to the actual interbank rate?", "output": "Classified as: 17"}
+{"input": "Someone stole my wallet a couple of hours ago now and they have taken money from my account. Is there any way that you can help so I won't lose any more of my money.", "output": "Classified as: 20"}
+{"input": "I need a hand here, I need to top up cash.", "output": "Classified as: 58"}
+{"input": "My purchase from this morning still is pending.", "output": "Classified as: 45"}
+{"input": "I am trying to delete my account.", "output": "Classified as: 55"}
+{"input": "I made a transfer from France a couple days ago and don't see the transaction yet. How long does an international transfer take?", "output": "Classified as: 5"}
+{"input": "Help!  What should I do?  My phone was stolen yesterday.", "output": "Classified as: 42"}
+{"input": "What do I do now that I can't use this card?", "output": "Classified as: 14"}
+{"input": "I would like to know where my source of funds came from.", "output": "Classified as: 70"}
+{"input": "Can I get my money back on an item?", "output": "Classified as: 52"}
+{"input": "can i verify my identity i the app", "output": "Classified as: 69"}
+{"input": "Can you help me transfer funds from another bank account to this account?", "output": "Classified as: 65"}
+{"input": "How do I activate auto top-up when traveling?", "output": "Classified as: 4"}
+{"input": "There was a fee charged when I paid with my card.", "output": "Classified as: 15"}
+{"input": "When will I receive a transfer from europe?", "output": "Classified as: 67"}
+{"input": "Some cash was missing at ATM.", "output": "Classified as: 75"}
+{"input": "Where do I scan my card?", "output": "Classified as: 13"}
+{"input": "Why can't I make a transfer?", "output": "Classified as: 35"}
+{"input": "Um, my top up didn't work", "output": "Classified as: 59"}
+{"input": "From which age can my kids use your service?", "output": "Classified as: 1"}
+{"input": "I was charged a fee for the transfer, but can you tell me why?", "output": "Classified as: 64"}
+{"input": "At what age can a person open an account?", "output": "Classified as: 1"}
+{"input": "Can I get an item refunded?", "output": "Classified as: 52"}
+{"input": "I believe a wrong exchange rate was applied towards a cash transaction I made abroad.", "output": "Classified as: 76"}
+{"input": "I'm not able to activate my card how do I fix this problem?", "output": "Classified as: 0"}
+{"input": "Can you tell me what this fee is on my statement?", "output": "Classified as: 34"}
+{"input": "Where do your cards get delivered to?", "output": "Classified as: 43"}
+{"input": "I got less cash at the ATM than I asked for. Why?", "output": "Classified as: 75"}
+{"input": "There is a repeat charge for the same item", "output": "Classified as: 63"}
+{"input": "This is terrible, i want to delete my account", "output": "Classified as: 55"}
+{"input": "what steps do you take to check identity", "output": "Classified as: 69"}
+{"input": "Why is the payment I made still pending?", "output": "Classified as: 45"}
+{"input": "There is a charge for an additional pound.", "output": "Classified as: 34"}
+{"input": "What is the estimated wait time for transfers from the US?", "output": "Classified as: 67"}
+{"input": "Can I use my account now, even though my identity verification has not gone through yet?", "output": "Classified as: 74"}
+{"input": "I need a new card because the ATM took mine.", "output": "Classified as: 18"}
+{"input": "Are there any reasons that my identity wouldn't be accepted even though everything I've provided is factual?", "output": "Classified as: 68"}
+{"input": "Is there a way to get a virtual card?", "output": "Classified as: 40"}
+{"input": "Someone has stolen my phone, what should I do?", "output": "Classified as: 42"}
+{"input": "Can you tell me why my transfer is failing and help resolve?", "output": "Classified as: 35"}
+{"input": "I want to get rid of the account, and delete personal information .", "output": "Classified as: 55"}
+{"input": "Why is there some cash that I did not deposit in my account?", "output": "Classified as: 20"}
+{"input": "What is the charge for exchanging currency?", "output": "Classified as: 31"}
+{"input": "I would like to cancel my previous purchase.", "output": "Classified as: 52"}
+{"input": "Is there a reason my transfer would have been declined?", "output": "Classified as: 27"}
+{"input": "How do I go about ordering another card?", "output": "Classified as: 39"}
+{"input": "The app says I got cash from an ATM but I didn't", "output": "Classified as: 20"}
+{"input": "Hey there's a fee for a transfer on my account.  Why?!", "output": "Classified as: 64"}
+{"input": "Why did I not get all the money that I asked for? I asked for all the cash in my my account, but I only got about half. Why is that??", "output": "Classified as: 75"}
+{"input": "Is there an option to top up with a cheque?", "output": "Classified as: 58"}
+{"input": "What do I do if I forgot my passcode?", "output": "Classified as: 44"}
+{"input": "Are there only certain ATM machines where I can use this card?", "output": "Classified as: 3"}
+{"input": "where is my new card?", "output": "Classified as: 11"}
+{"input": "What is the limit on disposable cards?", "output": "Classified as: 29"}
+{"input": "how come my withdrawal rate is wrong for my cash withdrawal", "output": "Classified as: 76"}
+{"input": "I have transfered to my account before but it is being declined now?", "output": "Classified as: 27"}
+{"input": "I used my card to make a payment and wondered why the payment was reverted?", "output": "Classified as: 53"}
+{"input": "Card activation is not working. What do i do?", "output": "Classified as: 0"}
+{"input": "I going to be traveling, can I set up auto top-up if I run low on money?", "output": "Classified as: 4"}
+{"input": "My transaction from earlier needs to be reversed.", "output": "Classified as: 8"}
+{"input": "My cash withdrawl has the wrong rate of exchange.", "output": "Classified as: 76"}
+{"input": "What retailers accept my card?", "output": "Classified as: 10"}
+{"input": "what do I need to do if the ATM kept my card?", "output": "Classified as: 18"}
+{"input": "The cash I wanted wasn't there.", "output": "Classified as: 75"}
+{"input": "Do you offer a discount for those who perform frequent currency exchanges?", "output": "Classified as: 31"}
+{"input": "What could possibly be the cause of my failed transfer?", "output": "Classified as: 35"}
+{"input": "I have trouble proving my identity.", "output": "Classified as: 68"}
+{"input": "What is the significance of verifying the top-up?", "output": "Classified as: 71"}
+{"input": "I am interested in giving a second card to my daughter, how can I make this happen?", "output": "Classified as: 39"}
+{"input": "Why was a payment I made reverted?", "output": "Classified as: 53"}
+{"input": "I think my account has been hacked there are charges on there I don't recognize.", "output": "Classified as: 22"}
+{"input": "I am reluctant to use ATMs international because I don't get an accurate exchange rate", "output": "Classified as: 76"}
+{"input": "Weird Direct Debit payment", "output": "Classified as: 28"}
+{"input": "Is payment required to get a card of my own?", "output": "Classified as: 43"}
+{"input": "Who should I contact if the amount of my withdrawal doesn't correspond to the amount that I tried to take out of my account?", "output": "Classified as: 75"}
+{"input": "Are you going to charge me to collect the money?", "output": "Classified as: 56"}
+{"input": "Hi, can you tell me why my transfer keeps being rejected? I've been trying to send money to my friends this morning but failed every time and I have no idea why?", "output": "Classified as: 35"}
+{"input": "Do you offer SWIFT transfers?", "output": "Classified as: 56"}
+{"input": "why do I have to show my ID", "output": "Classified as: 69"}
+{"input": "I think that the card is stolen.  What are my next steps?", "output": "Classified as: 41"}
+{"input": "How long will it take the money to appear in my account?", "output": "Classified as: 67"}
+{"input": "How much will I be charged for exchanging foreign currency", "output": "Classified as: 31"}
+{"input": "how do I link an old card?", "output": "Classified as: 13"}
+{"input": "If I exchange foreign currency, are there any other charges?", "output": "Classified as: 31"}
+{"input": "I could not get money from an ATM", "output": "Classified as: 26"}
+{"input": "Can you explain why I am now getting charged a fee for using my card?", "output": "Classified as: 15"}
+{"input": "This stupid system is not letting me prove my identity.", "output": "Classified as: 68"}
+{"input": "Why did you charge me more for my purchase? It was a foreign currency and you didn't offer market rate", "output": "Classified as: 17"}
+{"input": "What happened to my Top-Up? It's not reflected.", "output": "Classified as: 47"}
+{"input": "I need a second card, can I have more than one?", "output": "Classified as: 39"}
+{"input": "Why would my beneficiary not be allowed?", "output": "Classified as: 7"}
+{"input": "What do I do if I find a debit charge that I know I didn't do in my billing statement?", "output": "Classified as: 28"}
+{"input": "who do I talk to, to cancel a transfer?", "output": "Classified as: 8"}
+{"input": "is there a foreign currencies charge?", "output": "Classified as: 31"}
+{"input": "Can I have more than 2 disposable cards?", "output": "Classified as: 29"}
+{"input": "Can I use my American Express card with Apple Pay?", "output": "Classified as: 2"}
+{"input": "What does a pending cash withdrawal mean?", "output": "Classified as: 46"}
+{"input": "My transfer seems to be too expensive.", "output": "Classified as: 64"}
+{"input": "Where do I find our how to get a physical card?", "output": "Classified as: 43"}
+{"input": "Can you tell me why my card payment did not work?", "output": "Classified as: 25"}
+{"input": "I topped up but the app denied it", "output": "Classified as: 59"}
+{"input": "Can you assist me in acquiring a virtual card?", "output": "Classified as: 40"}
+{"input": "I tempted to get some money out of the machine earlier and it did not work.Looking now, the transaction actually shows to still be in progress. I would certainly appreciate someone look into this and let me know what's going on. I definitely do not want to be charged for money I never received.", "output": "Classified as: 46"}
+{"input": "I believe that a card payment I made was cancelled.", "output": "Classified as: 53"}
+{"input": "I am trying to transfer money and something is going wrong.", "output": "Classified as: 35"}
+{"input": "I did not get the cash that is showing up in my app.", "output": "Classified as: 20"}
+{"input": "I am still waiting on my card?", "output": "Classified as: 11"}
+{"input": "I need to get a disposable virtual card?", "output": "Classified as: 37"}
+{"input": "Will I see the transfer in my account within the week?", "output": "Classified as: 67"}
+{"input": "Will I be charged for adding money by transfer?", "output": "Classified as: 56"}
+{"input": "I have an emergency and lost my phone.  I need help accessing my account.", "output": "Classified as: 42"}
+{"input": "I have a Visa and Mastercard, can I use these?", "output": "Classified as: 73"}
+{"input": "What's taking so long for this payment to go through?", "output": "Classified as: 45"}
+{"input": "Is it possible to exchange USD and GBP on the app?", "output": "Classified as: 33"}
+{"input": "Your system is broken. My transfers keep failing, 5 times now.", "output": "Classified as: 35"}
+{"input": "I have no idea why there is a dollar that has been charged to my account.", "output": "Classified as: 34"}
+{"input": "what is the cost for exchanging currencies?", "output": "Classified as: 31"}
+{"input": "My funds must be verified", "output": "Classified as: 70"}
+{"input": "I think I am a victim of fraud.  I noticed there was a charge on my account that I didn't do because I haven't touched my card today.  Can you please reverse the charge and refund my money?", "output": "Classified as: 28"}
+{"input": "I really want a physical card. How do I get one?", "output": "Classified as: 43"}
+{"input": "Tell me why my card payment would be reverted.", "output": "Classified as: 53"}
+{"input": "i bought the wrong size and would like a refund", "output": "Classified as: 52"}
+{"input": "I need to be made aware when I am being charged an extra amount for payments please. I looked over the app earlier and noticed an additional feel related to one of the payments. I was not warned about this before.", "output": "Classified as: 15"}
+{"input": "How can I get my PIN unblocked?", "output": "Classified as: 49"}
+{"input": "Is there something wrong with my card payment? It's been pending a really, really long time.", "output": "Classified as: 45"}
+{"input": "I want a refund for my item", "output": "Classified as: 52"}
+{"input": "How long will it take for the money to reach my account?", "output": "Classified as: 67"}
+{"input": "Why haven't I received a refund yet?", "output": "Classified as: 51"}
+{"input": "What is the verification code for my top up card?", "output": "Classified as: 71"}
+{"input": "I lost my wallet and all my cards were in it.", "output": "Classified as: 41"}
+{"input": "I need my card activated.", "output": "Classified as: 0"}
+{"input": "I could not transfer funds to a beneficiary; is there a problem with your software?", "output": "Classified as: 7"}
+{"input": "If I want to add funds to the account using American Express, how do I do that?", "output": "Classified as: 54"}
+{"input": "Can an American resident apply to get a card?", "output": "Classified as: 24"}
+{"input": "Could you inform me as to why I have been charged a higher fee for doing banking abroad.", "output": "Classified as: 64"}
+{"input": "I really need to top-up my card today urgently but my card keeps getting declined!! Can you please resolve this problem or try an alternative", "output": "Classified as: 59"}
+{"input": "For what reason must I authenticate the top up?", "output": "Classified as: 71"}
+{"input": "How long will my most recent transfer take to go through? The recipient needs the money urgently.", "output": "Classified as: 66"}
+{"input": "I took out money and there is a fee.  Why?", "output": "Classified as: 19"}
+{"input": "Are there any restrictions for the disposable cards that I need to be aware of?", "output": "Classified as: 29"}
+{"input": "How is the exchange rate calculated?", "output": "Classified as: 32"}
+{"input": "How can I prove who I am?", "output": "Classified as: 69"}
+{"input": "I need to report a stolen card", "output": "Classified as: 41"}
+{"input": "Hi, I am disappointed to see such a bad exchange rate and hope you can assist me. Would you be able to confirm the official interbank exchange rate for me?", "output": "Classified as: 17"}
+{"input": "When do I get my card PIN?", "output": "Classified as: 38"}
+{"input": "What are the steps to activate the card, as it does not seem to work?", "output": "Classified as: 0"}
+{"input": "why didnt my account allow a transfer", "output": "Classified as: 7"}
+{"input": "Does it cost anything and how long would it take to get a card if I need a new one? My card is about to expire.", "output": "Classified as: 9"}
+{"input": "Out of the blue, my card stopped working.", "output": "Classified as: 14"}
+{"input": "Why can't I buy cryptocurrency on the app?", "output": "Classified as: 7"}
+{"input": "Is a physical card also available", "output": "Classified as: 43"}
+{"input": "I see cash in my app but I did not get it.", "output": "Classified as: 20"}
+{"input": "My disposable virtual card isn't working.", "output": "Classified as: 72"}
+{"input": "let me know how many disposable cards I can have?", "output": "Classified as: 29"}
+{"input": "How do I know where the funds come from?", "output": "Classified as: 70"}
+{"input": "The ATM machines keep declining my card and I don't know why. I thought I had money in my account. Why is this happening?", "output": "Classified as: 26"}
+{"input": "Can you please explain the topping up transfer process?", "output": "Classified as: 65"}
+{"input": "Im trying to top up my card but it's still pending and it's been an hour. Is there any way to make it go through faster? Do I not have enough?", "output": "Classified as: 47"}
+{"input": "Should I be seeing a fee applied for my money transfer?", "output": "Classified as: 64"}
+{"input": "I did not make a direct debit payment as listed on my app", "output": "Classified as: 28"}
+{"input": "Hi, I am unable to use my card in ATM. I had tried my card in two ATMs but both ATMs declined it. Could you please check my account?", "output": "Classified as: 26"}
+{"input": "My money transaction can't be seen by the person I sent it to", "output": "Classified as: 66"}
+{"input": "What other currencies can I hang onto?", "output": "Classified as: 36"}
+{"input": "How do I sign up for a card if I'm in America?", "output": "Classified as: 24"}
+{"input": "What amount can I top-up?", "output": "Classified as: 60"}
+{"input": "How do I use my card to top up?", "output": "Classified as: 62"}
+{"input": "Yikes!  I didn't get the amount of money that I requested.  What do I do now?", "output": "Classified as: 75"}
+{"input": "Am I able to modify my account details?", "output": "Classified as: 30"}
+{"input": "Someone else used my card to withdraw cash from an ATM", "output": "Classified as: 20"}
+{"input": "Can I transfer money using the SWIFT service?", "output": "Classified as: 56"}
+{"input": "I have a strange transaction on my account which appears to pertain to a cash withdrawal I made outside Nandos in Leeds.  What is that for?  Is it fraud?", "output": "Classified as: 19"}
+{"input": "I refilled my account balance but got an error message.", "output": "Classified as: 61"}
+{"input": "I cannot tell what my top up currently is.", "output": "Classified as: 62"}
+{"input": "Is it really necessary to verify my Identity?", "output": "Classified as: 74"}
+{"input": "I want to set up an auto top-up", "output": "Classified as: 4"}
+{"input": "Do I need to add my salary?", "output": "Classified as: 50"}
+{"input": "What ATMs can I use this card at?", "output": "Classified as: 3"}
+{"input": "i do not know what this charge is for", "output": "Classified as: 28"}
+{"input": "DO you know the reason for the identity check?", "output": "Classified as: 74"}
+{"input": "Are you sure this is the interbank exchange rate? This rate is really bad.", "output": "Classified as: 17"}
+{"input": "I need to cancel a transaction on my debit card.", "output": "Classified as: 28"}
+{"input": "Tell me about verifying top-up", "output": "Classified as: 71"}
+{"input": "How do I get my card active?", "output": "Classified as: 0"}
+{"input": "I need some money transferred ASAP, how long does the process take?", "output": "Classified as: 67"}
+{"input": "It's been a week since you sent my card and I still don't have it.", "output": "Classified as: 11"}
+{"input": "Is there a fee for paying by card?", "output": "Classified as: 15"}
+{"input": "What are the auto top-up policies?", "output": "Classified as: 4"}
+{"input": "Is there a fee for exchanging currency?", "output": "Classified as: 31"}
+{"input": "The day before yesterday, I performed a transfer within the country. It still has not completed. Can you check on that? The account number is definitely correct, as I've checked.", "output": "Classified as: 66"}
+{"input": "I can't upload my identification.", "output": "Classified as: 68"}
+{"input": "How did the extra charge on my card come in effect?", "output": "Classified as: 15"}
+{"input": "How do I get my card to work?", "output": "Classified as: 14"}
+{"input": "How do I go about transferring money using my credit card?", "output": "Classified as: 62"}
+{"input": "I have cash deposit to my account but it is experiencing a problem", "output": "Classified as: 6"}
+{"input": "When will I see my cash, since I already deposited my check?", "output": "Classified as: 6"}
+{"input": "What is the minimum age limit?", "output": "Classified as: 1"}
+{"input": "Does my account have the option to hold multiple currencies?", "output": "Classified as: 36"}
+{"input": "I tried to get money out of an ATM in Notting Hill earlier, but it didn't work. Is my card actually working? It's the first time I tried using it", "output": "Classified as: 26"}
+{"input": "Is there something wrong with the transferring functions? I keep trying to transfer funds and only get an error message.", "output": "Classified as: 7"}
+{"input": "I don't know the code for the app.", "output": "Classified as: 44"}
+{"input": "what is this fee for transfering", "output": "Classified as: 64"}
+{"input": "Do I need to select a preference to receive my salary payments in GBP and, if so, where?", "output": "Classified as: 50"}
+{"input": "Make me understand why I am charged an extra fee when I use the ATM.", "output": "Classified as: 19"}
+{"input": "Why are you keeping my money from me by declining my card? What is going on?", "output": "Classified as: 59"}
+{"input": "How do I change my account details?", "output": "Classified as: 30"}
+{"input": "My payment has been returned.", "output": "Classified as: 53"}
+{"input": "Is USD free to top up with a US card?", "output": "Classified as: 57"}
+{"input": "How much does each transfer cost?", "output": "Classified as: 56"}
+{"input": "What's my pin number?", "output": "Classified as: 38"}
+{"input": "Instead of GBP, how do I exchange for AUD?", "output": "Classified as: 33"}
+{"input": "What do I do if my card expires soon?", "output": "Classified as: 9"}
+{"input": "How do I activate my new card I just got?", "output": "Classified as: 0"}
+{"input": "My cash received does not match what has been requested", "output": "Classified as: 75"}
+{"input": "I could not get the cash I wanted", "output": "Classified as: 75"}
+{"input": "I tried to withdraw money, but was unable to. Still says that the transaction is pending? Will this money disappear??", "output": "Classified as: 46"}
+{"input": "How do I top-up automatically?", "output": "Classified as: 4"}
+{"input": "What's the best way to use a cheque to top up?", "output": "Classified as: 58"}
+{"input": "Can you tell me how to tell where my funds come from?", "output": "Classified as: 70"}
+{"input": "What is the length of time for one of these items to come to the U.S?", "output": "Classified as: 12"}
+{"input": "What is the charge to make a transfer", "output": "Classified as: 56"}
+{"input": "Would I have to pay anything if I need an additional card?", "output": "Classified as: 39"}
+{"input": "I want to apply for a Visa card.", "output": "Classified as: 73"}
+{"input": "Why does it still charge me even though I was unable to withdraw money from the ATM?", "output": "Classified as: 46"}
+{"input": "Can you give me a virtual card?", "output": "Classified as: 40"}
+{"input": "I have no idea why but my transfers keep getting declined. I have double checked all the recipient details several times already and they're definitely correct.", "output": "Classified as: 27"}
+{"input": "There's something wrong on my bill. A transfer fee should never have been added.", "output": "Classified as: 64"}
+{"input": "Do you charge for sending out more cards?", "output": "Classified as: 39"}
+{"input": "I am out of money in my account and I was wondering if I could do a bank transfer is put more in it?", "output": "Classified as: 65"}
+{"input": "Why is there a direct debit payment on my statement that I didn't do?", "output": "Classified as: 28"}
+{"input": "Can you please reactivate my card?", "output": "Classified as: 13"}
+{"input": "Am I able to open an account for my children?", "output": "Classified as: 1"}
+{"input": "Can I use a check to top up?", "output": "Classified as: 58"}
+{"input": "Could you explain your rules for ATM fees?", "output": "Classified as: 19"}
+{"input": "after going over my transactions for the last couple of months I noticed a pretty large charge that I know I did not make. I know it's been a while but can I still dispute this charge?", "output": "Classified as: 28"}
+{"input": "What's the fee for exchange of foreign currencies?", "output": "Classified as: 31"}
+{"input": "I pulled cash from the ATM earlier. Why is it still pending if I already have the cash?", "output": "Classified as: 46"}
+{"input": "I do not understand why there is a pending 1\u00a3 charge on my statement, I do not recall making this transaction. Can you please tell me what this is about?", "output": "Classified as: 34"}
+{"input": "There are a few transaction that I don't recognize, I think someone managed to get my card details and use it.\n", "output": "Classified as: 22"}
+{"input": "Is there a reason my top-up has not gone through?", "output": "Classified as: 47"}
+{"input": "Please help!  There was an extra fee when I got cash.", "output": "Classified as: 19"}
+{"input": "I want to link my new card. Can you help?", "output": "Classified as: 13"}
+{"input": "Why can't I get cash out?", "output": "Classified as: 26"}
+{"input": "What US cards do you accept?  I only have 1 other.", "output": "Classified as: 54"}
+{"input": "Why was my payment declined? I keep trying my card but it's not working.", "output": "Classified as: 25"}
+{"input": "Change of location, need to change details", "output": "Classified as: 30"}
+{"input": "I forgot the passcode on my app.", "output": "Classified as: 44"}
+{"input": "I didn't cancel my top-up.", "output": "Classified as: 61"}
+{"input": "How old do my kids need to be to use your service?", "output": "Classified as: 1"}
+{"input": "Tell me what ATMs use this card.", "output": "Classified as: 3"}
+{"input": "I need information explaining why my top-up failed to go through", "output": "Classified as: 59"}
+{"input": "my card details could be stolen, as i didnt make these transactions", "output": "Classified as: 22"}
+{"input": "What's the process to receive a second card?", "output": "Classified as: 39"}
+{"input": "I am seeing in the App a payment that its not mine", "output": "Classified as: 16"}
+{"input": "Where can my card be used?", "output": "Classified as: 10"}
+{"input": "Can i have a virtual card?", "output": "Classified as: 40"}
+{"input": "Are bank transfers immediate?", "output": "Classified as: 5"}
+{"input": "Seems like my top-up has not gone through", "output": "Classified as: 47"}
+{"input": "My card payment is showing up as pending for a very long time, what's going on with that, it should be going through at some point?", "output": "Classified as: 45"}
+{"input": "Where do I pay with my card?", "output": "Classified as: 10"}
+{"input": "My top up did not complete.", "output": "Classified as: 47"}
+{"input": "I got a new address and need to change my information.", "output": "Classified as: 30"}
+{"input": "Is there a way I can have a mastercard?", "output": "Classified as: 73"}
+{"input": "I tried to pull cash from an ATM but it wouldn't let me.", "output": "Classified as: 26"}
+{"input": "How many transactions can I do with a disposable card?", "output": "Classified as: 29"}
+{"input": "Can friends transfer money to each other?", "output": "Classified as: 50"}
+{"input": "Please update me on whether you have received the funds for the refund of the large purchase I made recently. I have requested this from the merchant days ago but still haven't got anything.", "output": "Classified as: 51"}
+{"input": "I need to cancel a purchase?", "output": "Classified as: 52"}
+{"input": "What do you charge for an exchange fee?", "output": "Classified as: 31"}
+{"input": "Your ATM pin can be changed at any VISA or MasterCard ATM with PIN services. Certain countries don't support ATM pin changes.", "output": "Classified as: 21"}
+{"input": "Tell me why my transfer was declined.", "output": "Classified as: 27"}
+{"input": "Why hasn't my money transfer shown up yet?", "output": "Classified as: 5"}
+{"input": "I wanted to know what discounts were offered for current exchanges as it is something that occurs frequently.", "output": "Classified as: 31"}
+{"input": "can you tell me where to find the top-up verification code?", "output": "Classified as: 71"}
+{"input": "How long do you expect me to wait for the transfer? It finally worked out, but has been pending for a long time and it's quite urgent.", "output": "Classified as: 48"}
+{"input": "Why can't I withdraw funds from my account?", "output": "Classified as: 26"}
+{"input": "My identity verification is not working.", "output": "Classified as: 68"}
+{"input": "How long does a European transfer take?", "output": "Classified as: 67"}
+{"input": "There are a couple payments with my card displayed in the app which I didn't make. What is happening? Maybe someone has access to my card.", "output": "Classified as: 16"}
+{"input": "I see a direct debit charge that I did not approve", "output": "Classified as: 28"}
+{"input": "Could you please freeze my card immediately?", "output": "Classified as: 41"}
+{"input": "I found my card! Can I link it back into the app?", "output": "Classified as: 13"}
+{"input": "I noticed a charge for a transfer.  Why is this?  Is it because I did an international transfer?", "output": "Classified as: 64"}
+{"input": "May I transfer a cheque into my account?", "output": "Classified as: 58"}
+{"input": "Tell me why I need top-up to be verified?", "output": "Classified as: 71"}
+{"input": "My identity verification didn't work", "output": "Classified as: 68"}
+{"input": "I need to top up, but I have to use an international card.  Is there a cost for that?", "output": "Classified as: 57"}
+{"input": "google pay top up did not work", "output": "Classified as: 2"}
+{"input": "My card is due to expire soon.", "output": "Classified as: 9"}
+{"input": "I'm having problems with ID verification", "output": "Classified as: 68"}
+{"input": "How do I change my currency to another?", "output": "Classified as: 33"}
+{"input": "Who accepts the card?", "output": "Classified as: 10"}
+{"input": "I don't understand what a disposable virtual card is, can you help?", "output": "Classified as: 37"}
+{"input": "I haven't gotten my credit card in the mail.", "output": "Classified as: 11"}
+{"input": "how much is the fee for topping by card", "output": "Classified as: 57"}
+{"input": "What do I do if I believe to be a victim of credit card fraud?", "output": "Classified as: 22"}
+{"input": "Are there specific ATM's that I can draw money from?", "output": "Classified as: 3"}
+{"input": "Why did you decline my transfer?", "output": "Classified as: 27"}
+{"input": "Is it possible to get both Mastercard and Visa card from you?", "output": "Classified as: 73"}
+{"input": "Why isn't my refund on my statement?", "output": "Classified as: 51"}
+{"input": "Why haven't I seen the cash from the cheque I deposited yet?", "output": "Classified as: 6"}
+{"input": "I would like to use this cheque to top up.  Can you tell me how to do that?", "output": "Classified as: 58"}
+{"input": "What cards and currencies can I use?", "output": "Classified as: 54"}
+{"input": "What should I do if someone stole my phone?", "output": "Classified as: 42"}
+{"input": "Where are the cards delivered to", "output": "Classified as: 43"}
+{"input": "In regards to my card payment, the exchange rate is incorrect.", "output": "Classified as: 17"}
+{"input": "My order needs to be canceled.", "output": "Classified as: 52"}
+{"input": "top up for my american express card is not working", "output": "Classified as: 2"}
+{"input": "What steps do I have to go through in order to activate my new card?", "output": "Classified as: 0"}
+{"input": "I need assistance with transferring funds to another account.", "output": "Classified as: 65"}
+{"input": "My identity isn't being accepted, what should I do?", "output": "Classified as: 68"}
+{"input": "Can I receive payments in another currency?", "output": "Classified as: 50"}
+{"input": "Will this card work at any ATM?", "output": "Classified as: 3"}
+{"input": "I might need to exchange between USD and GBP, is this possible with your app?", "output": "Classified as: 33"}
+{"input": "I do not see the card PIN anywhere?", "output": "Classified as: 38"}
+{"input": "my phone was lost", "output": "Classified as: 42"}
+{"input": "Are there restrictions on disposable virtual cards?", "output": "Classified as: 29"}
+{"input": "why wasn't a transfer to account approved", "output": "Classified as: 7"}
+{"input": "How can I transfer money into my account?", "output": "Classified as: 65"}
+{"input": "I would like to get some extra cards?", "output": "Classified as: 39"}
+{"input": "A 500 pound cash withdrawal was just made from my account, but I didn't make it. I am pretty sure my card has been compromised - can you help me?", "output": "Classified as: 20"}
+{"input": "How many active transactions can I make with a disposable card?", "output": "Classified as: 29"}
+{"input": "My top-up was declined", "output": "Classified as: 59"}
+{"input": "I sent some money to somebody a couple of hours ago, and they still have yet to receive it.  They really need the money, how much longer are they going to have to wait?", "output": "Classified as: 66"}
+{"input": "Why can I not do a transfer to a beneficiary?", "output": "Classified as: 7"}
+{"input": "I didn't get all the money I asked for", "output": "Classified as: 75"}
+{"input": "My transfer is failing when I try to do it.", "output": "Classified as: 35"}
+{"input": "My card failed to work when I was shopping in a store", "output": "Classified as: 25"}
+{"input": "I normally have no issues making transfers, so why am I suddenly being told it is not possible?", "output": "Classified as: 7"}
+{"input": "Where can I go to get my PIN unblocked?", "output": "Classified as: 49"}
+{"input": "How do I top-up my card with a cheque?", "output": "Classified as: 58"}
+{"input": "Why wasn't my payment accepted by the app", "output": "Classified as: 53"}
+{"input": "I need a card reactivation, I had reported my card lost but I ran across it in my jacket.", "output": "Classified as: 13"}
+{"input": "Why was one of my transfers declined?", "output": "Classified as: 27"}
+{"input": "When I got cash the exchange rate was wrong", "output": "Classified as: 76"}
+{"input": "How long does it take for something to be delivered to the U.S?", "output": "Classified as: 12"}
+{"input": "Is my transfer pending?", "output": "Classified as: 48"}
+{"input": "Please tell me how to change my pin.", "output": "Classified as: 21"}
+{"input": "I made a bank transfer but it doesn't seem to have gone through?", "output": "Classified as: 5"}
+{"input": "Why do you keep declining my transfers? it's always been working really well so far but when I tried to buy something just now the card got declined, I tried couple of times already  but same thing is happening.", "output": "Classified as: 27"}
+{"input": "Do you also have this extra fee on your statement?", "output": "Classified as: 34"}
+{"input": "Tell me what I need to do to activate my card.", "output": "Classified as: 0"}
+{"input": "My top up hasn't gone through yet, why?", "output": "Classified as: 47"}
+{"input": "Why was I blocked from withdrawing from the ATM?", "output": "Classified as: 26"}
+{"input": "What are the age limits for your service?", "output": "Classified as: 1"}
+{"input": "My app says that I'm not verified.", "output": "Classified as: 68"}
+{"input": "where can i located the auto top up function?", "output": "Classified as: 4"}
+{"input": "Why was my top up cancelled?", "output": "Classified as: 61"}
+{"input": "Hello. I just noticed I was charged two times for a restaurant I visited this week. Can you reverse the additional charge?", "output": "Classified as: 63"}
+{"input": "My transfer went through, but it seems to be caught up in a pending status.  This was very important that it got done quickly, can you give me a status update on how long it will take?", "output": "Classified as: 48"}
+{"input": "Could you please tell me why my purchases from this morning say payment is pending?", "output": "Classified as: 45"}
+{"input": "How do you determine the exchange rate?", "output": "Classified as: 32"}
+{"input": "Does it cost anything to get a new card? Mine's about to expire and I'd also like to know how long it takes to get the new one.", "output": "Classified as: 9"}
+{"input": "Please check my Card. As Withdrawal was working fine so far, but this morning suddenly got declined. Can you please check the problem?", "output": "Classified as: 26"}
+{"input": "I am angry that I got charged for using my card.", "output": "Classified as: 15"}
+{"input": "Where are you cards supported?", "output": "Classified as: 24"}
+{"input": "I sent money about 5 days ago and the recipient has not received the money yet.", "output": "Classified as: 66"}
+{"input": "My money transfer has not yet occurred", "output": "Classified as: 48"}
+{"input": "What type of card can I get?", "output": "Classified as: 73"}
+{"input": "How do I go forth with bank transfers for top up accounts?", "output": "Classified as: 65"}
+{"input": "There is a payment I don't recognize", "output": "Classified as: 16"}
+{"input": "I want to start using my card, how do I activate it?", "output": "Classified as: 0"}
+{"input": "If I top-up by using a trasfer are there charges that applied?", "output": "Classified as: 56"}
+{"input": "What is the verification process used for?", "output": "Classified as: 71"}
+{"input": "Can you look into why my most recent top-up is showing as pending? I thought it was supposed to be instantaneous.", "output": "Classified as: 47"}
+{"input": "Can i make transactions before identity verification?", "output": "Classified as: 74"}
+{"input": "The ATM is messed up. It gave me less than I wanted.", "output": "Classified as: 75"}
+{"input": "What exchange rate will I receive?", "output": "Classified as: 32"}
+{"input": "Why has my top-up been returned to my account?", "output": "Classified as: 61"}
+{"input": "How do I find my PIN number?", "output": "Classified as: 38"}
+{"input": "I think there was an error in your exchange rate.", "output": "Classified as: 17"}
+{"input": "I was charged an extra pound for no reason. Why is that?", "output": "Classified as: 34"}
+{"input": "How many days to deliver to a US customer?", "output": "Classified as: 12"}
+{"input": "My address is incorrect on my file.", "output": "Classified as: 30"}
+{"input": "I am suppose to be getting a refund from something I purchased but it hasn't showed up in my account.", "output": "Classified as: 51"}
+{"input": "My cash withdrawal is showing as pending, why?", "output": "Classified as: 46"}
+{"input": "What documents do you need to verify my identity?", "output": "Classified as: 69"}
+{"input": "I would like to know what exchange rates you use?", "output": "Classified as: 32"}
+{"input": "I can't find the top-up card verification code.", "output": "Classified as: 71"}
+{"input": "Did you deactivate my card it's not working anymore", "output": "Classified as: 14"}
+{"input": "Can you send me a Mastercard, instead of a Visa?", "output": "Classified as: 73"}
+{"input": "Can I change my PIN abroad?", "output": "Classified as: 21"}
+{"input": "The card has suffered a security breach.", "output": "Classified as: 22"}
+{"input": "Why is it I am charged an extra fee when I use the ATM?", "output": "Classified as: 19"}
+{"input": "Are purchases returnable for full refund?", "output": "Classified as: 52"}
+{"input": "Yesterday my phone was stolen from me :( What do i need to do about it?", "output": "Classified as: 42"}
+{"input": "Why was I unable to finish this transfer?", "output": "Classified as: 35"}
+{"input": "I deposited a check yesterday to up my account balance, but that deposit hasn't shown up yet.  It's been a day already!", "output": "Classified as: 6"}
+{"input": "My phone was left at a hotel and I can't access the app.", "output": "Classified as: 42"}
+{"input": "How can I replace an expired card?", "output": "Classified as: 9"}
+{"input": "What's the process for topping up by card?", "output": "Classified as: 62"}
+{"input": "Hello, I'm having trouble with my card, I don't understand what's happening, I tried using the ATM machine earlier but it wasn't working but seems like the transactions is still in progress, can you cancel it for me?", "output": "Classified as: 46"}
+{"input": "What kinds of cards can I use to top up?", "output": "Classified as: 54"}
+{"input": "Hi, I'm buying my son Bertie a starter home in London.  I'm just trying to send the 5% deposit over to the agent. It's only \u00a3200,000 but seems to be throwing an error.  What is going on?  If I wait any longer the house prices might rise, can you look in to it please?", "output": "Classified as: 35"}
+{"input": "I need to cancel my recent transfer quickly since I made a mistake. Please help before it goes through.", "output": "Classified as: 8"}
+{"input": "Can I change my pin number at a cash machine?", "output": "Classified as: 21"}
+{"input": "Can I change from AUD to GBP?", "output": "Classified as: 33"}
+{"input": "My exchange rate was wrong for an Item I bought!", "output": "Classified as: 17"}
+{"input": "I would like to be assisted with the activation of my card.", "output": "Classified as: 0"}
+{"input": "There is more than one charge on my account for a transaction.", "output": "Classified as: 63"}
+{"input": "The exchange rate from my card payment isn't right.", "output": "Classified as: 17"}
+{"input": "I live in Germany. Is that one of the countries you are in? What other countries are you in?", "output": "Classified as: 24"}
+{"input": "I have a new card and I can't add money to it.  I tried about 30 minutes ago and it is still pending.  What do I do?", "output": "Classified as: 47"}
+{"input": "What is the procedure to transfer money to my account?", "output": "Classified as: 65"}
+{"input": "After I used my card I saw I was charged a fee for using it", "output": "Classified as: 15"}
+{"input": "When will my transfer post to my account?", "output": "Classified as: 67"}
+{"input": "I would like to report an issue with my product and want to get it refunded", "output": "Classified as: 52"}
+{"input": "Hello, I just checked my card transactions and saw that I was charged twice for a restaurant visit I did earlier this week. Is it possible to remove one of them and get my false paid money pack?", "output": "Classified as: 63"}
+{"input": "My currency rate is inaccurate.", "output": "Classified as: 17"}
+{"input": "My Apple Pay top up with my American Express card is not working? Please tell me why", "output": "Classified as: 2"}
+{"input": "Why can't I transfer to an account?", "output": "Classified as: 7"}
+{"input": "Who can request disposable cards?", "output": "Classified as: 29"}
+{"input": "A payment shows up on the app that I never made.", "output": "Classified as: 16"}
+{"input": "Where do I find how to top off with a check?", "output": "Classified as: 58"}
+{"input": "There is a payment with my card which i definitely did not do.", "output": "Classified as: 16"}
+{"input": "There are funds showing in my app that I did not receive.", "output": "Classified as: 20"}
+{"input": "I just lost my wallet and I think someone is using my card to withdraw my money. Can you please cancel or freeze my card?!!", "output": "Classified as: 20"}
+{"input": "I purchased something and the seller hasn't received the money yet, but it has been deducted from my account.", "output": "Classified as: 53"}
+{"input": "A transaction is showing more than once.", "output": "Classified as: 63"}
+{"input": "I've completely forgot the code to get into the app.", "output": "Classified as: 44"}
+{"input": "A while ago i requested a refund from a seller. I keep checking my statement but I have not been refunded yet. I'm confused why i haven't gotten my money back yet but I need your help getting it please.", "output": "Classified as: 51"}
+{"input": "My card hasn't arrived in the mail yet. I ordered it two weeks ago. What can I do?", "output": "Classified as: 11"}
+{"input": "Why does a top- up need to be verify?", "output": "Classified as: 71"}
+{"input": "how to delete account, not happy", "output": "Classified as: 55"}
+{"input": "Why was I charged a fee when I withdrew money?", "output": "Classified as: 19"}
+{"input": "How do I know what exchange rate I will get?", "output": "Classified as: 32"}
+{"input": "There's a duplicate charge on my account?", "output": "Classified as: 63"}
+{"input": "Why would a merchant revert a card payment?", "output": "Classified as: 53"}
+{"input": "My cash deposit isn't in my account. What happened?", "output": "Classified as: 6"}
+{"input": "Could you tell me the fiat currencies that you work with?", "output": "Classified as: 36"}
+{"input": "I think my card payment was cancelled. What happened?", "output": "Classified as: 53"}
+{"input": "I want to transfer money into my account", "output": "Classified as: 65"}
+{"input": "Someone withdrew money from my account, and it wasn't me.", "output": "Classified as: 20"}
+{"input": "I want a refund on the things i bought", "output": "Classified as: 52"}
+{"input": "Why hasn't the transfer shown up in my account yet?", "output": "Classified as: 67"}
+{"input": "Ive been trying to use my card for two weeks now to purchase somethings online but nothing is going through. It keeps returning my payment to my account. There shouldn't be anything wrong with my account, is it the card?", "output": "Classified as: 53"}
+{"input": "Give me my card, I need it now!", "output": "Classified as: 12"}
+{"input": "there is a charge i dont recognize", "output": "Classified as: 16"}
+{"input": "The amount of cash i have received is not correct.", "output": "Classified as: 75"}
+{"input": "The ATM stole my card!", "output": "Classified as: 18"}
+{"input": "How can I update my details since I moved?", "output": "Classified as: 30"}
+{"input": "How can we correct a mistake on an ATM transaction?  The app shows what I should have gotten.", "output": "Classified as: 75"}
+{"input": "Tell me if there is a limit to top-up.", "output": "Classified as: 60"}
+{"input": "Why is my card not working anymore?", "output": "Classified as: 14"}
+{"input": "I think someone may have cloned my card or something.  My card isn't lost but I just saw a charge of $500 cash withdraw.  Can you help me?", "output": "Classified as: 20"}
+{"input": "There is a pending transaction on my account, what does this mean?", "output": "Classified as: 45"}
+{"input": "I need to refund my item, can you please help?", "output": "Classified as: 52"}
+{"input": "Is there a limit on making disposable cards?", "output": "Classified as: 29"}
+{"input": "I still want to use my account but haven't verified is that OK?", "output": "Classified as: 74"}
+{"input": "What is this direct debit in my statement?", "output": "Classified as: 28"}
+{"input": "I cannot seem to use my card.", "output": "Classified as: 14"}
+{"input": "I found a transfer fee - is that correct?", "output": "Classified as: 64"}
+{"input": "What should I do if I think someone is using my card without my permission?", "output": "Classified as: 22"}
+{"input": "Why isn't my id verified?", "output": "Classified as: 68"}
+{"input": "Do you charge for sending more cards?", "output": "Classified as: 39"}
+{"input": "I think the top up failed", "output": "Classified as: 59"}
+{"input": "I have some transactions on my account I did not make. Can you cancel my card and prevent further use.", "output": "Classified as: 22"}
+{"input": "Where can I find my card PIN?", "output": "Classified as: 38"}
+{"input": "Do you only use Visa or do you have Mastercard too?", "output": "Classified as: 73"}
+{"input": "What do I need to do to get my salary through this?", "output": "Classified as: 50"}
+{"input": "Do I need to verify the top-up?", "output": "Classified as: 71"}
+{"input": "Why was there an extra charge because I used my card to pay?", "output": "Classified as: 15"}
+{"input": "Can you explain the transfer fee that I was charged?", "output": "Classified as: 64"}
+{"input": "What's the exchange fee?", "output": "Classified as: 31"}
+{"input": "Changing my PIN", "output": "Classified as: 21"}
+{"input": "Using international ATMs messes up the exchange rate.", "output": "Classified as: 76"}
+{"input": "I was informed that transfers were free. I noticed I have a fee but why?", "output": "Classified as: 64"}
+{"input": "What does it mean if it says that my payment is pending?", "output": "Classified as: 45"}
+{"input": "Is there a fee for topping up a card?", "output": "Classified as: 57"}
+{"input": "Why isn't my balance reflecting a transfer I did?", "output": "Classified as: 5"}
+{"input": "How does it work when I transfer money into my account?", "output": "Classified as: 65"}
+{"input": "I made a mistake when sending a payment, sending it to the wrong account number (with a typo) - can you please cancel the transaction?", "output": "Classified as: 8"}
+{"input": "My transfer failed to process correctly. Is there a reason this would happen?", "output": "Classified as: 35"}
+{"input": "Help, I don't see my money i just added.", "output": "Classified as: 47"}
+{"input": "I have not received my pin yet", "output": "Classified as: 38"}
+{"input": "How much does it cost to top up a US-issued card?", "output": "Classified as: 57"}
+{"input": "When will my cash withdrawal show/", "output": "Classified as: 46"}
+{"input": "Where can I find out how to transfer money into my account.", "output": "Classified as: 65"}
+{"input": "I think my top-up has failed.", "output": "Classified as: 59"}
+{"input": "How can I the person see my money transaction?", "output": "Classified as: 66"}
+{"input": "There is a payment made with my card that I don't recognize at all.", "output": "Classified as: 16"}
+{"input": "Are there cash machines where I can change my PIN?", "output": "Classified as: 21"}
+{"input": "My PIN has been blocked.", "output": "Classified as: 49"}
+{"input": "How can I see the progress of delivery of the card that was sent?", "output": "Classified as: 11"}
+{"input": "I did not receive the right amount of cash I requested", "output": "Classified as: 75"}
+{"input": "Why hasn't the app verified my identity?", "output": "Classified as: 68"}
+{"input": "How do I verify the source of my funds?", "output": "Classified as: 70"}
+{"input": "What do I owe for a new card?", "output": "Classified as: 43"}
+{"input": "Please send a new card; the ATM ate mine.", "output": "Classified as: 18"}
+{"input": "Why did my top up get reverted?", "output": "Classified as: 61"}
+{"input": "Can you tell me why I was charged to withdraw cash?", "output": "Classified as: 19"}
+{"input": "Seems like my card payment has been cancelled", "output": "Classified as: 53"}
+{"input": "Transfer has failed.", "output": "Classified as: 35"}
+{"input": "How do I auto top-up?", "output": "Classified as: 4"}
+{"input": "Why do I need to verify a top-up?", "output": "Classified as: 71"}
+{"input": "What do I need to bring for identification?", "output": "Classified as: 68"}
+{"input": "I have the cash already, my account still shows up as pending.  How can my account be still pending?", "output": "Classified as: 46"}
+{"input": "How do you do currency exchanges?", "output": "Classified as: 32"}
+{"input": "Help, your app is showing a larger WD than I actually did earlier at an ATM.", "output": "Classified as: 75"}
+{"input": "When I topped up the app reverted it.", "output": "Classified as: 61"}
+{"input": "where can I change my address?", "output": "Classified as: 30"}
+{"input": "My card wont work at an ATM", "output": "Classified as: 26"}
+{"input": "Can I make transfers before my identity verification?", "output": "Classified as: 74"}
+{"input": "I lost track of my card", "output": "Classified as: 41"}
+{"input": "tell me how to get a refund for something I bought.", "output": "Classified as: 52"}
+{"input": "How do I order a disposable virtual card?", "output": "Classified as: 37"}
+{"input": "Can I withdraw from any ATM?", "output": "Classified as: 3"}
+{"input": "What do I do to exchange currency?", "output": "Classified as: 33"}
+{"input": "I transferred some money but it is not here yet", "output": "Classified as: 66"}
+{"input": "Why verify the top-ups?", "output": "Classified as: 71"}
+{"input": "I made an ATM withdrawal over the holiday and then later realized I was charged an exorbitant fee!  I never would've made this withdrawal if I'd known I'd be charged so much.", "output": "Classified as: 76"}
+{"input": "My statement indicates I made a payment to an unfamiliar merchant.", "output": "Classified as: 16"}
+{"input": "A receiver let me know that they didn't receive the full transfer I completed and that it was actually a bit less than what I sent. At this point I have to make another transfer to make up for the amount missing. Can you please follow up with what's going  on here?", "output": "Classified as: 64"}
+{"input": "I was under the impression that transfers were going to be free and here I was charged for something I bought overseas!  I don't think this fee is right", "output": "Classified as: 64"}
+{"input": "I need to transfer money into this account from my other bank account.", "output": "Classified as: 65"}
+{"input": "Help, my phone was stolen, please advise!", "output": "Classified as: 42"}
+{"input": "Why do I have a charge for an ATM withdrawal? I thought these were free?", "output": "Classified as: 19"}
+{"input": "I'm trying to purchase crypto via the app. I haven't been able to get it to go through. Am I doing something wrong?", "output": "Classified as: 7"}
+{"input": "i used a check check yesterday to balance my account and it isn't showing up?", "output": "Classified as: 6"}
+{"input": "What do I do about a debit on my account that I didn't make?", "output": "Classified as: 28"}
+{"input": "I needed cash from the ATM but I couldn't get it.", "output": "Classified as: 26"}
+{"input": "Can I get a refund?", "output": "Yes, we offer refunds for eligible returns. To process your refund, I'll need your order number. Once verified, refunds are typically processed within 5-7 business days."}
+{"input": "exchanging currencies costs what?", "output": "Classified as: 31"}
+{"input": "How long does a transfer from the US take?", "output": "Classified as: 67"}
+{"input": "I don't know my password", "output": "Classified as: 44"}
+{"input": "What identification is required to activate my card?", "output": "Classified as: 0"}
+{"input": "Why doesn't the person I sent money to see that transfer yet?", "output": "Classified as: 66"}
+{"input": "I need to terminate my account.", "output": "Classified as: 55"}
+{"input": "A seller is stating that they haven't received money yet when the money has already deducted from my account.", "output": "Classified as: 53"}
+{"input": "Is there a list of where I can use my card?", "output": "Classified as: 10"}
+{"input": "What is the reason that my top-up is still pending?", "output": "Classified as: 47"}
+{"input": "What is the charge for using a Top up card in the US?", "output": "Classified as: 57"}
+{"input": "I forgot my code", "output": "Classified as: 44"}
+{"input": "Where can I find my fund information?", "output": "Classified as: 70"}
+{"input": "What do I do if I cannot access the app?", "output": "Classified as: 42"}
+{"input": "When will my transfer from the US get here?", "output": "Classified as: 67"}
+{"input": "ATM apparently not working?  Couldn't access funds in my account?", "output": "Classified as: 26"}
+{"input": "The exchange rate was wrong?", "output": "Classified as: 76"}
+{"input": "I need to reset my passcode. Where do I go to do that?", "output": "Classified as: 44"}
+{"input": "I'm pretty sure my top up is still pending.", "output": "Classified as: 47"}
+{"input": "Why is my payment still pending?", "output": "Classified as: 45"}
+{"input": "My product hasn't arrived even though I ordered it a while ago. I want a refund!", "output": "Classified as: 52"}
+{"input": "Is there a daily auto top-up limit?", "output": "Classified as: 4"}
+{"input": "Why won't my transfer to another account work?", "output": "Classified as: 7"}
+{"input": "When I tried to pay in a store my card din't work", "output": "Classified as: 25"}
+{"input": "Why does my top-up get cancelled?", "output": "Classified as: 61"}
+{"input": "There's a cash withdrawal I didn't make", "output": "Classified as: 20"}
+{"input": "I did a bank transfer to top up, but the money is not available.", "output": "Classified as: 59"}
+{"input": "I ordered my card but it still isn't here", "output": "Classified as: 11"}
+{"input": "My transfer to another account was not allowed. Why is that?", "output": "Classified as: 7"}
+{"input": "My statement shows and extra 1$ that was charged to it and I would like to know why.", "output": "Classified as: 34"}
+{"input": "Can both a Visa and Mastercard be received from you?", "output": "Classified as: 73"}
+{"input": "Is there anywhere I can't use my card?", "output": "Classified as: 10"}
+{"input": "Is there a charge for cash withdrawals? I always thought it was free.", "output": "Classified as: 19"}
+{"input": "The ATM machine ate my card.", "output": "Classified as: 18"}
+{"input": "Am I charged if I make a top-up?", "output": "Classified as: 56"}
+{"input": "The exchange rate for foreign ATM currency is wrong.", "output": "Classified as: 76"}
+{"input": "Why was I denied the option to transfer money to a selected beneficiary?", "output": "Classified as: 7"}
+{"input": "I notice there's a pending payment on my card.", "output": "Classified as: 45"}
+{"input": "unsupported transfer declined", "output": "Classified as: 27"}
+{"input": "My transfer to a beneficiary was rejected.", "output": "Classified as: 7"}
+{"input": "Would you please unblock my pin? I don't know why, but it's blocked.", "output": "Classified as: 49"}
+{"input": "Why have I been charged an extra pound?", "output": "Classified as: 34"}
+{"input": "What steps do I do to transfer money using my credit card?", "output": "Classified as: 62"}
+{"input": "Why am i being charged for withdrawing cash funds?", "output": "Classified as: 19"}
+{"input": "what cards can i use to add money to my account", "output": "Classified as: 54"}
+{"input": "How do I add money to my card?", "output": "Classified as: 62"}
+{"input": "Is there a charge for getting my money?", "output": "Classified as: 56"}
+{"input": "I bought an item and the exchange rate was wrong.", "output": "Classified as: 17"}
+{"input": "I bought something that I need a refund for.", "output": "Classified as: 52"}
+{"input": "What countries have access to this service.", "output": "Classified as: 24"}
+{"input": "How can I lookup the source for my available money?", "output": "Classified as: 70"}
+{"input": "What is wrong with the exchange rate? This should have been a much higher amount of cash for that to apply.", "output": "Classified as: 76"}
+{"input": "My refund isn't going fast enough.", "output": "Classified as: 51"}
+{"input": "Do I have to use a bank approved ATM to withdraw money?", "output": "Classified as: 3"}
+{"input": "i need help finding the auto top up option.", "output": "Classified as: 4"}
+{"input": "Can I use the card at any cash machine?", "output": "Classified as: 3"}
+{"input": "My phone has been stolen.", "output": "Classified as: 42"}
+{"input": "Is there a way for me to check my balance?", "output": "Classified as: 70"}
+{"input": "Can I pay with my card anywhere?", "output": "Classified as: 10"}
+{"input": "On what do you base your exchange rates?", "output": "Classified as: 32"}
+{"input": "I need help with some transactions in my account that I dont recognize or remember purchasing. Im not sure if the name is just different or what. Should my card be put on hold while the issue gets figured out to be safe or is it ok?", "output": "Classified as: 16"}
+{"input": "How can I edit my personal details in the app?", "output": "Classified as: 30"}
+{"input": "I tried to withdraw cash from the ATM machine and it did not work. Can you tell me why?", "output": "Classified as: 26"}
+{"input": "I am waiting on the refund", "output": "Classified as: 51"}
+{"input": "I think my transfer failed. What do I do now?", "output": "Classified as: 35"}
+{"input": "I'm having an issue with transaction. I topped up my account and saw it went through, but that was a few days ago and the money isn't in my account any more. What's up with that?", "output": "Classified as: 61"}
+{"input": "I have an odd payment in my statement", "output": "Classified as: 16"}
+{"input": "Does the top-up need verified?", "output": "Classified as: 71"}
+{"input": "I am seeing and extra 1$ charged to my account and wanted to know about it.", "output": "Classified as: 34"}
+{"input": "What do I do if I can't get my card out of the ATM?", "output": "Classified as: 18"}
+{"input": "I accidentally put in the wrong pin too many times and now I need to unblock it. Can you assist with this?", "output": "Classified as: 49"}
+{"input": "Why do I have to pay extra for using my card?", "output": "Classified as: 15"}
+{"input": "Can I get a card although I'm not in the UK", "output": "Classified as: 24"}
+{"input": "When will I have access to my pin number?", "output": "Classified as: 38"}
+{"input": "Why has my card payment been reversed?", "output": "Classified as: 53"}
+{"input": "Hello I changed my mind and really need a refund on one of things I bought recently. Can you please cancel the transaction and get me my money back. Pls it's urgent", "output": "Classified as: 52"}
+{"input": "What kind of cards are supported?  What currency?", "output": "Classified as: 54"}
+{"input": "what are your exchange rates at?", "output": "Classified as: 32"}
+{"input": "I bought something and already paid for it but now I don't see it.", "output": "Classified as: 53"}
+{"input": "What types of currencies do you accept?", "output": "Classified as: 54"}
+{"input": "Why is there a fee on a card payment?", "output": "Classified as: 15"}
+{"input": "Why am I being asked to verify my identity?", "output": "Classified as: 74"}
+{"input": "Tell me why there is a fee for a card payment.", "output": "Classified as: 15"}
+{"input": "Is it possible to top up with Google Pay?", "output": "Classified as: 2"}
+{"input": "Is there a charge for top-ups?", "output": "Classified as: 57"}
+{"input": "how does my statement get updated so i know when a refund will reflect on my balance", "output": "Classified as: 51"}
+{"input": "Is it possible for me to set up separate accounts for my kids?", "output": "Classified as: 1"}
+{"input": "do i need to wait to get my card before getting a pin", "output": "Classified as: 38"}
+{"input": "I put my check in the bank, but I haven't gotten my cash yet?", "output": "Classified as: 6"}
+{"input": "I was just shopping online for some tickets and the payment was declined by you.  Why has this happened?  I am certain I have the right amount of funds in my account.", "output": "Classified as: 25"}
+{"input": "I have been charged an extra pound!", "output": "Classified as: 34"}
+{"input": "What is going on with it saying my card payment was declined?", "output": "Classified as: 25"}
+{"input": "The atm wouldn't give out cash", "output": "Classified as: 26"}
+{"input": "Why did a transaction I made charge me $1?", "output": "Classified as: 34"}
+{"input": "My top-up has not posted.", "output": "Classified as: 47"}
+{"input": "Why am I not allowed to add a certain beneficiary?", "output": "Classified as: 7"}
+{"input": "I didn't receive the correct amount of cash", "output": "Classified as: 75"}
+{"input": "Please provide currency exchange rates", "output": "Classified as: 31"}
+{"input": "Does it cost much or take long to get a new card? Mine is about to expire.", "output": "Classified as: 9"}
+{"input": "I bought something online a couple days ago, sent the money immediately online but the seller says it's still not there yet. How long do EU transfers actually take?", "output": "Classified as: 48"}
+{"input": "Why did they charge me an extra $1?", "output": "Classified as: 34"}
+{"input": "I see in the app some cash was withdrawn, but it's not mine.", "output": "Classified as: 20"}
+{"input": "How can I request cash back? The ATM just gave me a different amount than what I've been charged though...", "output": "Classified as: 75"}
+{"input": "Will the system automatically top up itself?", "output": "Classified as: 4"}
+{"input": "What can I use to verify my identity?", "output": "Classified as: 69"}
+{"input": "Why have I not gotten my new card?", "output": "Classified as: 11"}
+{"input": "Will there be extra charges regarding to adding money into my international card?", "output": "Classified as: 57"}
+{"input": "Can I change my PIN if I want to?", "output": "Classified as: 21"}
+{"input": "What fee will be charged for exchanges?", "output": "Classified as: 31"}
+{"input": "I thought transfers were free, why was I charged?", "output": "Classified as: 64"}
+{"input": "I paid with card and I was charged a fee", "output": "Classified as: 15"}
+{"input": "Is it possible to transfer money to my credit card?", "output": "Classified as: 62"}
+{"input": "How to cancel a transaction", "output": "Classified as: 8"}
+{"input": "Is it possible to have an item refunded?", "output": "Classified as: 52"}
+{"input": "I need to find out where the card is that I ordered.", "output": "Classified as: 11"}
+{"input": "Why was I charged extra on my app?", "output": "Classified as: 34"}
+{"input": "Can you check about unauthorized use of my card, I think someone is using mine without my knowledge?", "output": "Classified as: 22"}
+{"input": "What do I need to do to perform identity checks?", "output": "Classified as: 69"}
+{"input": "I believe that my card has been stolen!", "output": "Classified as: 41"}
+{"input": "Why is the pending status on my cash withdrawal taking so long?", "output": "Classified as: 46"}
+{"input": "Where do I find my PIN for my new card?", "output": "Classified as: 38"}
+{"input": "I wish to top up using a cheque.", "output": "Classified as: 58"}
+{"input": "I don't think the exchange rate was right.", "output": "Classified as: 76"}
+{"input": "Can my account be topped up by my friends?", "output": "Classified as: 62"}
+{"input": "Last week I put a cash deposit into my account and it is still isn't there.", "output": "Classified as: 6"}
+{"input": "I have a transfer that was declined.", "output": "Classified as: 27"}
+{"input": "I am still waiting for the cash to be returned from a cheque I deposited!", "output": "Classified as: 6"}
+{"input": "The card can be used at which ATMs?", "output": "Classified as: 3"}
+{"input": "Can you please inform me of the restrictions for the disposable cards.", "output": "Classified as: 29"}
+{"input": "I noticed a new fee on my account. I didn't know there were fees for these payments. What is the policy?", "output": "Classified as: 15"}
+{"input": "Please list the countries you support.", "output": "Classified as: 24"}
+{"input": "What should I do if I exceed my PIN tries?", "output": "Classified as: 49"}
+{"input": "What does it cost to receive a SEPA transfer?", "output": "Classified as: 56"}
+{"input": "Is this card available to Americans?", "output": "Classified as: 24"}
+{"input": "I made a terrible mistake when typing in my account number.  I accidently sent money to the wrong account.  I noticed the app won't allow me to void the transaction.  Can someone help me with this immediately?", "output": "Classified as: 8"}
+{"input": "Can someone assist me with explaining how I can unblock my pin?", "output": "Classified as: 49"}
+{"input": "Can my password be reset if I do not have it?", "output": "Classified as: 44"}
+{"input": "Is there a charge for topping up by card?", "output": "Classified as: 57"}
+{"input": "I was issued a card about a week ago. why hasn't it come in yet?", "output": "Classified as: 11"}
+{"input": "Why isn't the transfer to my account showing up?", "output": "Classified as: 5"}
+{"input": "The ATM keeps declining my Transaction . I tried two different ATMs already Would you please check if everything is okay with my account?", "output": "Classified as: 26"}
+{"input": "Money was taken out without my consent,", "output": "Classified as: 20"}
+{"input": "I was transferring some money to a friend, which I thought would be free, but I see there is a charge.  What's up with that?", "output": "Classified as: 64"}
+{"input": "I saw a fee on my app from one of my payments and I wasn't sure where it came from. Is there a way you can tell me when there's an additional fee for my payments?", "output": "Classified as: 15"}
+{"input": "what is this charge on my card?", "output": "Classified as: 28"}
+{"input": "I have a pending transaction", "output": "Classified as: 48"}
+{"input": "My identity verification isn't working", "output": "Classified as: 68"}
+{"input": "Can it be delivered on a certain date?", "output": "Classified as: 12"}
+{"input": "When will my returned transaction show up on my account?", "output": "Classified as: 51"}
+{"input": "Help me cancel a transaction.", "output": "Classified as: 8"}
+{"input": "is it possible to top-up with google pay.", "output": "Classified as: 2"}
+{"input": "Why did I only receive this much currency?", "output": "Classified as: 76"}
+{"input": "The balance hasn't changed yet after depositing a cheque with some money.", "output": "Classified as: 6"}
+{"input": "Hello, Please look into this matter urgently. As i have lost my wallet and i can see one withdrawal, now i do not want to loose more money.", "output": "Classified as: 20"}
+{"input": "Is there a way to top-up when it reaches a certain balance?", "output": "Classified as: 4"}
+{"input": "Can I open up an account for my child?", "output": "Classified as: 1"}
+{"input": "I want to activate my new card.", "output": "Classified as: 0"}
+{"input": "Errors keep showing up every time I try to make this transfer and I am on a time crunch,  could you please help.", "output": "Classified as: 35"}
+{"input": "It's been two weeks and I haven't gotten my card, what do I do?", "output": "Classified as: 11"}
+{"input": "How will I know when I can use the auto top-up feature?", "output": "Classified as: 4"}
+{"input": "Why is the purchase I made this morning still pending?", "output": "Classified as: 45"}
+{"input": "Can you tell my why my funds transfer did not work properly?", "output": "Classified as: 35"}
+{"input": "How do I reset my password?", "output": "Classified as: 44"}
+{"input": "I need to cancel a transfer", "output": "Classified as: 8"}
+{"input": "I got charged twice", "output": "Classified as: 63"}
+{"input": "How can I use my credit card to transfer money?", "output": "Classified as: 62"}
+{"input": "Can you help me with proving my identity?", "output": "Classified as: 68"}
+{"input": "Why is their a charge pending on my card still?", "output": "Classified as: 45"}
+{"input": "I just deposited cash to my account and can't find it!", "output": "Classified as: 6"}
+{"input": "Is it possible to top up by card?", "output": "Classified as: 62"}
+{"input": "I have a card payment that has been pending for some time and would like to know when it is going to go through.", "output": "Classified as: 45"}
+{"input": "Fix my top up", "output": "Classified as: 59"}
+{"input": "My card is not able to be activated how do I get it to work?", "output": "Classified as: 0"}
+{"input": "Tell me what I should do after my card expires.", "output": "Classified as: 9"}
+{"input": "why was my payment reverted on the app", "output": "Classified as: 53"}
+{"input": "Why isn't my card working anymore?", "output": "Classified as: 14"}
+{"input": "I was overcharged one extra pound!", "output": "Classified as: 34"}
+{"input": "is there a charge on withdrawals?", "output": "Classified as: 19"}
+{"input": "When do I get my PIN?", "output": "Classified as: 38"}
+{"input": "I would like my card activated.", "output": "Classified as: 0"}
+{"input": "When will my top-up happen?", "output": "Classified as: 47"}
+{"input": "When will the money reach my  account?", "output": "Classified as: 67"}
+{"input": "Why is there an identify check?", "output": "Classified as: 74"}
+{"input": "Do I have a say when it's delivered?", "output": "Classified as: 12"}
+{"input": "When can I expect to receive my card?", "output": "Classified as: 12"}
+{"input": "How can I go about ordering a virtual card?", "output": "Classified as: 40"}
+{"input": "No transactions are being accepted, what's wrong with my card?", "output": "Classified as: 14"}
+{"input": "I believe my exchange rate is incorrect", "output": "Classified as: 76"}
+{"input": "Am I allowed to hold money in multiple currencies?", "output": "Classified as: 36"}
+{"input": "What can i pay with out  fees", "output": "Classified as: 15"}
+{"input": "I made a bank transfer earlier from my UK account.  I don't see it yet, can you check the status?", "output": "Classified as: 5"}
+{"input": "The exchange rate is incorrect for my cash withdrawal transaction.", "output": "Classified as: 76"}
+{"input": "What is the verification process for my card?", "output": "Classified as: 71"}
+{"input": "What steps should I take before my card expires?", "output": "Classified as: 9"}
+{"input": "i withdrew cash and dont see it reflected on the balance", "output": "Classified as: 46"}
+{"input": "What currencies can I hold?", "output": "Classified as: 36"}
+{"input": "How come my card payment is still pending?", "output": "Classified as: 45"}
+{"input": "are multiple currencies acceptable?", "output": "Classified as: 36"}
+{"input": "There is a cash withdrawal in my account that isn't mine.", "output": "Classified as: 20"}
+{"input": "Why did I get charged for withdrawing cash?", "output": "Classified as: 19"}
+{"input": "What fiduciary currencies are supported for tenure and exchange?", "output": "Classified as: 36"}
+{"input": "i didnt do this charge", "output": "Classified as: 16"}
+{"input": "I need a new login code", "output": "Classified as: 44"}
+{"input": "Please tell me how I can get a virtual card.", "output": "Classified as: 40"}
+{"input": "i made a payment with my card and was charged a fee, why would you do that", "output": "Classified as: 15"}
+{"input": "What is not accepted in order for me to top up my account?", "output": "Classified as: 58"}
+{"input": "Does it cost to top up my card?", "output": "Classified as: 57"}
+{"input": "Do I need to go to an office to change my pin?", "output": "Classified as: 21"}
+{"input": "what is the matter?", "output": "Classified as: 28"}
+{"input": "Why wont the other bank take my money?? Is it not good enough?? There's sufficient funds but I keep getting denied a standard transfer. Ive tried 5 times!", "output": "Classified as: 35"}
+{"input": "Who can have access to top up my account?", "output": "Classified as: 62"}
+{"input": "I got charged twice with a duplicate card. How do I resolve this?", "output": "Classified as: 63"}
+{"input": "How do I know when my new card is going to arrive?", "output": "Classified as: 11"}
+{"input": "How do I terminate my account.", "output": "Classified as: 55"}
+{"input": "You advertise no fee when paying with a card then my statement shows a fee.", "output": "Classified as: 15"}
+{"input": "How can I hold and exchange fiat currencies?", "output": "Classified as: 36"}
+{"input": "I must verify the source of my funds", "output": "Classified as: 70"}
+{"input": "There's a payment with my card that I definitely didn't do myself, never seen that name before.", "output": "Classified as: 16"}
+{"input": "If I need an additional card, is there a fee for that?", "output": "Classified as: 39"}
+{"input": "How do I top up with a cheque?", "output": "Classified as: 58"}
+{"input": "Can you please tell me how long it takes for the transfer to be available.", "output": "Classified as: 67"}
+{"input": "I do not know where the transaction is.", "output": "Classified as: 66"}
+{"input": "Can I use my account without verifying identity?", "output": "Classified as: 74"}
+{"input": "What do I do if my card is stolen?", "output": "Classified as: 41"}
+{"input": "In the app, how can I make it show the new card that arrived?", "output": "Classified as: 13"}
+{"input": "Some cash shows up on my app.", "output": "Classified as: 20"}
+{"input": "My ATM withdrawal is taking forever", "output": "Classified as: 46"}
+{"input": "What are the requirements to open an account for a minor?", "output": "Classified as: 1"}
+{"input": "I've been to several different countries, can I exchange the cash with a discount for a large transaction?", "output": "Classified as: 31"}
+{"input": "What is the reason for the fee charge on my transfer?", "output": "Classified as: 64"}
+{"input": "What are the restrictions on auto top-up?", "output": "Classified as: 4"}
+{"input": "How do I get a PIN?", "output": "Classified as: 38"}
+{"input": "I've tried completing a very standard transfer and have already attempted it 5 times. What's going on here? Is there a problem with your system?", "output": "Classified as: 35"}
+{"input": "I can use this card at which ATMs?", "output": "Classified as: 3"}
+{"input": "What currencies can be used for top up?", "output": "Classified as: 54"}
+{"input": "Is this card available to United States Residents?", "output": "Classified as: 24"}
+{"input": "Tell me if there is a top-up limit.", "output": "Classified as: 60"}
+{"input": "Why was there a transfer fee on my account?", "output": "Classified as: 64"}
+{"input": "The funds I transferred are not in my account", "output": "Classified as: 5"}
+{"input": "How do I know where I can use my card?", "output": "Classified as: 10"}
+{"input": "Is my card valid everywhere?", "output": "Classified as: 10"}
+{"input": "Explain the card PIN to me.", "output": "Classified as: 38"}
+{"input": "I was blocked by using the wrong pin too many times, can you help me?", "output": "Classified as: 49"}
+{"input": "Transfer unable to be completed, states 'declined'", "output": "Classified as: 27"}
+{"input": "Where is my top-up generated from?", "output": "Classified as: 70"}
+{"input": "What fiat currencies are used for holdings?", "output": "Classified as: 36"}
+{"input": "Do you have an age limit?", "output": "Classified as: 1"}
+{"input": "My balance is not what I thought it was following an ATM withdrawal", "output": "Classified as: 46"}
+{"input": "I would like to top up my account with a bank transfer, is that allowed?", "output": "Classified as: 65"}
+{"input": "What is taking so long on my transfer from the US?", "output": "Classified as: 67"}
+{"input": "I have been travelling overseas and I need to change my PIN. Can you tell me how this is done?", "output": "Classified as: 21"}
+{"input": "I cannot view the refunded amount in my account.", "output": "Classified as: 51"}
+{"input": "Why does my transfer keep generating an error message?", "output": "Classified as: 7"}
+{"input": "What about my children?", "output": "Classified as: 1"}
+{"input": "My card was stolen. What do I need to do?", "output": "Classified as: 41"}
+{"input": "Is the card welcomed by everybody?", "output": "Classified as: 10"}
+{"input": "I need quickly transfer something from China. About how long will it take?", "output": "Classified as: 67"}
+{"input": "The top-up verification code is not visible.", "output": "Classified as: 71"}
+{"input": "The app doesn't think it's me.", "output": "Classified as: 68"}
+{"input": "What do I do to verify a top-up?", "output": "Classified as: 71"}
+{"input": "I used an ATM and wanted to know why I was charged an extra fee.", "output": "Classified as: 19"}
+{"input": "How do I activate my card that just arrived?", "output": "Classified as: 0"}
+{"input": "I just realised I made the wrong payment yesterday. Can you please change it to the right account? It's my rent payment and really really needs to be in the right account by tomorrow", "output": "Classified as: 8"}
+{"input": "Why is there extra cash in my account?", "output": "Classified as: 20"}
+{"input": "A strange card payment, I do not recognize it.", "output": "Classified as: 16"}
+{"input": "Is there somewhere I can send a check to add to my account?", "output": "Classified as: 58"}
+{"input": "I didn't make these transactions. Is someone else using my card?", "output": "Classified as: 22"}
+{"input": "Why is verification for my identity needed?", "output": "Classified as: 74"}
+{"input": "I want a virtual card that is disposable", "output": "Classified as: 37"}
+{"input": "I am inquiring about your auto top up feature.", "output": "Classified as: 4"}
+{"input": "How do I get a refund for something I bought?", "output": "Classified as: 52"}
+{"input": "the exchange rate is wrong from something I got in another country", "output": "Classified as: 17"}
+{"input": "How will I get my card?", "output": "Classified as: 12"}
+{"input": "I just got married and I need to change my name", "output": "Classified as: 30"}
+{"input": "I'm interested in using fiat currencies, which do you support?", "output": "Classified as: 36"}
+{"input": "Is it possible to do auto top up?", "output": "Classified as: 4"}
+{"input": "Is there a tracking number for the card?", "output": "Classified as: 11"}
+{"input": "One of my card payments, I don't recognise the name of the merchant.", "output": "Classified as: 16"}
+{"input": "Will you send me a new card in China?", "output": "Classified as: 9"}
+{"input": "I would like to edit my personal information .", "output": "Classified as: 30"}
+{"input": "What exactly is the exchange fee?", "output": "Classified as: 31"}
+{"input": "My card will expire soon, When do I need to order a new one?", "output": "Classified as: 9"}
+{"input": "What method do you use for the exchange rate?", "output": "Classified as: 32"}
+{"input": "Is it possible to get a refund for the item?", "output": "Classified as: 52"}
+{"input": "Can I choose the day it's delivered?", "output": "Classified as: 12"}
+{"input": "How do I edit the personal details on my account?", "output": "Classified as: 30"}
+{"input": "I didn't get a PIN yet. What gives?", "output": "Classified as: 38"}
+{"input": "What does it mean if my top-up has not gone through?", "output": "Classified as: 47"}
+{"input": "What can I use to receive my salary?", "output": "Classified as: 50"}
+{"input": "How to a go about ordering a disposable virtual card?", "output": "Classified as: 37"}
+{"input": "beneficiary transfer problems?", "output": "Classified as: 7"}
+{"input": "I double checked that I have the correct account details already, they're right for sure. Transfer is still pending since forever. It should not have been done so.", "output": "Classified as: 48"}
+{"input": "my money, where is it coming from?", "output": "Classified as: 70"}
+{"input": "Why am I unable to withdraw money even though in the past I've done it just fine?", "output": "Classified as: 26"}
+{"input": "Tell me how a top up would be reverted.", "output": "Classified as: 61"}
+{"input": "What is this cash withdrawal I don't recognize?", "output": "Classified as: 20"}
+{"input": "I sent a check into the system but still haven't received the cash yet", "output": "Classified as: 6"}
+{"input": "Can I change my PIN without going to a bank?", "output": "Classified as: 21"}
+{"input": "I've transferred money into my account but the balance is the same", "output": "Classified as: 5"}
+{"input": "Where did my top-up go? I can't find it in my wallet", "output": "Classified as: 62"}
+{"input": "Is there an allowance on cards?", "output": "Classified as: 15"}
+{"input": "Would I need to pay extra for currency exchanges?", "output": "Classified as: 31"}
+{"input": "Why should I verify the top-up?", "output": "Classified as: 71"}
+{"input": "How do i cancel a charge?", "output": "Classified as: 8"}
+{"input": "How long do I need to wait til my top up isn't pending?", "output": "Classified as: 47"}
+{"input": "I need to know if everything is okay here. After making a transfer from a UK account it doesn't show up. How long does this normally take to process?", "output": "Classified as: 5"}
+{"input": "are you sending me my card?", "output": "Classified as: 12"}
+{"input": "How do I top up with cash?", "output": "Classified as: 58"}
+{"input": "How do I exchange currencies using the app?", "output": "Classified as: 33"}
+{"input": "WHAT IS THE REASON FOR THAT", "output": "Classified as: 14"}
+{"input": "What am I going to need in order to activate my card?", "output": "Classified as: 0"}
+{"input": "My identity can't be verified for some reason", "output": "Classified as: 68"}
+{"input": "What kind of money can I hold?", "output": "Classified as: 36"}
+{"input": "You will hear back from us about your verification results in 10 minutes to a one hour timeframe.  If these verification results do fail, please double-check to make sure your images are clear and have no glare or blur; your photos need to be fully readable.  You need to be 18 years of age or older and a resident of Switzerland or the European Economic Area to create an account.", "output": "Classified as: 68"}
+{"input": "I tried to get cash but it was declined!", "output": "Classified as: 26"}
+{"input": "I tried to pay with my card and it didn't work", "output": "Classified as: 25"}
+{"input": "I am having problems with my contactless.", "output": "Classified as: 23"}
+{"input": "Do you know what your exchange rates are?", "output": "Classified as: 32"}
+{"input": "Where do I look for cash top up?", "output": "Classified as: 58"}
+{"input": "Is there something that I can do since my phone was stolen yesterday?", "output": "Classified as: 42"}
+{"input": "What do you need for the identity verification", "output": "Classified as: 69"}
+{"input": "What is the price of iPhone 15?", "output": "Let me check the price of iPhone 15 for you. I can provide current pricing, available colors, and stock status."}
+{"input": "How long does transfers take?", "output": "Classified as: 5"}
+{"input": "THere is some cash that is showing up on my app.", "output": "Classified as: 20"}
+{"input": "Why did I get charged extra?", "output": "Classified as: 15"}
+{"input": "Hello, I went ahead and checked my account details to be sure, and they are definitely correct.  I've had a transfer pending for a while, and I can't understand why it hasn't gone through yet.", "output": "Classified as: 48"}
+{"input": "Which countries do you operate in", "output": "Classified as: 24"}
+{"input": "Hi there, I came across a problem with my top up and my money is missing, was there a system error?", "output": "Classified as: 61"}
+{"input": "What forms of ID should I use for verification?", "output": "Classified as: 69"}
+{"input": "I don't have a password.", "output": "Classified as: 44"}
+{"input": "I managed to drunken block my card :(( Help!", "output": "Classified as: 49"}
+{"input": "The exchange rate was different when I got cash", "output": "Classified as: 76"}
+{"input": "Is American Express supported for adding funds?", "output": "Classified as: 54"}
+{"input": "I can't use my virtual disposable card", "output": "Classified as: 72"}
+{"input": "How do i set up my credit card to send transfers?", "output": "Classified as: 62"}
+{"input": "Can I get an update on my replacement card?", "output": "Classified as: 11"}
+{"input": "Can I use a transfer to receive my transfer?", "output": "Classified as: 50"}
+{"input": "Hi, I am new to this. Are there any additional fees or charges that I should be aware of? I was looking through the app and I thought I saw something in regards to fee-free allowances.", "output": "Classified as: 15"}
+{"input": "I have made several unsuccessful attempts to make a transfer.  I'm getting frustrated at getting error messages and it not going through.", "output": "Classified as: 7"}
+{"input": "I didn't initiate a direct debit that I see on my account", "output": "Classified as: 28"}
+{"input": "How do I troubleshoot when contactless doesn't work?", "output": "Classified as: 23"}
+{"input": "Explain to me why a transfer would be declined.", "output": "Classified as: 27"}
+{"input": "How limited is a virtual card?", "output": "Classified as: 29"}
+{"input": "I can't see the transfer that I put in.", "output": "Classified as: 5"}
+{"input": "Would I be able to use SWIFT transfers?", "output": "Classified as: 56"}
+{"input": "I found my lost card in my jacket pocket this morning so I'd like to reactivate it please.", "output": "Classified as: 13"}
+{"input": "Would you be able to offer me a discount, since I need to exchange currencies frequently?", "output": "Classified as: 31"}
+{"input": "is it just visa or can i also use mastercard?", "output": "Classified as: 73"}
+{"input": "Why can't I see a transfer to my account?", "output": "Classified as: 5"}
+{"input": "My money is all gone. What ways are okay to add money to my account?", "output": "Classified as: 65"}
+{"input": "How to activate Google Pay for top up?", "output": "Classified as: 2"}
+{"input": "I'm not happy, I want to close my account.", "output": "Classified as: 55"}
+{"input": "Who do I talk to about the ATM swallowing my card?", "output": "Classified as: 18"}
+{"input": "When can I expect delivery?", "output": "Classified as: 12"}
+{"input": "Can you assist on apple watch top ups?", "output": "Classified as: 2"}
+{"input": "Where can I update my pin number?", "output": "Classified as: 21"}
+{"input": "I was spending cash with my card and got a fee.", "output": "Classified as: 15"}
+{"input": "How can I get my money that I didn't get from the ATM?", "output": "Classified as: 75"}
+{"input": "Can you unblock my account?  I entered the PIN wrong.", "output": "Classified as: 49"}
+{"input": "Hello. I looked at my account and see that a transaction I tried to do is pending, but I did not complete that transaction. When I was at the ATM, the machine declined my card. Can you make sure that transaction does not go through because I definitely did not receive the money.", "output": "Classified as: 46"}
+{"input": "My plans may change so I may need to change from GBP to AUD.", "output": "Classified as: 33"}
+{"input": "I would like a physical card", "output": "Classified as: 43"}
+{"input": "Please tell me how the exchange rate is determined. I was expecting more money for the transaction.", "output": "Classified as: 76"}
+{"input": "What is the greatest number of times that I can top-up?", "output": "Classified as: 60"}
+{"input": "After looking at the app I noticed a couple of payments I know I did not make. Is it possible someone has accessed my card? What is actually going on?", "output": "Classified as: 16"}
+{"input": "My card payment has been declined", "output": "Classified as: 25"}
+{"input": "where are the transfers originating", "output": "Classified as: 70"}
+{"input": "Where can I have a new bank card sent to China?", "output": "Classified as: 9"}
+{"input": "At what ATM can I change my PIN?", "output": "Classified as: 21"}
+{"input": "Can I order a new card to China?", "output": "Classified as: 9"}
+{"input": "Can my account be topped-up by friends of mine.", "output": "Classified as: 62"}
+{"input": "I was checking my account when I saw a $500 cash withdraw that I know I didn't do.  I have my card so I don't understand how this happened.  Please help me.", "output": "Classified as: 20"}
+{"input": "Please help me with my card.  It won't activate.", "output": "Classified as: 0"}
+{"input": "How will I receive my PIN?", "output": "Classified as: 38"}
+{"input": "What are the rules for a top-up?", "output": "Classified as: 60"}
+{"input": "My wallet is empty even though I topped it up an hour ago.", "output": "Classified as: 62"}
+{"input": "What is the top-up limit on my cards?", "output": "Classified as: 60"}
+{"input": "I don't think my transfer wen through. Why?", "output": "Classified as: 35"}
+{"input": "The first payment I attempted for my card at the store earlier did not process so I had to make a second attempt. The second time it worked. It now appears I was charged twice. After looking at the app I see a pending charge. Please remove the pending amount because it is clearly not accurate and was declined.", "output": "Classified as: 63"}
+{"input": "I would like to have a physical card to carry around and use. How can I get one?", "output": "Classified as: 43"}
+{"input": "How long does a check take to show up in the account balance?", "output": "Classified as: 6"}
+{"input": "It looks like a payment I've made hasn't made it through yet.", "output": "Classified as: 45"}
+{"input": "I need my card to be activated right now.", "output": "Classified as: 0"}
+{"input": "I deposited cash this morning, but it is not yet available.", "output": "Classified as: 6"}
+{"input": "How long does it take for the card to come?", "output": "Classified as: 12"}
+{"input": "What is the number of transactions I get with a disposable card?", "output": "Classified as: 29"}
+{"input": "Can you tell me where my funds come from?", "output": "Classified as: 70"}
+{"input": "After I make a payment, how long will it be before it transitions from \"pending\" to complete?", "output": "Classified as: 45"}
+{"input": "An item I bought had the wrong exchange rate applied.", "output": "Classified as: 17"}
+{"input": "I need to update my address.", "output": "Classified as: 30"}
+{"input": "What currencies can I not hold many in, if so what are they?", "output": "Classified as: 36"}
+{"input": "I lost my phone. What do I need to do?", "output": "Classified as: 42"}
+{"input": "I did not make this payment that I see in the App.", "output": "Classified as: 16"}
+{"input": "What fees to you have for top ups?", "output": "Classified as: 57"}
+{"input": "Why can't I use a disposable card?", "output": "Classified as: 29"}
+{"input": "What are the steps to finishing up with this account?", "output": "Classified as: 55"}
+{"input": "I tried and tried, but I could not complete my transfer. Tell me what is wrong.", "output": "Classified as: 35"}
+{"input": "I just saw a fee on my account. When do these get charged?", "output": "Classified as: 15"}
+{"input": "i am under 18 and i am trying to verify my id. why wont it work?", "output": "Classified as: 68"}
+{"input": "Where's the money I transferred into my account?", "output": "Classified as: 5"}
+{"input": "Why hasn't my son received the transfer I sent to him earlier?", "output": "Classified as: 66"}
+{"input": "Can I set automatic top ups?", "output": "Classified as: 4"}
+{"input": "Is there a limit to the number of disposable cards I can have?", "output": "Classified as: 29"}
+{"input": "Is there an issue with my account?  I don't see a cheque deposit that I made yesterday.  Please assist.", "output": "Classified as: 6"}
+{"input": "How do I find the refund on my statement?", "output": "Classified as: 51"}
+{"input": "I am still waiting for a transfer to show up", "output": "Classified as: 48"}
+{"input": "I don't think I should have been charged a fee to use my card.", "output": "Classified as: 15"}
+{"input": "My card did not go through in a shop", "output": "Classified as: 25"}
+{"input": "Am I allowed to use different currencies?", "output": "Classified as: 50"}
+{"input": "What should I do if I think that someone might be using me card?", "output": "Classified as: 22"}
+{"input": "Where do I go to terminate my account?", "output": "Classified as: 55"}
+{"input": "Is there an age limit to when my child can use these services?", "output": "Classified as: 1"}
+{"input": "What if I don't verify my identity?", "output": "Classified as: 74"}
+{"input": "My physical card is not working", "output": "Classified as: 14"}
+{"input": "I see a direct debit payment on my statement that wasn't me", "output": "Classified as: 28"}
+{"input": "Since I got married, I need to change my name.", "output": "Classified as: 30"}
+{"input": "I was overcharged an additional pound.", "output": "Classified as: 34"}
+{"input": "I can't find the auto-top up option.", "output": "Classified as: 4"}
+{"input": "Which merchants accept my card?", "output": "Classified as: 10"}
+{"input": "The ATM charged me an extra fee, Why?", "output": "Classified as: 19"}
+{"input": "A shop I go to didn't let me pay.", "output": "Classified as: 25"}
+{"input": "I have not used my card all day, however, there is an unusual payment showing in my app.  I would like to have that amount reimbursed.", "output": "Classified as: 28"}
+{"input": "Does a discount apply if I exchange currencies frequently?", "output": "Classified as: 31"}
+{"input": "My card is not working when I try to use it.", "output": "Classified as: 14"}
+{"input": "I am not happy with your service and request that my account be terminated!", "output": "Classified as: 55"}
+{"input": "How long do top-ups take to go through", "output": "Classified as: 47"}
+{"input": "My account isn't showing a transfer I made.", "output": "Classified as: 5"}
+{"input": "I tried to make a transfer, but it didn't work.", "output": "Classified as: 35"}
+{"input": "I wanted to know about a pending dollar that is on my statement.", "output": "Classified as: 34"}
+{"input": "Can friends I have top-up my account?", "output": "Classified as: 62"}
+{"input": "what documents do i need to verify who i am", "output": "Classified as: 69"}
+{"input": "I tried to do a transfer but I got a message that it was declined.", "output": "Classified as: 27"}
+{"input": "I couldn't pay with my card", "output": "Classified as: 25"}
+{"input": "Can I start an account for my kids?", "output": "Classified as: 1"}
+{"input": "I want to inactivate my account.", "output": "Classified as: 55"}
+{"input": "Someone stole my card!", "output": "Classified as: 41"}
+{"input": "Is there a minimum age for having an account?", "output": "Classified as: 1"}
+{"input": "Can I return an item?", "output": "Classified as: 52"}
+{"input": "There's a payment that isn't mine on my app", "output": "Classified as: 16"}
+{"input": "I don't understand why I was charged an additional fee for this service. Can you clarify?", "output": "Classified as: 15"}
+{"input": "Somebody used my card without my knowledge!", "output": "Classified as: 22"}
+{"input": "Why has my transfer been declined?", "output": "Classified as: 27"}
+{"input": "Can you tell me how to change my PIN?", "output": "Classified as: 21"}
+{"input": "I was mistakenly charged a fee for using my card.", "output": "Classified as: 15"}
+{"input": "Can you tell me why I haven't received my new card yet?", "output": "Classified as: 11"}
+{"input": "There are fraudulent charges that I didn't make on my card. Can you please put in the safeguards necessary to stop this from happening anymore?", "output": "Classified as: 22"}
+{"input": "My card is about to expire.  Where do I get a new one.", "output": "Classified as: 9"}
+{"input": "How can my friend send money to me?", "output": "Classified as: 50"}
+{"input": "I have a card payment that I don't recognize. What should I do?", "output": "Classified as: 16"}
+{"input": "Why would a merchant revert my payment?", "output": "Classified as: 53"}
+{"input": "Why is there a cash withdrawal I didn't make?", "output": "Classified as: 20"}
+{"input": "My top up may have been reverted", "output": "Classified as: 61"}
+{"input": "How much does top up fees cost?", "output": "Classified as: 57"}
+{"input": "An incorrect exchange rate was applied to an item I bought.", "output": "Classified as: 17"}
+{"input": "What documentation is needed for the identity check?", "output": "Classified as: 69"}
+{"input": "The wrong exchange rate applied to my cash withdrawal.", "output": "Classified as: 76"}
+{"input": "Can I use my account although my identity verification has yet to pass?", "output": "Classified as: 74"}
+{"input": "I need to figure out who has access to my card there are some payments I didn't make that are showing on the app.  Could you please help?", "output": "Classified as: 16"}
+{"input": "My card has been lost! help!", "output": "Classified as: 41"}
+{"input": "The fee charged when I changed rubles into British pounds was too much.", "output": "Classified as: 17"}
+{"input": "Please check the exchange rate for my payment last Saturday. I believe I have been overcharged.", "output": "Classified as: 17"}
+{"input": "If I want to select a new PIN what do I do?", "output": "Classified as: 21"}
+{"input": "Why can't I get my top up to work in Apple Pay?", "output": "Classified as: 2"}
+{"input": "How to exchange my currency", "output": "Classified as: 33"}
+{"input": "I think someone might have a copy of my card because a 500 dollar withdrawal was made, and it wasn't me. Can you please help?", "output": "Classified as: 20"}
+{"input": "Is my child too young to sign up?", "output": "Classified as: 1"}
+{"input": "Can I set my own top-up limit?", "output": "Classified as: 60"}
+{"input": "I didn't make a payment that shows in my app.", "output": "Classified as: 16"}
+{"input": "I'm not sure what to do about the PIN, because I don't have one yet.", "output": "Classified as: 38"}
+{"input": "My card has been compromised. I see a bunch of online shopping charges that I didn't make. I need to freeze it immediately.", "output": "Classified as: 22"}
+{"input": "I am travelling and I was wondering what your exchange rates are", "output": "Classified as: 32"}
+{"input": "My contactless is non-functional.", "output": "Classified as: 23"}

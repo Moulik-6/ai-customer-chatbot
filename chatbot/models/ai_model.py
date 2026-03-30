@@ -7,6 +7,7 @@ import requests
 from ..config import (
     HUGGINGFACE_MODEL, HUGGINGFACE_API_KEY, HUGGINGFACE_API_URL,
     MODEL_TYPE, MODEL_CONFIGS, MOCK_MODE, USE_LOCAL_MODEL,
+    FINETUNED_MODEL_PATH,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,23 +54,27 @@ if not MOCK_MODE and USE_LOCAL_MODEL:
         import torch
         from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
 
-        logger.info(f"Loading local model: {HUGGINGFACE_MODEL}")
+        # Check if fine-tuned model is available (preferred)
+        model_to_load = FINETUNED_MODEL_PATH if FINETUNED_MODEL_PATH else HUGGINGFACE_MODEL
+        
+        logger.info(f"Loading local model: {model_to_load}")
         device = 0 if torch.cuda.is_available() else -1
 
-        is_seq2seq = 'flan' in HUGGINGFACE_MODEL.lower() or 't5' in HUGGINGFACE_MODEL.lower()
+        is_seq2seq = 'flan' in model_to_load.lower() or 't5' in model_to_load.lower()
 
         if is_seq2seq:
-            tokenizer = AutoTokenizer.from_pretrained(HUGGINGFACE_MODEL)
-            model = AutoModelForSeq2SeqLM.from_pretrained(HUGGINGFACE_MODEL)
+            tokenizer = AutoTokenizer.from_pretrained(model_to_load)
+            model = AutoModelForSeq2SeqLM.from_pretrained(model_to_load)
             if device >= 0:
                 model = model.cuda()
             LOCAL_MODEL = {'tokenizer': tokenizer, 'model': model, 'type': 'seq2seq'}
         elif MODEL_TYPE == 'classification':
-            LOCAL_MODEL = pipeline('text-classification', model=HUGGINGFACE_MODEL, device=device)
+            LOCAL_MODEL = pipeline('text-classification', model=model_to_load, device=device)
         else:
-            LOCAL_MODEL = pipeline('text-generation', model=HUGGINGFACE_MODEL, device=device)
+            LOCAL_MODEL = pipeline('text-generation', model=model_to_load, device=device)
 
-        logger.info(f"Local model loaded on {'GPU' if device >= 0 else 'CPU'}")
+        model_type = "fine-tuned" if FINETUNED_MODEL_PATH else "base"
+        logger.info(f"Local {model_type} model loaded on {'GPU' if device >= 0 else 'CPU'}")
     except ImportError:
         logger.warning("torch/transformers not installed — falling back to remote inference")
         USE_LOCAL_MODEL = False
