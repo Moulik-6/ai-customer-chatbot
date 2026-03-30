@@ -236,7 +236,11 @@ def chat():
                 bot_response = format_product_list(all_products)
                 return _db_response(bot_response, intent_tag, "product_list")
 
-            # If DB is unavailable, fall through to intent response.
+            bot_response = (
+                "I couldn't fetch the product catalog right now. "
+                "Please try again in a moment, or ask for a specific product name or SKU."
+            )
+            return _db_response(bot_response, intent_tag, "product_catalog_unavailable")
 
         # ========== 3.5 PRODUCT LOOKUP (DB-first for product-like free text) ==========
         # If text smells like a product/pricing request, try DB before model fallback.
