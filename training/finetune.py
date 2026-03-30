@@ -9,8 +9,9 @@ Usage:
 import json
 import logging
 import torch
+import inspect
 from pathlib import Path
-from datasets import Dataset
+from torch.utils.data import Dataset
 from transformers import (
     AutoTokenizer, AutoModelForSeq2SeqLM,
     Trainer, TrainingArguments, DataCollatorForSeq2Seq,
@@ -35,6 +36,39 @@ WARMUP_STEPS = 500
 device = "cuda" if torch.cuda.is_available() else "cpu"
 logger.info(f"Using device: {device}")
 
+
+class Seq2SeqChatDataset(Dataset):
+    """Lightweight torch dataset to avoid datasets/dill issues on Python 3.14."""
+
+    def __init__(self, rows, tokenizer, max_input_len=512, max_target_len=256):
+        self.rows = rows
+        self.tokenizer = tokenizer
+        self.max_input_len = max_input_len
+        self.max_target_len = max_target_len
+
+    def __len__(self):
+        return len(self.rows)
+
+    def __getitem__(self, idx):
+        row = self.rows[idx]
+        input_text = f"Customer: {row['input']}"
+        target_text = row["output"]
+
+        model_inputs = self.tokenizer(
+            input_text,
+            max_length=self.max_input_len,
+            truncation=True,
+            padding=False,
+        )
+        label_inputs = self.tokenizer(
+            text_target=target_text,
+            max_length=self.max_target_len,
+            truncation=True,
+            padding=False,
+        )
+        model_inputs["labels"] = label_inputs["input_ids"]
+        return model_inputs
+
 # ── LOAD DATA ──────────────────────────────────────────────
 logger.info("Loading training data...")
 train_data = []
@@ -45,18 +79,7 @@ for line in open(DATA_DIR / "train.jsonl"):
 
 for line in open(DATA_DIR / "val.jsonl"):
     val_data.append(json.loads(line))
-
-train_dataset = Dataset.from_dict({
-    "input": [ex["input"] for ex in train_data],
-    "output": [ex["output"] for ex in train_data],
-})
-
-val_dataset = Dataset.from_dict({
-    "input": [ex["input"] for ex in val_data],
-    "output": [ex["output"] for ex in val_data],
-})
-
-logger.info(f"Loaded: {len(train_dataset)} train, {len(val_dataset)} val examples")
+logger.info(f"Loaded JSONL rows: {len(train_data)} train, {len(val_data)} val examples")
 
 # ── LOAD MODEL & TOKENIZER ──────────────────────────────────
 logger.info(f"Loading {MODEL_NAME}...")
@@ -69,50 +92,50 @@ if device == "cuda":
 logger.info(f"Model loaded: {MODEL_NAME}")
 logger.info(f"Model size: {model.num_parameters() / 1e6:.1f}M parameters")
 
-# ── PREPROCESSING ──────────────────────────────────────────
-def preprocess_function(examples):
-    """Tokenize input and target."""
-    inputs = [f"Customer: {ex}" for ex in examples["input"]]
-    targets = examples["output"]
-
-    model_inputs = tokenizer(inputs, max_length=512, truncation=True, padding=True)
-    labels = tokenizer(text_target=targets, max_length=256, truncation=True, padding=True)
-
-    model_inputs["labels"] = labels["input_ids"]
-    return model_inputs
-
-train_dataset = train_dataset.map(
-    preprocess_function, batched=True, batch_size=32,
-    desc="Processing train dataset"
-)
-val_dataset = val_dataset.map(
-    preprocess_function, batched=True, batch_size=32,
-    desc="Processing val dataset"
-)
+# ── BUILD TORCH DATASETS ──────────────────────────────────
+train_dataset = Seq2SeqChatDataset(train_data, tokenizer)
+val_dataset = Seq2SeqChatDataset(val_data, tokenizer)
+logger.info(f"Built torch datasets: {len(train_dataset)} train, {len(val_dataset)} val")
 
 # ── TRAINING ARGUMENTS ──────────────────────────────────────
-training_args = TrainingArguments(
-    output_dir=str(OUTPUT_DIR),
-    evaluation_strategy="epoch",
-    learning_rate=LEARNING_RATE,
-    per_device_train_batch_size=BATCH_SIZE,
-    per_device_eval_batch_size=BATCH_SIZE,
-    gradient_accumulation_steps=GRAD_ACCUM_STEPS,
-    num_train_epochs=EPOCHS,
-    warmup_steps=WARMUP_STEPS,
-    weight_decay=0.01,
-    logging_steps=50,
-    save_strategy="epoch",
-    load_best_model_at_end=True,
-    metric_for_best_model="eval_loss",
-    greater_is_better=False,
-    seed=42,
+_ta_params = inspect.signature(TrainingArguments.__init__).parameters
+train_args_kwargs = {
+    "output_dir": str(OUTPUT_DIR),
+    "learning_rate": LEARNING_RATE,
+    "per_device_train_batch_size": BATCH_SIZE,
+    "per_device_eval_batch_size": BATCH_SIZE,
+    "gradient_accumulation_steps": GRAD_ACCUM_STEPS,
+    "num_train_epochs": EPOCHS,
+    "warmup_steps": WARMUP_STEPS,
+    "weight_decay": 0.01,
+    "logging_steps": 50,
+    "load_best_model_at_end": True,
+    "metric_for_best_model": "eval_loss",
+    "greater_is_better": False,
+    "seed": 42,
     # CPU optimizations
-    dataloader_pin_memory=False,
-    optim="adafactor",  # More memory efficient
-    fp16=device == "cuda",  # Mixed precision if GPU
-    no_cuda=device == "cpu",
-)
+    "dataloader_pin_memory": False,
+    "optim": "adafactor",  # More memory efficient
+    "fp16": device == "cuda",  # Mixed precision if GPU
+}
+
+# Transformers changed parameter names across versions
+if "evaluation_strategy" in _ta_params:
+    train_args_kwargs["evaluation_strategy"] = "epoch"
+elif "eval_strategy" in _ta_params:
+    train_args_kwargs["eval_strategy"] = "epoch"
+
+if "save_strategy" in _ta_params:
+    train_args_kwargs["save_strategy"] = "epoch"
+
+if "no_cuda" in _ta_params:
+    train_args_kwargs["no_cuda"] = device == "cpu"
+elif "use_cpu" in _ta_params:
+    train_args_kwargs["use_cpu"] = device == "cpu"
+
+# Drop unsupported keys to stay version-compatible
+train_args_kwargs = {k: v for k, v in train_args_kwargs.items() if k in _ta_params}
+training_args = TrainingArguments(**train_args_kwargs)
 
 # ── DATA COLLATOR ──────────────────────────────────────────
 data_collator = DataCollatorForSeq2Seq(

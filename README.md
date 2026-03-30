@@ -4,24 +4,24 @@ emoji: 🤖
 colorFrom: blue
 colorTo: purple
 sdk: docker
-app_file: app.py
+app_file: run.py
 pinned: false
 ---
 
 # AI Customer Chatbot
 
-A professional AI-powered customer service chatbot built with Flask, powered by Google's FLAN-T5-XL model (3B parameters), with Supabase database integration and smart multi-table lookups.
+A professional AI-powered customer service chatbot built with Flask. The default runtime model is FLAN-T5-small, and the app supports switching to a fine-tuned model repo via environment settings.
 
 ## Features
 
-- 🤖 **AI Responses** — Google FLAN-T5-XL (3B params) with few-shot prompting & beam search
+- 🤖 **AI Responses** — FLAN-T5-small by default with optional fine-tuned model deployment
 - 🔍 **Smart DB Lookups** — Automatically queries orders, customers, and products based on user input
 - 💬 **Intent Matching** — 26 precompiled intent patterns for instant responses
 - 🛍️ **Product Management** — Full CRUD API with search, category filter, duplicate detection
 - 📦 **Order Management** — Order CRUD, status tracking, tracking numbers
 - 📊 **Conversation Logging** — All chats logged to Supabase (SQLite fallback)
 - 🎨 **Premium UI** — ChatGPT/Claude-inspired dark theme with session persistence
-- � **API Key Auth** — Admin/write endpoints protected with `X-API-Key` header
+- 🔐 **API Key Auth** — Admin/write endpoints protected with `X-API-Key` header
 - ⚡ **Rate Limiting** — 30 req/min on chat, 200 req/hr global default
 - 🛡️ **XSS Protection** — HTML-escaped bot responses with safe markdown rendering
 - 🐳 **Docker Deployment** — Ready for Hugging Face Spaces (model weights cached in image)
@@ -30,27 +30,28 @@ A professional AI-powered customer service chatbot built with Flask, powered by 
 
 ```
 ai-customer-chatbot/
-├── app.py                          # Slim entry point — Flask factory + blueprint registration
-├── config.py                       # Centralized env vars & constants
-├── database.py                     # Supabase client + SQLite fallback + conversation logging
-├── auth.py                         # Admin API-key decorator
-├── models/
+├── run.py                          # Entry point — starts Flask app on configured PORT
+├── chatbot/
+│   ├── config.py                   # Centralized env vars & constants
+│   ├── database.py                 # Supabase client + SQLite fallback + conversation logging
+│   ├── auth.py                     # Admin API-key decorator
+│   ├── models/
 │   ├── __init__.py
 │   └── ai_model.py                 # FLAN-T5 loading, prompt building, inference
-├── services/
+│   ├── services/
 │   ├── __init__.py
 │   ├── intent_service.py           # Load & match intents from intents.json
 │   ├── entity_service.py           # Regex extraction (order #, email, SKU, product name)
 │   ├── lookup_service.py           # Supabase queries (orders, products, customers)
 │   └── formatter_service.py        # Format DB rows into customer-friendly responses
-├── routes/
+│   ├── routes/
 │   ├── __init__.py
 │   ├── chat.py                     # /api/chat, /, /health — main chat + smart lookups
 │   ├── admin.py                    # /api/admin/* — logs, stats, debug
 │   ├── products.py                 # /api/products — CRUD
 │   └── orders.py                   # /api/orders — CRUD + status tracking
-├── index.html                      # Chat frontend — dark theme UI
-├── intents.json                    # 26 customer service intent categories
+│   └── data/intents.json           # Customer service intent categories
+├── frontend/index.html             # Chat frontend UI
 ├── requirements.txt                # Python dependencies
 ├── Dockerfile                      # Docker config for HF Spaces (port 7860)
 ├── SUPABASE_SETUP.md               # Full database schema & setup guide
@@ -69,7 +70,7 @@ When a user sends a message, the chatbot follows a **6-level priority system**:
 3. **Product by SKU/name** — For product/pricing/stock intents → queries `products` table
 4. **Order tracking prompt** — Order intent but no order number → asks user for it
 5. **Intent match** — Matches against 26 keyword patterns → returns canned response
-6. **AI fallback** — Sends to FLAN-T5-XL for a generated response
+6. **AI fallback** — Sends to configured Hugging Face generation model
 
 ## Order Number Format
 
@@ -136,11 +137,11 @@ cp .env.example .env
 ### 4. Run
 
 ```bash
-python app.py
+python run.py
 # Runs on http://localhost:7860
 ```
 
-## 🧠 Fine-Tuning FLAN-T5 (Optional but Recommended)
+## 🧠 Fine-Tuning FLAN-T5-Small (Optional but Recommended)
 
 For better customer service responses, you can fine-tune FLAN-T5 using public datasets:
 
@@ -154,11 +155,17 @@ python training/finetune.py
 # 3. Test inference
 python training/inference.py
 
-# 4. Update .env
-echo "FINETUNED_MODEL_PATH=training/finetuned_model" >> .env
+# 4. Upload trained model to HF model repo
+HF_TOKEN=your_write_token \
+HF_MODEL_REPO=seyo009/ai-customer-chatbot-flan-small-ft \
+python training/upload_model_to_hf.py
 
-# 5. Restart app
-python app.py
+# 5. Set Space secrets
+# HUGGINGFACE_MODEL=seyo009/ai-customer-chatbot-flan-small-ft
+# USE_LOCAL_MODEL=false
+
+# 6. Restart app
+python run.py
 ```
 
 **What's included**:
@@ -219,7 +226,7 @@ See [training/README.md](training/README.md) for detailed instructions and troub
 | Layer | Technology |
 |-------|------------|
 | Backend | Flask 2.3, Python 3.11 |
-| AI Model | Google FLAN-T5-XL (3B params, local) |
+| AI Model | FLAN-T5-small (default) or fine-tuned model repo |
 | Database | Supabase (PostgreSQL) / SQLite fallback |
 | Frontend | Vanilla HTML/CSS/JS, dark theme |
 | Deployment | Docker on Hugging Face Spaces |

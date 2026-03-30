@@ -5,8 +5,12 @@ Output: JSONL files for training (instruction-following format).
 """
 import json
 import logging
-from datasets import load_dataset
 from pathlib import Path
+import random
+import time
+
+import requests
+from huggingface_hub import hf_hub_download
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,15 +19,87 @@ logger = logging.getLogger(__name__)
 data_dir = Path(__file__).parent / "data"
 data_dir.mkdir(exist_ok=True)
 
+
+def _load_banking77_via_api(limit_per_page=100):
+    """Load Banking77 using HF datasets-server rows API (no datasets library)."""
+    logger.info("Loading Banking77 via HF rows API...")
+    base_url = "https://datasets-server.huggingface.co/rows"
+    offset = 0
+    rows = []
+
+    while True:
+        params = {
+            "dataset": "legacy-datasets/banking77",
+            "config": "default",
+            "split": "train",
+            "offset": offset,
+            "limit": limit_per_page,
+        }
+        # Retry with backoff for transient throttling/network errors.
+        for attempt in range(6):
+            resp = requests.get(base_url, params=params, timeout=30)
+            if resp.status_code == 429:
+                sleep_s = min(2 ** attempt, 30)
+                logger.warning(f"Rows API rate-limited at offset={offset}, retrying in {sleep_s}s...")
+                time.sleep(sleep_s)
+                continue
+            resp.raise_for_status()
+            break
+        else:
+            raise RuntimeError(f"Rows API rate-limited repeatedly at offset={offset}")
+
+        payload = resp.json()
+        batch = payload.get("rows", [])
+        if not batch:
+            break
+
+        for item in batch:
+            row = item.get("row", {})
+            text = row.get("text")
+            label = row.get("label")
+            if text is not None and label is not None:
+                rows.append({"text": text, "label": label})
+
+        offset += len(batch)
+        if len(batch) < limit_per_page:
+            break
+
+    if not rows:
+        raise RuntimeError("No Banking77 rows downloaded from API")
+
+    logger.info(f"Banking77 loaded from API: {len(rows)} examples")
+    return rows
+
+
+def _load_banking77_via_parquet():
+    """Fallback loader: download parquet directly from HF Hub and parse with pyarrow."""
+    logger.info("Falling back to parquet download for Banking77...")
+    try:
+        import pyarrow.parquet as pq
+    except Exception as e:
+        raise RuntimeError(
+            "pyarrow is required for parquet fallback. Install with: pip install pyarrow"
+        ) from e
+
+    parquet_path = hf_hub_download(
+        repo_id="legacy-datasets/banking77",
+        repo_type="dataset",
+        filename="data/train-00000-of-00001.parquet",
+    )
+    table = pq.read_table(parquet_path, columns=["text", "label"])
+    rows = table.to_pylist()
+    if not rows:
+        raise RuntimeError("No rows found in Banking77 parquet file")
+    logger.info(f"Banking77 loaded from parquet: {len(rows)} examples")
+    return rows
+
 # ── LOAD BANKING77 ──────────────────────────────────────────
 logger.info("Loading Banking77 dataset...")
 try:
-    dataset = load_dataset("banking77", split="train")
-    logger.info(f"Banking77 loaded: {len(dataset)} examples")
+    dataset = _load_banking77_via_api()
 except Exception as e:
-    logger.error(f"Failed to load Banking77: {e}")
-    logger.info("Make sure you have: pip install datasets")
-    raise
+    logger.warning(f"API loader failed: {e}")
+    dataset = _load_banking77_via_parquet()
 
 # ── SYNTHETIC DATA GENERATION ──────────────────────────────
 # Generated customer service conversations for e-commerce
@@ -73,7 +149,6 @@ logger.info(f"  - Synthetic: {len(SYNTHETIC_DATA)}")
 logger.info(f"  - Banking77: {len(banking_formatted)}")
 
 # ── SPLIT & SAVE ──────────────────────────────────────────
-import random
 random.seed(42)
 random.shuffle(all_data)
 
@@ -90,7 +165,7 @@ logger.info(f"Split sizes: train={len(train_data)}, val={len(val_data)}, test={l
 # Save as JSONL
 for split, data in [("train", train_data), ("val", val_data), ("test", test_data)]:
     path = data_dir / f"{split}.jsonl"
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         for example in data:
             f.write(json.dumps(example) + '\n')
     logger.info(f"Saved {split}: {path}")

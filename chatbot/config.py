@@ -36,7 +36,7 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', '').strip()
 
 # ── Hugging Face / Model ─────────────────────────────────
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
-HUGGINGFACE_MODEL = os.getenv('HUGGINGFACE_MODEL', 'google/flan-t5-xl').strip()
+HUGGINGFACE_MODEL = os.getenv('HUGGINGFACE_MODEL', 'google/flan-t5-small').strip()
 MODEL_TYPE = 'generation'
 MOCK_MODE = os.getenv('MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
 USE_LOCAL_MODEL = os.getenv('USE_LOCAL_MODEL', 'true').strip().lower() in ('1', 'true', 'yes')

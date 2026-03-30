@@ -77,7 +77,6 @@ if not MOCK_MODE and USE_LOCAL_MODEL:
         logger.info(f"Local {model_type} model loaded on {'GPU' if device >= 0 else 'CPU'}")
     except ImportError:
         logger.warning("torch/transformers not installed — falling back to remote inference")
-        USE_LOCAL_MODEL = False
     except Exception as e:
         logger.error(f"Failed to load local model: {e}")
         raise ValueError(f"Could not load local model: {e}")

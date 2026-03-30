@@ -11,7 +11,11 @@ supabase>=2.3,<3
 # NLP — spaCy for semantic intent matching
 spacy>=3.7,<4
 
-# Optional — only needed if USE_LOCAL_MODEL=true (requires ~12GB RAM)
-# transformers>=4.36
-# torch>=2.1
-# numpy<2
+# ML / training (required for local fine-tuning + inference scripts)
+transformers>=4.40,<5
+torch>=2.1
+accelerate>=0.28,<2
+huggingface-hub>=0.22,<1
+pyarrow>=15,<22
+sentencepiece>=0.1.99,<1
+numpy<2
