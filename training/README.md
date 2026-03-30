@@ -2,6 +2,32 @@
 
 This guide helps you fine-tune FLAN-T5 using Banking77 + synthetic customer service data, with deployment in 24 hours.
 
+## If You Feel Stuck: Do Exactly This
+
+If you do not have persistent storage in Hugging Face Space, use this flow:
+
+1. Push this repo to a trainer Space (or run locally).
+2. Run training:
+```bash
+python training/prepare_data.py
+python training/finetune.py
+python training/inference.py
+```
+3. Immediately upload the trained model to a Hugging Face model repo:
+```bash
+HF_TOKEN=your_write_token \
+HF_MODEL_REPO=seyo009/ai-customer-chatbot-flan-small-ft \
+python training/upload_model_to_hf.py
+```
+4. In your production Space secrets set:
+```text
+HUGGINGFACE_MODEL=seyo009/ai-customer-chatbot-flan-small-ft
+USE_LOCAL_MODEL=false
+```
+5. Restart the production Space.
+
+This avoids losing the model when Space restarts.
+
 ## Overview
 
 - **Model**: FLAN-T5-small (80M params, CPU-friendly)
@@ -14,7 +40,7 @@ This guide helps you fine-tune FLAN-T5 using Banking77 + synthetic customer serv
 ### 1. Install Dependencies
 
 ```bash
-pip install datasets transformers torch
+pip install -r requirements.txt
 ```
 
 ### 2. Prepare Data
@@ -28,6 +54,8 @@ python training/prepare_data.py
 This combines:
 - ✅ Banking77 dataset (intent classification examples)
 - ✅ Synthetic customer service conversations (e-commerce examples)
+
+Note: The data loader uses HTTP/parquet fallback and is compatible with Python 3.14.
 
 ### 3. Fine-Tune Model
 
@@ -52,8 +80,14 @@ python training/finetune.py
 # Test inference
 python training/inference.py
 
-# Update .env
-FINETUNED_MODEL_PATH=training/finetuned_model
+# Upload model to HF model repo
+HF_TOKEN=your_write_token \
+HF_MODEL_REPO=seyo009/ai-customer-chatbot-flan-small-ft \
+python training/upload_model_to_hf.py
+
+# In production Space secrets set:
+# HUGGINGFACE_MODEL=seyo009/ai-customer-chatbot-flan-small-ft
+# USE_LOCAL_MODEL=false
 
 # Restart app
 python run.py
@@ -66,6 +100,7 @@ training/
 ├── prepare_data.py       # Download Banking77 + generate synthetic data
 ├── finetune.py           # Fine-tuning script (CPU/GPU optimized)
 ├── inference.py          # Test inference on fine-tuned model
+├── upload_model_to_hf.py # Upload trained model to HF model repo
 ├── data/                 # (generated after prepare_data.py)
 │   ├── train.jsonl
 │   ├── val.jsonl
@@ -92,25 +127,17 @@ training/
 
 ## Integration
 
-Once trained, the model is automatically loaded:
+Once trained, deploy via model repo and point production Space to it:
 
-1. Model path stored in `.env`:
-   ```env
-   FINETUNED_MODEL_PATH=/path/to/training/finetuned_model
-   ```
-
-2. `chatbot/models/ai_model.py` automatically detects and loads it:
-   ```python
-   # From ai_model.py
-   model_to_load = FINETUNED_MODEL_PATH if FINETUNED_MODEL_PATH else HUGGINGFACE_MODEL
-   ```
-
-3. Restart the Flask app:
+1. Upload local folder with `training/upload_model_to_hf.py`.
+2. Set Space secret `HUGGINGFACE_MODEL` to your model repo id.
+3. Keep `USE_LOCAL_MODEL=false` in Space.
+4. Restart the Flask app:
    ```bash
    python run.py
    ```
 
-The chatbot will now use the fine-tuned model for all AI responses.
+The chatbot will now use the fine-tuned model repo for generation.
 
 ## Data Details
 
@@ -153,17 +180,17 @@ python training/finetune.py
 
 ## Deployment to HF Spaces
 
-1. **Push fine-tuned model to repo**:
+1. **Upload fine-tuned model to model repo**:
    ```bash
-   git add training/finetuned_model/
-   git commit -m "Add fine-tuned FLAN-T5"
-   git push
+   HF_TOKEN=your_write_token \
+   HF_MODEL_REPO=seyo009/ai-customer-chatbot-flan-small-ft \
+   python training/upload_model_to_hf.py
    ```
 
-2. **Update HF Space env vars**:
+2. **Update HF Space secrets**:
    ```
-   FINETUNED_MODEL_PATH=training/finetuned_model
-   USE_LOCAL_MODEL=true
+   HUGGINGFACE_MODEL=seyo009/ai-customer-chatbot-flan-small-ft
+   USE_LOCAL_MODEL=false
    ```
 
 3. **Restart Space** (goes live immediately)

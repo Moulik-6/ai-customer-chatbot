@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 echo -e "${YELLOW}[1/4]${NC} Checking dependencies..."
 python -c "import torch; print(f'  ✓ PyTorch {torch.__version__}')" || exit 1
 python -c "import transformers; print(f'  ✓ Transformers {transformers.__version__}')" || exit 1
-python -c "import datasets; print(f'  ✓ Datasets')" || exit 1
+python -c "import huggingface_hub; print(f'  ✓ Hugging Face Hub {huggingface_hub.__version__}')" || exit 1
 
 DEVICE=$(python -c "import torch; print('GPU (CUDA)' if torch.cuda.is_available() else 'CPU')")
 echo -e "  ✓ Device detected: ${GREEN}${DEVICE}${NC}"
@@ -45,10 +45,11 @@ echo "✅ All steps complete!"
 echo "================================${NC}"
 echo ""
 echo "Next steps:"
-echo "1. Update .env with:"
-echo "   FINETUNED_MODEL_PATH=training/finetuned_model"
+echo "1. Upload to Hugging Face model repo:"
+echo "   HF_TOKEN=your_write_token HF_MODEL_REPO=seyo009/ai-customer-chatbot-flan-small-ft python training/upload_model_to_hf.py"
 echo ""
-echo "2. Restart the app:"
-echo "   python run.py"
+echo "2. Set Space secrets:"
+echo "   HUGGINGFACE_MODEL=seyo009/ai-customer-chatbot-flan-small-ft"
+echo "   USE_LOCAL_MODEL=false"
 echo ""
-echo "3. The chatbot will now use your fine-tuned model! 🎉"
+echo "3. Restart the app/Space. 🎉"

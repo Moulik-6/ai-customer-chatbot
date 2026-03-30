@@ -34,3 +34,6 @@ dist/
 Thumbs.db
 .vscode/
 .vercel
+
+# Local training artifacts
+training/finetuned_model/
