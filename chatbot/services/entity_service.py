@@ -4,14 +4,14 @@ Entity extraction — pull order numbers, emails, SKUs, product names from messa
 import re
 
 # Precompiled patterns
-_RE_ORDER_NUMBER = re.compile(r'ORD[-\s]?\d{4}[-\s]?\d{3,4}', re.IGNORECASE)
+_RE_ORDER_NUMBER = re.compile(r'ORD[-\s]?\d{3,}', re.IGNORECASE)
 _RE_EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 _RE_SKU = re.compile(r'\b[A-Z]{2,}[-][A-Z0-9][-A-Z0-9]{2,}\b')
-_RE_PHONE = re.compile(r'(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}')
+_RE_PHONE = re.compile(r'(?:\+?1[-\.\s]?)?\(?\d{3}\)?[-\.\s]?\d{3}[-\.\s]?\d{4}')
 
 
 def extract_order_number(message):
-    """Extract order number (ORD-XXXX-XXX) from message."""
+    """Extract order number (ORD-XXX or longer) from message."""
     match = _RE_ORDER_NUMBER.search(message)
     return match.group(0).replace(' ', '-').upper() if match else None
 
