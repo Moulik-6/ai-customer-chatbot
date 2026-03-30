@@ -36,7 +36,6 @@ chat_bp = Blueprint('chat', __name__)
 
 
 _LOCAL_FRONTEND_DIR = Path(PROJECT_ROOT) / 'frontend'
-_RE_CREATIVE_PROMPT = re.compile(r'\b(story|joke|poem|haiku|song|creative)\b', re.IGNORECASE)
 _RE_PRODUCT_HINT = re.compile(
     r'\b(product|products|catalog|inventory|stock|price|pricing|cost|electronics|phone|laptop|ipad|apple)\b',
     re.IGNORECASE,
@@ -142,14 +141,6 @@ def chat():
         product_name = extract_product_name(message)
 
         intent_match = match_intent(message)
-
-        # Creative-writing asks should go to model generation instead of ecommerce intents.
-        if (
-            intent_match
-            and _RE_CREATIVE_PROMPT.search(message)
-            and not any([order_number, email, sku, product_name])
-        ):
-            intent_match = None
 
         intent_tag = intent_match['tag'] if intent_match else None
 
