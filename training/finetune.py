@@ -9,7 +9,6 @@ Usage:
 import json
 import logging
 import torch
-import os
 from pathlib import Path
 from datasets import Dataset
 from transformers import (
@@ -75,16 +74,10 @@ def preprocess_function(examples):
     """Tokenize input and target."""
     inputs = [f"Customer: {ex}" for ex in examples["input"]]
     targets = examples["output"]
-    
-    model_inputs = tokenizer(
-        inputs, max_length=512, truncation=True, padding=True
-    )
-    
-    with tokenizer.as_target_tokenizer():
-        labels = tokenizer(
-            targets, max_length=256, truncation=True, padding=True
-        )
-    
+
+    model_inputs = tokenizer(inputs, max_length=512, truncation=True, padding=True)
+    labels = tokenizer(text_target=targets, max_length=256, truncation=True, padding=True)
+
     model_inputs["labels"] = labels["input_ids"]
     return model_inputs
 

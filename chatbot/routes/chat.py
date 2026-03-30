@@ -6,7 +6,6 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-import requests
 from flask import Blueprint, request, jsonify, redirect, send_from_directory
 
 from ..extensions import limiter
