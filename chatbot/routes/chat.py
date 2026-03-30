@@ -4,14 +4,15 @@ Chat routes — main chat endpoint, index page, health check.
 import logging
 import time
 from collections import defaultdict
+from pathlib import Path
 
 import requests
-from flask import Blueprint, request, jsonify, redirect
+from flask import Blueprint, request, jsonify, redirect, send_from_directory
 
 from ..extensions import limiter
 from ..config import (
     HUGGINGFACE_MODEL, MODEL_TYPE, USE_LOCAL_MODEL, MOCK_MODE,
-    CHAT_RATE_LIMIT,
+    CHAT_RATE_LIMIT, FRONTEND_URL, PROJECT_ROOT,
 )
 from ..database import log_conversation
 from ..services.intent_service import match_intent, INTENTS
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 chat_bp = Blueprint('chat', __name__)
 
 
-FRONTEND_URL = 'https://ai-customer-chatbot-tau.vercel.app'
+_LOCAL_FRONTEND_DIR = Path(PROJECT_ROOT) / 'frontend'
 
 # ── Conversation context (in-memory, per session) ────────
 # Stores last MAX_CONTEXT_TURNS exchanges per session_id.
@@ -44,12 +45,16 @@ _conversation_context = defaultdict(list)  # session_id -> [{user, bot}, ...]
 
 @chat_bp.route('/', methods=['GET'])
 def index():
-    return redirect(FRONTEND_URL)
+    if FRONTEND_URL:
+        return redirect(FRONTEND_URL)
+    return send_from_directory(_LOCAL_FRONTEND_DIR, 'index.html')
 
 
 @chat_bp.route('/index.html', methods=['GET'])
 def index_html():
-    return redirect(FRONTEND_URL)
+    if FRONTEND_URL:
+        return redirect(FRONTEND_URL)
+    return send_from_directory(_LOCAL_FRONTEND_DIR, 'index.html')
 
 
 # ── Health check ──────────────────────────────────────────

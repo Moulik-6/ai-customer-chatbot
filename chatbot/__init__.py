@@ -43,7 +43,6 @@ def create_app():
     @app.after_request
     def set_security_headers(response):
         response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         response.headers['Content-Security-Policy'] = (
@@ -52,7 +51,8 @@ def create_app():
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "img-src 'self' data:; "
             "font-src 'self' https://fonts.gstatic.com; "
-            "connect-src 'self' https://ai-customer-chatbot-tau.vercel.app https://seyo009-ai-customer-chatbot.hf.space"
+            "connect-src 'self' https://ai-customer-chatbot-tau.vercel.app https://seyo009-ai-customer-chatbot.hf.space; "
+            "frame-ancestors 'self' https://huggingface.co https://*.huggingface.co"
         )
         return response
 
