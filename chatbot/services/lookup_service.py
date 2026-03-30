@@ -2,11 +2,39 @@
 Database lookups — query orders, products, and customers from Supabase.
 """
 import logging
+import re
 from ..database import supabase
 from .sanitize import sanitize_search
 from .entity_service import extract_sku
 
 logger = logging.getLogger(__name__)
+
+_NOISE_TERMS = {
+    'show', 'me', 'the', 'a', 'an', 'products', 'product', 'item', 'items',
+    'about', 'details', 'info', 'information', 'stock', 'in', 'available',
+    'what', 'is', 'are', 'for', 'of', 'please', 'can', 'you'
+}
+
+
+def _candidate_product_queries(query):
+    """Generate progressively simpler search candidates from natural language input."""
+    cleaned = sanitize_search(query)
+    if not cleaned:
+        return []
+
+    tokens = [t for t in re.split(r'\s+', cleaned.lower()) if t]
+    keyword_tokens = [t for t in tokens if t not in _NOISE_TERMS]
+
+    candidates = [cleaned]
+    if keyword_tokens:
+        candidates.append(' '.join(keyword_tokens))
+        # Also try individual keywords from most specific to broadest.
+        for token in keyword_tokens:
+            if len(token) >= 3:
+                candidates.append(token)
+
+    # Preserve insertion order while removing duplicates.
+    return list(dict.fromkeys([c.strip() for c in candidates if c.strip()]))
 
 
 def lookup_order_status(order_number):
@@ -51,14 +79,17 @@ def lookup_product(query):
             if result.data:
                 return result.data
 
-        # Fuzzy name/description/category search
-        safe_query = sanitize_search(query)
-        result = (supabase.table('products')
-                  .select('*')
-                  .or_(f"name.ilike.%{safe_query}%,description.ilike.%{safe_query}%,sku.ilike.%{safe_query}%,category.ilike.%{safe_query}%")
-                  .limit(5)
-                  .execute())
-        return result.data if result.data else None
+        # Fuzzy name/description/category search with natural-language fallback candidates
+        for candidate in _candidate_product_queries(query):
+            result = (supabase.table('products')
+                      .select('*')
+                      .or_(f"name.ilike.%{candidate}%,description.ilike.%{candidate}%,sku.ilike.%{candidate}%,category.ilike.%{candidate}%")
+                      .limit(5)
+                      .execute())
+            if result.data:
+                return result.data
+
+        return None
     except Exception as e:
         logger.error(f"Error looking up product: {e}")
         return None
@@ -90,16 +121,19 @@ def lookup_customer_by_email(email):
         return None
 
 
-def list_products(limit=10):
+def list_products(limit=10, in_stock_only=False):
     """List recent products (for generic 'what products?' queries)."""
     try:
         if not supabase:
             return None
-        result = (supabase.table('products')
-                  .select('name,price,category,sku')
-                  .limit(limit)
-                  .order('created_at', desc=True)
-                  .execute())
+        query = (supabase.table('products')
+                 .select('name,price,category,sku,stock')
+                 .limit(limit)
+                 .order('created_at', desc=True))
+        if in_stock_only:
+            query = query.gt('stock', 0)
+
+        result = query.execute()
         return result.data if result.data else None
     except Exception as e:
         logger.error(f"Error listing products: {e}")

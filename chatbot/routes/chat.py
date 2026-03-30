@@ -37,6 +37,10 @@ chat_bp = Blueprint('chat', __name__)
 
 _LOCAL_FRONTEND_DIR = Path(PROJECT_ROOT) / 'frontend'
 _RE_CREATIVE_PROMPT = re.compile(r'\b(story|joke|poem|haiku|song|creative)\b', re.IGNORECASE)
+_RE_PRODUCT_HINT = re.compile(
+    r'\b(product|products|catalog|inventory|stock|price|pricing|cost|electronics|phone|laptop|ipad|apple)\b',
+    re.IGNORECASE,
+)
 
 # ── Conversation context (in-memory, per session) ────────
 # Stores last MAX_CONTEXT_TURNS exchanges per session_id.
@@ -212,6 +216,8 @@ def chat():
         # ========== 3. PRODUCT LOOKUP (by SKU or name) ==========
         if intent_tag in ('product_info', 'pricing', 'stock_availability', 'size_fitting'):
             search_term = sku or product_name
+            products = None
+
             if search_term:
                 products = lookup_product(search_term)
                 if products:
@@ -219,20 +225,41 @@ def chat():
                     logger.info(f"Product lookup: {search_term} ({len(products)} found)")
                     return _db_response(bot_response, intent_tag, "product_lookup")
 
-            # No entity extracted — try the raw message as a search term
-            if not search_term:
-                products = lookup_product(message)
-                if products:
-                    bot_response = format_product(products)
-                    logger.info(f"Product search (raw message): {message[:50]} ({len(products)} found)")
-                    return _db_response(bot_response, intent_tag, "product_lookup")
+            # Always try the full message even if an entity was extracted but returned no matches.
+            products = lookup_product(message)
+            if products:
+                bot_response = format_product(products)
+                logger.info(f"Product search (raw message): {message[:50]} ({len(products)} found)")
+                return _db_response(bot_response, intent_tag, "product_lookup")
 
-                # Still nothing — list available products
-                all_products = list_products()
+            # For stock intent, surface in-stock catalog when no direct match was found.
+            if intent_tag == 'stock_availability':
+                all_products = list_products(in_stock_only=True)
                 if all_products:
                     bot_response = format_product_list(all_products)
                     return _db_response(bot_response, intent_tag, "product_list")
-            # Fall through to intent response
+
+            # For other product intents, surface general catalog before generic intent fallback.
+            all_products = list_products()
+            if all_products:
+                bot_response = format_product_list(all_products)
+                return _db_response(bot_response, intent_tag, "product_list")
+
+            # If DB is unavailable, fall through to intent response.
+
+        # ========== 3.5 PRODUCT LOOKUP (DB-first for product-like free text) ==========
+        # If text smells like a product/pricing request, try DB before model fallback.
+        if not intent_match and _RE_PRODUCT_HINT.search(message):
+            products = lookup_product(message)
+            if products:
+                bot_response = format_product(products)
+                logger.info(f"Product DB-first fallback: {message[:50]} ({len(products)} found)")
+                return _db_response(bot_response, "product_info", "product_lookup")
+
+            all_products = list_products()
+            if all_products:
+                bot_response = format_product_list(all_products)
+                return _db_response(bot_response, "product_info", "product_list")
 
         # ========== 4. ORDER TRACKING (no order number) ==========
         if intent_tag == 'order_tracking':
