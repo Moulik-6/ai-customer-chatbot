@@ -2,6 +2,7 @@
 Chat routes — main chat endpoint, index page, health check.
 """
 import logging
+import re
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -35,6 +36,7 @@ chat_bp = Blueprint('chat', __name__)
 
 
 _LOCAL_FRONTEND_DIR = Path(PROJECT_ROOT) / 'frontend'
+_RE_CREATIVE_PROMPT = re.compile(r'\b(story|joke|poem|haiku|song|creative)\b', re.IGNORECASE)
 
 # ── Conversation context (in-memory, per session) ────────
 # Stores last MAX_CONTEXT_TURNS exchanges per session_id.
@@ -136,6 +138,15 @@ def chat():
         product_name = extract_product_name(message)
 
         intent_match = match_intent(message)
+
+        # Creative-writing asks should go to model generation instead of ecommerce intents.
+        if (
+            intent_match
+            and _RE_CREATIVE_PROMPT.search(message)
+            and not any([order_number, email, sku, product_name])
+        ):
+            intent_match = None
+
         intent_tag = intent_match['tag'] if intent_match else None
 
         def _elapsed_ms():

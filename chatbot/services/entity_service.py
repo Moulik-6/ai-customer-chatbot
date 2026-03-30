@@ -4,16 +4,27 @@ Entity extraction — pull order numbers, emails, SKUs, product names from messa
 import re
 
 # Precompiled patterns
-_RE_ORDER_NUMBER = re.compile(r'ORD[-\s]?\d{3,}', re.IGNORECASE)
+_RE_ORDER_NUMBER_CANONICAL = re.compile(
+    r'\bORD[-\s]?\d{3,}(?:[-\s]?\d+)*\b',
+    re.IGNORECASE,
+)
+_RE_ORDER_NUMBER_LOOSE = re.compile(
+    r'\b(?:ord|order)\s*(?:number\s*)?[-:#]?\s*(\d{3,})\b',
+    re.IGNORECASE,
+)
 _RE_EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 _RE_SKU = re.compile(r'\b[A-Z]{2,}[-][A-Z0-9][-A-Z0-9]{2,}\b')
 _RE_PHONE = re.compile(r'(?:\+?1[-\.\s]?)?\(?\d{3}\)?[-\.\s]?\d{3}[-\.\s]?\d{4}')
 
 
 def extract_order_number(message):
-    """Extract order number (ORD-XXX or longer) from message."""
-    match = _RE_ORDER_NUMBER.search(message)
-    return match.group(0).replace(' ', '-').upper() if match else None
+    """Extract order number from either canonical or loose phrasing."""
+    match = _RE_ORDER_NUMBER_CANONICAL.search(message)
+    if match:
+        return match.group(0).replace(' ', '-').upper()
+
+    loose = _RE_ORDER_NUMBER_LOOSE.search(message)
+    return f"ORD-{loose.group(1)}" if loose else None
 
 
 def extract_email(message):
