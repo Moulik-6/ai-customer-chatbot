@@ -10,7 +10,43 @@ pinned: false
 
 # AI Customer Chatbot
 
-A professional AI-powered customer service chatbot built with Flask. The default runtime model is FLAN-T5-small, and the app supports switching to a fine-tuned model repo via environment settings.
+A production-ready model showcase for customer-support AI. Organizations can test the live demo, download the model, and tailor it to their own workflows using a simple dataset.
+
+## Model Showcase Goal
+
+This project is designed as a model adoption funnel:
+
+1. Try the live demo to validate quality.
+2. Download the model from Hugging Face.
+3. Fine-tune with your organization's dataset.
+4. Deploy in your own environment.
+
+Model repo:
+- https://huggingface.co/seyo009/ai-customer-chatbot-flan-small-ft
+
+## Organization Customization (Simple Dataset)
+
+Use a small instruction dataset in JSONL format:
+
+```json
+{"input":"Customer asks about resetting MFA","output":"To reset MFA, go to Security Settings > Multi-Factor Authentication and choose Reset."}
+{"input":"Customer asks about invoice export","output":"You can export invoices from Billing > Invoices > Export CSV."}
+```
+
+Then run:
+
+```bash
+python training/prepare_data.py
+python training/finetune.py
+python training/upload_model_to_hf.py
+```
+
+Set your deployment to the tuned model:
+
+```bash
+HUGGINGFACE_MODEL=your-org/your-tuned-model
+USE_LOCAL_MODEL=false
+```
 
 ## Features
 
