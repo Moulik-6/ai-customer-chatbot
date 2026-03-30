@@ -32,6 +32,7 @@ SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 
 # ── Admin Auth ────────────────────────────────────────────
 ADMIN_API_KEY = os.getenv('ADMIN_API_KEY')
+FRONTEND_URL = os.getenv('FRONTEND_URL', '').strip()
 
 # ── Hugging Face / Model ─────────────────────────────────
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
