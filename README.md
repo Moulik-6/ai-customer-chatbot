@@ -71,6 +71,48 @@ When a user sends a message, the chatbot follows a **6-level priority system**:
 5. **Intent match** — Matches against 26 keyword patterns → returns canned response
 6. **AI fallback** — Sends to FLAN-T5-XL for a generated response
 
+## Order Number Format
+
+Order numbers are flexible and easy to use for automatic detection and lookup.
+
+### Pattern
+
+**Format**: `ORD-XXX` (minimum 3 digits) or longer
+
+**Regex**: `ORD[-\s]?\d{3,}`
+
+**Variations accepted**:
+- Short: `ORD-234`, `ORD-999`
+- With dashes: `ORD-0001-234`, `ORD-1234567`
+- With spaces: `ORD 234`, `ORD 0001 234`
+- Case-insensitive: `ord-234`, `ORD-234`
+
+### Examples in Codebase
+
+| Order Number | Source | Context |
+|---|---|---|
+| `ORD-001` | `test_live.py` | Test case: order lookup |
+| `ORD-9999-999` | `test_live.py` | Test case: nonexistent order |
+
+### How Ordering Works
+
+1. **Detection**: User message is scanned for order number pattern via `extract_order_number()` in [chatbot/services/entity_service.py](chatbot/services/entity_service.py#L9)
+2. **Lookup**: Order ID is queried from the `orders` table by `order_number` field
+3. **Response**: Bot returns order details including status, tracking number, and items
+4. **Fallback**: If no order number detected but order intent recognized, bot asks user to provide it
+
+### Order Status Tracking
+
+Orders can have these statuses (customizable):
+- `pending` — Order received, not yet shipped
+- `processing` — Being prepared
+- `shipped` — On the way (tracking number available)
+- `delivered` — Arrived at customer
+- `cancelled` — Order cancelled
+- `returned` — Return received
+
+Update status via: `PATCH /api/orders/<id>/status`
+
 ## Quick Start
 
 ### 1. Install Dependencies

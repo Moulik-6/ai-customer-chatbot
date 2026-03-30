@@ -203,6 +203,64 @@ curl https://your-space.hf.space/api/products/duplicates
 2. Select `conversations` or `products` table
 3. View all your data in real-time!
 
+## 📦 Order Number Format
+
+When creating orders, use the flexible order number format for automatic chatbot detection:
+
+**Format**: `ORD-XXX` or longer (minimum 3 digits)
+
+**Examples**: `ORD-234`, `ORD-0001-100`, `ORD-1234-567`, `ORD-9999-9999`
+
+**Regex Pattern**: `ORD[-\s]?\d{3,}`
+
+The chatbot automatically extracts and looks up orders matching this pattern in chat messages.
+
+### Sample Order Insert (SQL)
+
+```sql
+INSERT INTO orders (
+    order_number,
+    customer_name,
+    customer_email,
+    customer_phone,
+    shipping_address,
+    status,
+    total_amount,
+    tracking_number,
+    notes
+) VALUES (
+    'ORD-0001-100',
+    'John Doe',
+    'john@example.com',
+    '+1 (555) 123-4567',
+    '123 Main St, Springfield, IL 62701',
+    'shipped',
+    2499.99,
+    'TRACK-123456789',
+    'Express shipping'
+);
+```
+
+### Sample Order Items Insert (SQL)
+
+```sql
+INSERT INTO order_items (
+    order_id,
+    product_name,
+    product_sku,
+    quantity,
+    unit_price,
+    subtotal
+) VALUES (
+    (SELECT id FROM orders WHERE order_number='ORD-0001-100'),
+    'iPhone 15 Pro',
+    'IPHONE-15-PRO',
+    1,
+    999.99,
+    999.99
+);
+```
+
 ## 🎯 API Endpoints Available
 
 ### **Conversations** (Auto-logged)
@@ -219,6 +277,15 @@ curl https://your-space.hf.space/api/products/duplicates
 - `PUT /api/products/<id>` - Update product
 - `DELETE /api/products/<id>` - Delete product
 - `GET /api/products/duplicates` - Get duplicate products
+
+### **Orders** (CRUD)
+
+- `GET /api/orders` - Get all orders (`?customer_email=` & `?status=`)
+- `GET /api/orders/<id>` - Get order by ID
+- `GET /api/orders/number/<order_number>` - Get order by order number (e.g., `/api/orders/number/ORD-0001-100`)
+- `POST /api/orders` - Create order with items
+- `PUT /api/orders/<id>` - Update order
+- `PATCH /api/orders/<id>/status` - Update status + tracking number
 
 ## 🔒 Security Notes
 
