@@ -117,7 +117,7 @@ training_args = TrainingArguments(
     # CPU optimizations
     dataloader_pin_memory=False,
     optim="adafactor",  # More memory efficient
-    fps16=device == "cuda",  # Mixed precision if GPU
+    fp16=device == "cuda",  # Mixed precision if GPU
     no_cuda=device == "cpu",
 )
 
