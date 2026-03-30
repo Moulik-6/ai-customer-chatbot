@@ -1,4 +1,5 @@
 FROM python:3.11-slim
+# Rebuild trigger: refresh Space image for latest backend routing fixes.
 
 WORKDIR /app
 
