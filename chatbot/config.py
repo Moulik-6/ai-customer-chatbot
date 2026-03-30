@@ -24,6 +24,7 @@ PROJECT_ROOT = PACKAGE_DIR.parent
 DATA_DIR = PACKAGE_DIR / 'data'
 DB_PATH = str(PROJECT_ROOT / 'chatbot.db')
 INTENTS_PATH = str(DATA_DIR / 'intents.json')
+FINETUNED_MODEL_PATH = os.getenv('FINETUNED_MODEL_PATH')  # Optional: path to fine-tuned model
 
 # ── Supabase ──────────────────────────────────────────────
 SUPABASE_URL = os.getenv('SUPABASE_URL')

@@ -140,7 +140,34 @@ python app.py
 # Runs on http://localhost:7860
 ```
 
-## API Endpoints
+## 🧠 Fine-Tuning FLAN-T5 (Optional but Recommended)
+
+For better customer service responses, you can fine-tune FLAN-T5 using public datasets:
+
+```bash
+# 1. Prepare data (Banking77 + synthetic examples)
+python training/prepare_data.py
+
+# 2. Fine-tune (1-2 hours on CPU, 15-30 min on GPU)
+python training/finetune.py
+
+# 3. Test inference
+python training/inference.py
+
+# 4. Update .env
+echo "FINETUNED_MODEL_PATH=training/finetuned_model" >> .env
+
+# 5. Restart app
+python app.py
+```
+
+**What's included**:
+- 📊 Banking77 dataset (13K+ customer service examples)
+- 🔄 Synthetic e-commerce conversations (orders, returns, products)
+- ⚡ Optimized for CPU/GPU training
+- 📈 Automatic model loading on startup
+
+See [training/README.md](training/README.md) for detailed instructions and troubleshooting.
 
 ### Chat
 
