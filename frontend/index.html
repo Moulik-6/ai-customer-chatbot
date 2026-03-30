@@ -294,7 +294,11 @@
       // ═══════════════════════════════════════════════════════
       // CONFIGURATION
       // ═══════════════════════════════════════════════════════
-      const API_BASE = 'https://seyo009-ai-customer-chatbot.hf.space';
+      const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const isHfSpace = window.location.hostname.endsWith('.hf.space');
+      const API_BASE = isLocalhost
+        ? 'http://localhost:7860'
+        : (isHfSpace ? window.location.origin : 'https://seyo009-ai-customer-chatbot.hf.space');
       const API_URL  = `${API_BASE}/api/chat`;
 
       const STORAGE_KEY = 'chat_history_v2';
