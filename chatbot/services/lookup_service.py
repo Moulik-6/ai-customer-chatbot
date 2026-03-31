@@ -5,8 +5,9 @@ import logging
 import re
 import requests
 import time
+from datetime import datetime, timedelta, timezone
 from ..database import supabase
-from ..config import AFTERSHIP_API_KEY
+from ..config import AFTERSHIP_API_KEY, TRACKING_MOCK_MODE, TRACKING_MOCK_CARRIER
 from .sanitize import sanitize_search
 from .entity_service import extract_sku
 
@@ -160,6 +161,74 @@ _tracking_cache = {}  # Format: {tracking_number: {'data': {...}, 'timestamp': t
 _TRACKING_CACHE_TTL = 3600  # 1 hour
 
 
+def _build_mock_tracking(tracking_number, carrier='mock'):
+    """Generate deterministic mock tracking events for local testing."""
+    if not tracking_number:
+        return None
+
+    now = datetime.now(timezone.utc)
+    status_cycle = ['pending', 'in_transit', 'out_for_delivery', 'delivered']
+    idx = sum(ord(ch) for ch in tracking_number) % len(status_cycle)
+    tag = status_cycle[idx]
+
+    checkpoint_templates = {
+        'pending': [
+            (now - timedelta(hours=16), 'Warehouse A', 'Shipment information received'),
+            (now - timedelta(hours=10), 'Sorting Center', 'Package prepared for dispatch'),
+        ],
+        'in_transit': [
+            (now - timedelta(hours=20), 'Origin Facility', 'Package accepted by carrier'),
+            (now - timedelta(hours=9), 'Regional Hub', 'Package in transit'),
+            (now - timedelta(hours=2), 'Destination Hub', 'Arrived at destination facility'),
+        ],
+        'out_for_delivery': [
+            (now - timedelta(hours=18), 'Destination Hub', 'Arrived at destination facility'),
+            (now - timedelta(hours=6), 'Local Depot', 'Loaded on delivery vehicle'),
+            (now - timedelta(minutes=45), 'Local Route', 'Out for delivery'),
+        ],
+        'delivered': [
+            (now - timedelta(hours=22), 'Destination Hub', 'Arrived at destination facility'),
+            (now - timedelta(hours=7), 'Local Route', 'Out for delivery'),
+            (now - timedelta(hours=1), 'Recipient Address', 'Delivered successfully'),
+        ],
+    }
+
+    checkpoints = []
+    for ts, location, message in checkpoint_templates[tag]:
+        checkpoints.append({
+            'checkpoint_time': ts.isoformat(),
+            'message': message,
+            'location': {'name': location},
+        })
+
+    expected_delivery = None
+    if tag in ('pending', 'in_transit'):
+        expected_delivery = (now + timedelta(days=2)).date().isoformat()
+    elif tag == 'out_for_delivery':
+        expected_delivery = now.date().isoformat()
+
+    return {
+        'tag': tag,
+        'status': {
+            'pending': '⏳ Pending',
+            'in_transit': '📦 In Transit',
+            'out_for_delivery': '🚚 Out for Delivery',
+            'delivered': '🎉 Delivered',
+        }[tag],
+        'description': f"Mock tracking from {carrier.upper()} for testing",
+        'timestamp': now.isoformat(),
+        'location': checkpoints[-1]['location']['name'] if checkpoints else None,
+        'message': checkpoints[-1]['message'] if checkpoints else None,
+        'latest_event': {
+            'time': checkpoints[-1]['checkpoint_time'] if checkpoints else None,
+            'location': checkpoints[-1]['location']['name'] if checkpoints else None,
+            'message': checkpoints[-1]['message'] if checkpoints else None,
+        },
+        'estimated_delivery': expected_delivery,
+        'checkpoints': list(reversed(checkpoints[-3:])),
+    }
+
+
 def _parse_tracking_response(tracking_data):
     """Parse AfterShip tracking response into readable format."""
     if not tracking_data:
@@ -203,7 +272,16 @@ def get_live_tracking(tracking_number, carrier='auto'):
     Caches result for 1 hour to avoid rate limiting.
     Falls back gracefully if API unavailable.
     """
-    if not tracking_number or not AFTERSHIP_API_KEY:
+    if not tracking_number:
+        return None
+
+    if TRACKING_MOCK_MODE:
+        mock_data = _build_mock_tracking(tracking_number, carrier=TRACKING_MOCK_CARRIER)
+        if mock_data:
+            logger.info(f"Using mock tracking for {tracking_number}")
+        return mock_data
+
+    if not AFTERSHIP_API_KEY:
         return None
     
     # Check cache first

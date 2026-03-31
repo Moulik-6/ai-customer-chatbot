@@ -32,6 +32,8 @@ SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 
 # ── Live Tracking ─────────────────────────────────────────
 AFTERSHIP_API_KEY = os.getenv('AFTERSHIP_API_KEY')
+TRACKING_MOCK_MODE = os.getenv('TRACKING_MOCK_MODE', 'false').strip().lower() in ('1', 'true', 'yes')
+TRACKING_MOCK_CARRIER = os.getenv('TRACKING_MOCK_CARRIER', 'mock').strip()
 
 # ── Admin Auth ────────────────────────────────────────────
 ADMIN_API_KEY = os.getenv('ADMIN_API_KEY')
