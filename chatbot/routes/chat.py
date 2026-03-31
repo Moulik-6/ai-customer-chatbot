@@ -459,7 +459,7 @@ def chat():
                 return _db_response(bot_response, "product_info", "product_list")
 
         # ========== 4. ORDER TRACKING (no order number) ==========
-        # Intent responses are deterministic (canned) and do NOT call the AI model.
+        # Intent responses may be enhanced by the AI model when available.
         if intent_tag == 'order_tracking':
             bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_tag)
             log_conversation(
@@ -475,7 +475,7 @@ def chat():
             }), 200
 
         # ========== 5. OTHER INTENT MATCHES ==========
-        # Intent responses are deterministic (canned) and do NOT call the AI model.
+        # Intent responses may be enhanced by the AI model when available.
         if intent_match:
             logger.info(f"Intent matched: {intent_match['tag']}")
             bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_match['tag'])
