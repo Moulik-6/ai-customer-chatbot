@@ -84,7 +84,7 @@ if not MOCK_MODE and USE_LOCAL_MODEL:
 
 # ── Public API ────────────────────────────────────────────
 
-def query_model(prompt, context=None):
+def query_model(prompt, context=None, use_support_prompt=True):
     """
     Route to the right inference backend and return a standardized dict:
       {'type': 'generation'|'classification', 'result': ..., 'model': ...}
@@ -95,7 +95,7 @@ def query_model(prompt, context=None):
     if MOCK_MODE:
         return _mock_response(prompt)
     if LOCAL_MODEL:
-        return _local_inference(prompt, context=context)
+        return _local_inference(prompt, context=context, use_support_prompt=use_support_prompt)
 
     # Check if remote inference is actually available
     if not HUGGINGFACE_API_KEY:
@@ -103,7 +103,7 @@ def query_model(prompt, context=None):
         return _unavailable_fallback(prompt)
 
     try:
-        return _remote_inference(prompt, context=context)
+        return _remote_inference(prompt, context=context, use_support_prompt=use_support_prompt)
     except (ValueError, requests.RequestException, TimeoutError) as e:
         logger.warning(f"Remote inference failed ({e}) — returning fallback")
         return _unavailable_fallback(prompt)
@@ -111,7 +111,7 @@ def query_model(prompt, context=None):
 
 # ── Private helpers ───────────────────────────────────────
 
-def _local_inference(prompt, context=None):
+def _local_inference(prompt, context=None, use_support_prompt=True):
     """Run inference on the locally loaded model."""
     import torch
 
@@ -121,7 +121,7 @@ def _local_inference(prompt, context=None):
             model = LOCAL_MODEL['model']
             device = next(model.parameters()).device
 
-            prompt_text = _build_flan_prompt(prompt, context=context)
+            prompt_text = _build_flan_prompt(prompt, context=context) if use_support_prompt else prompt
             inputs = tokenizer(prompt_text, return_tensors="pt", padding=True,
                                max_length=512, truncation=True).to(device)
 
@@ -163,7 +163,7 @@ def _local_inference(prompt, context=None):
         raise
 
 
-def _remote_inference(prompt, context=None):
+def _remote_inference(prompt, context=None, use_support_prompt=True):
     """Call the Hugging Face Inference API."""
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
     params_key = 'generation' if MODEL_TYPE == 'generation' else 'classification'
@@ -171,7 +171,7 @@ def _remote_inference(prompt, context=None):
     # For generation models, use the full prompt with context
     input_text = prompt
     if MODEL_TYPE == 'generation':
-        input_text = _build_flan_prompt(prompt, context=context)
+        input_text = _build_flan_prompt(prompt, context=context) if use_support_prompt else prompt
 
     payload = {"inputs": input_text, "parameters": MODEL_CONFIGS[params_key]['params']}
 
