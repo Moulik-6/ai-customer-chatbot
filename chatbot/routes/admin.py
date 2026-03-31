@@ -7,8 +7,8 @@ import os
 from flask import Blueprint, request, jsonify
 
 from ..auth import require_admin_key
-from ..config import DB_PATH
-from ..database import get_db, purge_old_logs
+from ..config import DB_PATH, SUPABASE_URL, SUPABASE_KEY
+from ..database import get_db, purge_old_logs, supabase
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +170,76 @@ def debug_db():
     except Exception as e:
         logger.error(f"Debug endpoint error: {e}")
         return jsonify({"error": "Internal error checking database status", "code": "INTERNAL_ERROR"}), 500
+
+
+@admin_bp.route('/api/admin/db_status', methods=['GET'])
+@require_admin_key
+def db_status():
+    """
+    Report Supabase connectivity and basic table access.
+
+    Returns DB health info without exposing secrets.
+    """
+    supabase_configured = bool(SUPABASE_URL and SUPABASE_KEY)
+    can_select_products = False
+    can_select_orders = False
+    can_select_order_items = False
+    last_error = None
+    notes = []
+
+    if not supabase_configured:
+        notes.append("SUPABASE_URL and/or SUPABASE_KEY are not set — DB features disabled.")
+    elif supabase is None:
+        notes.append("Supabase credentials are set but client failed to initialise. Check server startup logs.")
+    else:
+        # Test products table
+        try:
+            result = supabase.table('products').select('id').limit(1).execute()
+            can_select_products = True
+            if not result.data:
+                notes.append("products table is accessible but appears empty.")
+        except Exception as e:
+            last_error = str(e)
+            notes.append(f"Cannot SELECT from products: {last_error}")
+
+        # Test orders table
+        try:
+            result = supabase.table('orders').select('id').limit(1).execute()
+            can_select_orders = True
+            if not result.data:
+                notes.append("orders table is accessible but appears empty.")
+        except Exception as e:
+            last_error = str(e)
+            notes.append(f"Cannot SELECT from orders: {last_error}")
+
+        # Test order_items table
+        try:
+            result = supabase.table('order_items').select('id').limit(1).execute()
+            can_select_order_items = True
+            if not result.data:
+                notes.append("order_items table is accessible but appears empty.")
+        except Exception as e:
+            last_error = str(e)
+            notes.append(f"Cannot SELECT from order_items: {last_error}")
+
+        # RLS hint: configured but cannot read
+        if supabase_configured and not (can_select_products and can_select_orders):
+            notes.append(
+                "Supabase is configured but one or more tables returned no data or an error. "
+                "If Row Level Security (RLS) is enabled, you must add SELECT policies for the "
+                "anon/authenticated role, otherwise all reads will return empty results. "
+                "See SUPABASE_SETUP.md for example SQL policies."
+            )
+
+    return jsonify({
+        "supabase_configured": supabase_configured,
+        "supabase_client_initialised": supabase is not None,
+        "can_select_products": can_select_products,
+        "can_select_orders": can_select_orders,
+        "can_select_order_items": can_select_order_items,
+        "last_error": last_error,
+        "notes": notes,
+    }), 200
 
 
 @admin_bp.route('/api/admin/logs/purge', methods=['POST'])
