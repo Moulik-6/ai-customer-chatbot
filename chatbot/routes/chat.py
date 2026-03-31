@@ -7,6 +7,8 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
+import requests
+
 from flask import Blueprint, request, jsonify, redirect, send_from_directory
 
 from ..extensions import limiter
@@ -288,6 +290,7 @@ def chat():
                 return _db_response(bot_response, "product_info", "product_list")
 
         # ========== 4. ORDER TRACKING (no order number) ==========
+        # Intent responses are deterministic (canned) and do NOT call the AI model.
         if intent_tag == 'order_tracking':
             bot_response = intent_match['response']
             log_conversation(
@@ -303,6 +306,7 @@ def chat():
             }), 200
 
         # ========== 5. OTHER INTENT MATCHES ==========
+        # Intent responses are deterministic (canned) and do NOT call the AI model.
         if intent_match:
             logger.info(f"Intent matched: {intent_match['tag']}")
             log_conversation(
