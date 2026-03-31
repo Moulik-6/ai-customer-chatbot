@@ -149,18 +149,18 @@ Every incoming message is processed through a **three-layer priority system** in
 
 ## Sample Product Catalog
 
-| SKU | Name | Category | Price | Stock |
-|-----|------|----------|-------|-------|
-| `IPHONE-15-PRO` | iPhone 15 Pro | Electronics | $999.99 | 50 |
-| `MACBOOK-AIR-M2` | MacBook Air M2 | Electronics | $1,099.99 | 30 |
-| `IPAD-PRO-12` | iPad Pro 12.9" | Electronics | $1,299.99 | 25 |
-| `AIRPODS-PRO-2` | AirPods Pro 2nd Gen | Electronics | $249.99 | 100 |
-| `APPLE-WATCH-S9` | Apple Watch Series 9 | Electronics | $399.99 | 60 |
-| `SAMSUNG-S24-ULTRA` | Samsung Galaxy S24 Ultra | Electronics | $1,199.99 | 40 |
-| `SONY-WH1000XM5` | Sony WH-1000XM5 Headphones | Electronics | $349.99 | 75 |
-| `LOGITECH-MX-MASTER` | Logitech MX Master 3S Mouse | Accessories | $99.99 | 120 |
-| `ANKER-CHARGER-65W` | Anker 65W USB-C Charger | Accessories | $35.99 | 200 |
-| `SAMSUNG-T7-SSD` | Samsung T7 Portable SSD 1TB | Storage | $89.99 | 85 |
+| Product ID | SKU | Name | Category | Price | Stock |
+|------------|-----|------|----------|-------|-------|
+| `f7a237a6-8fe8-4dc6-a853-2394b235d4e9` | `IPHONE-15-PRO-MAX` | iPhone 15 Pro Max 256GB | Electronics | $1,199.99 | 45 |
+| `64720218-1786-4d24-bd97-f85f1f15c058` | `IPHONE-15-128` | iPhone 15 128GB | Electronics | $799.99 | 120 |
+| `c659eb46-43de-4c4e-b148-60bd121de699` | `GALAXY-S24-ULTRA` | Samsung Galaxy S24 Ultra | Electronics | $1,299.99 | 60 |
+| `378b6c9d-f4cd-45ee-9e91-d23cd8430df0` | `PIXEL-8-PRO` | Google Pixel 8 Pro | Electronics | $999.99 | 35 |
+| `7520fad7-022b-4922-aa24-7a8d419a72eb` | `MBP-14-M3PRO` | MacBook Pro 14" M3 Pro | Electronics | $1,999.99 | 25 |
+| `36e32000-b185-4072-98b7-016727aee46a` | `MBA-13-M3` | MacBook Air 13" M3 | Electronics | $1,099.99 | 80 |
+| `0d4ca37e-c909-4425-ab5c-b0dad791bc11` | `IPAD-PRO-129` | iPad Pro 12.9" M2 | Electronics | $1,099.99 | 40 |
+| `706a748f-9f5b-4a17-ba70-9ae08079f930` | `AIRPODS-PRO-2` | AirPods Pro 2nd Gen | Electronics | $249.99 | 200 |
+| `5e6fca07-d35d-4d2c-abd2-123e5d709921` | `SONY-WH1000XM5` | Sony WH-1000XM5 | Electronics | $349.99 | 75 |
+| `e4a88690-d8de-41b5-bdd2-36a0c591dc5b` | `AWATCH-S9` | Apple Watch Series 9 | Electronics | $399.99 | 90 |
 
 ---
 
