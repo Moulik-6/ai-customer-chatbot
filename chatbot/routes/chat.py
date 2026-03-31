@@ -301,7 +301,10 @@ def chat():
                     # Fetch live tracking if tracking number available
                     live_tracking = None
                     if order.get('tracking_number'):
-                        live_tracking = get_live_tracking(order['tracking_number'])
+                        live_tracking = get_live_tracking(
+                            order['tracking_number'],
+                            expected_status=order.get('status'),
+                        )
                     return _db_response(format_order(order, live_tracking=live_tracking), "order_tracking", "order_lookup", {"order": order})
                 bot_response = (
                     f"❌ Sorry, I couldn't find order **{lookup_num}** in our system. "
@@ -382,7 +385,10 @@ def chat():
                 # Fetch live tracking if tracking number available
                 live_tracking = None
                 if order.get('tracking_number'):
-                    live_tracking = get_live_tracking(order['tracking_number'])
+                    live_tracking = get_live_tracking(
+                        order['tracking_number'],
+                        expected_status=order.get('status'),
+                    )
                 bot_response = format_order(order, live_tracking=live_tracking)
                 logger.info(f"Order lookup: {order_number}")
                 return _db_response(bot_response, "order_tracking", "order_lookup", {"order": order})

@@ -161,7 +161,7 @@ _tracking_cache = {}  # Format: {tracking_number: {'data': {...}, 'timestamp': t
 _TRACKING_CACHE_TTL = 3600  # 1 hour
 
 
-def _build_mock_tracking(tracking_number, carrier='mock'):
+def _build_mock_tracking(tracking_number, carrier='mock', expected_status=None):
     """Generate deterministic mock tracking events for local testing."""
     if not tracking_number:
         return None
@@ -170,6 +170,21 @@ def _build_mock_tracking(tracking_number, carrier='mock'):
     status_cycle = ['pending', 'in_transit', 'out_for_delivery', 'delivered']
     idx = sum(ord(ch) for ch in tracking_number) % len(status_cycle)
     tag = status_cycle[idx]
+
+    status_aliases = {
+        'pending': 'pending',
+        'processing': 'pending',
+        'shipped': 'in_transit',
+        'in_transit': 'in_transit',
+        'out_for_delivery': 'out_for_delivery',
+        'delivered': 'delivered',
+        'cancelled': 'cancelled',
+        'returned': 'returned',
+    }
+    if expected_status:
+        normalized = status_aliases.get(str(expected_status).strip().lower())
+        if normalized:
+            tag = normalized
 
     checkpoint_templates = {
         'pending': [
@@ -190,6 +205,13 @@ def _build_mock_tracking(tracking_number, carrier='mock'):
             (now - timedelta(hours=22), 'Destination Hub', 'Arrived at destination facility'),
             (now - timedelta(hours=7), 'Local Route', 'Out for delivery'),
             (now - timedelta(hours=1), 'Recipient Address', 'Delivered successfully'),
+        ],
+        'cancelled': [
+            (now - timedelta(hours=8), 'Order Management', 'Shipment cancelled by merchant'),
+        ],
+        'returned': [
+            (now - timedelta(days=3), 'Recipient Address', 'Delivery attempt failed'),
+            (now - timedelta(days=1), 'Return Hub', 'Package returned to sender'),
         ],
     }
 
@@ -214,6 +236,8 @@ def _build_mock_tracking(tracking_number, carrier='mock'):
             'in_transit': '📦 In Transit',
             'out_for_delivery': '🚚 Out for Delivery',
             'delivered': '🎉 Delivered',
+            'cancelled': '❌ Cancelled',
+            'returned': '🔄 Returned',
         }[tag],
         'description': f"Mock tracking from {carrier.upper()} for testing",
         'timestamp': now.isoformat(),
@@ -266,7 +290,7 @@ def _parse_tracking_response(tracking_data):
     }
 
 
-def get_live_tracking(tracking_number, carrier='auto'):
+def get_live_tracking(tracking_number, carrier='auto', expected_status=None):
     """
     Fetch live tracking from AfterShip (supports 500+ carriers).
     Caches result for 1 hour to avoid rate limiting.
@@ -276,7 +300,11 @@ def get_live_tracking(tracking_number, carrier='auto'):
         return None
 
     if TRACKING_MOCK_MODE:
-        mock_data = _build_mock_tracking(tracking_number, carrier=TRACKING_MOCK_CARRIER)
+        mock_data = _build_mock_tracking(
+            tracking_number,
+            carrier=TRACKING_MOCK_CARRIER,
+            expected_status=expected_status,
+        )
         if mock_data:
             logger.info(f"Using mock tracking for {tracking_number}")
         return mock_data
