@@ -293,6 +293,68 @@ INSERT INTO order_items (
 - For production, enable RLS policies in Supabase
 - Never commit `.env` to git (already in `.gitignore`)
 
+---
+
+## ⚠️ Row Level Security (RLS) — Why DB Lookups May Appear Broken
+
+Supabase enables **Row Level Security (RLS)** by default on new tables.  
+When RLS is active and no policies are defined, **all reads via the anon key return empty results** — even if rows exist in the table.  
+
+This is the most common reason you see:
+- `/api/products` returning `[]`
+- Order lookups returning "order not found"
+- The chatbot falling back to FLAN / intents despite having data in Supabase
+
+### How to fix: add SELECT policies
+
+Go to **Supabase → Authentication → Policies** (or use the SQL Editor) and run:
+
+```sql
+-- ⚠️ DEMO ONLY — allows any anonymous visitor to read all rows.
+-- In production, restrict to authenticated users or add row-level conditions.
+
+-- Allow public read access on products
+CREATE POLICY "Allow public read on products"
+ON products FOR SELECT
+USING (true);
+
+-- Allow public read access on orders
+CREATE POLICY "Allow public read on orders"
+ON orders FOR SELECT
+USING (true);
+
+-- Allow public read access on order_items
+CREATE POLICY "Allow public read on order_items"
+ON order_items FOR SELECT
+USING (true);
+```
+
+> **Production warning**: the policies above allow *any* visitor to read *all* rows.  
+> For a real deployment you should restrict order reads to the authenticated owner, for example:  
+> `USING (customer_email = auth.jwt() ->> 'email')`
+
+### Alternative: disable RLS (development only)
+
+```sql
+ALTER TABLE products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE order_items DISABLE ROW LEVEL SECURITY;
+```
+
+> Only do this for local development or a private sandbox — never on a production database.
+
+### Verify RLS is the problem
+
+Use the built-in debug endpoint (requires `ADMIN_API_KEY`):
+
+```bash
+curl -H "X-API-Key: your-admin-key" https://your-host/api/admin/db_status
+```
+
+If `supabase_configured` is `true` but `can_select_products` / `can_select_orders` are `false`, it is almost certainly an RLS / missing-policy issue.
+
+---
+
 ## 📈 Free Tier Limits
 
 - **Database**: 500MB (plenty for most apps)

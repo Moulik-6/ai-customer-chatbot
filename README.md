@@ -95,6 +95,9 @@ Every incoming message is processed through a **three-layer priority system** in
 |--------|----------|------|-------------|
 | `GET` | `/api/admin/logs` | `X-API-Key` | Conversation logs (`?limit=` & `?session_id=`) |
 | `GET` | `/api/admin/stats` | `X-API-Key` | Usage statistics |
+| `GET` | `/api/admin/db_status` | `X-API-Key` | Supabase connectivity & table access health check |
+| `GET` | `/api/admin/debug` | `X-API-Key` | SQLite database status |
+| `POST` | `/api/admin/logs/purge` | `X-API-Key` | Delete logs older than N days |
 
 > `X-API-Key` is required on all write and admin endpoints when `ADMIN_API_KEY` is set.
 
@@ -127,6 +130,7 @@ Every incoming message is processed through a **three-layer priority system** in
 | `status` | text | `pending` / `processing` / `shipped` / `delivered` / `cancelled` / `returned` |
 | `total_amount` | numeric | Total order value in USD |
 | `tracking_number` | text | Carrier tracking number (optional) |
+| `carrier` | text | Carrier code for live tracking, e.g. `ups`, `fedex`, `usps`, `dhl` (optional) |
 | `order_date` | timestamp | When the order was placed |
 
 ### Order Items
@@ -189,6 +193,57 @@ Every incoming message is processed through a **three-layer priority system** in
   ]
 }
 ```
+
+---
+
+## Troubleshooting: DB Lookups Return Empty
+
+If `/api/products` returns `[]` or order lookups say "not found" despite having data in Supabase, the most likely cause is **Row Level Security (RLS)**.
+
+Supabase enables RLS by default. Without SELECT policies, **the anon key cannot read any rows**.
+
+### Quick check
+
+```bash
+curl -H "X-API-Key: your-admin-key" https://your-host/api/admin/db_status
+```
+
+If `supabase_configured` is `true` but `can_select_products` / `can_select_orders` are `false`, add SELECT policies (see [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for example SQL).
+
+### Other common causes
+
+| Symptom | Likely cause |
+|---------|-------------|
+| `DB_NOT_CONFIGURED` error | `SUPABASE_URL` or `SUPABASE_KEY` env vars not set |
+| Empty arrays despite rows existing | RLS enabled without SELECT policies |
+| Order items missing | FK `order_items.order_id → orders.id` not created |
+| Product lookup misses | SKU case mismatch or column name differs from schema |
+
+---
+
+## DB Smoke Test
+
+A lightweight script is included to verify DB connectivity from the command line:
+
+```bash
+BASE_URL=https://seyo009-ai-customer-chatbot.hf.space python scripts/db_smoke_test.py
+
+# Include DB status check (requires admin key):
+BASE_URL=https://... ADMIN_API_KEY=your-key python scripts/db_smoke_test.py
+```
+
+---
+
+## Live Tracking (Stub)
+
+A stub service is available at `chatbot/services/tracking_service.py`. It provides the interface for integrating a third-party carrier tracking provider (AfterShip, EasyPost, Shippo, etc.) without requiring an external dependency today.
+
+To enable live tracking:
+1. Choose a provider and add its SDK to `requirements.txt`.
+2. Add `TRACKING_API_KEY` to `.env.example` and `chatbot/config.py`.
+3. Implement `_call_provider()` in `tracking_service.py`.
+4. Add a `carrier` column (e.g. `ups`, `fedex`) to your `orders` table.
+5. Optionally expose `GET /api/orders/number/<order_number>/tracking` in `chatbot/routes/orders.py`.
 
 ---
 

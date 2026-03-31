@@ -212,6 +212,7 @@ def chat():
                 bot_response = format_order(order)
                 logger.info(f"Order lookup: {order_number}")
                 return _db_response(bot_response, "order_tracking", "order_lookup", {"order": order})
+            logger.debug(f"[DB_LOOKUP_MISS] order_number={order_number!r} — no match in DB (check RLS / empty table / wrong format)")
             bot_response = (
                 f"❌ Sorry, I couldn't find order **{order_number}** in our system. "
                 "Please check the order number and try again. Or contact support@company.com for assistance."
@@ -226,6 +227,7 @@ def chat():
                     bot_response = format_orders_list(orders, email)
                     logger.info(f"Orders lookup by email: {email} ({len(orders)} found)")
                     return _db_response(bot_response, "order_tracking", "orders_by_email")
+                logger.debug(f"[DB_LOOKUP_MISS] email={email!r} (order intent) — no orders found in DB")
                 bot_response = f"I couldn't find any orders associated with **{email}**. Please check the email address or provide an order number."
                 return _db_response(bot_response, "order_tracking", "customer_not_found")
 
@@ -234,6 +236,7 @@ def chat():
                 bot_response = format_customer(customer)
                 logger.info(f"Customer lookup: {email}")
                 return _db_response(bot_response, "account", "customer_lookup")
+            logger.debug(f"[DB_LOOKUP_MISS] email={email!r} — no customer found in DB")
             bot_response = f"I couldn't find an account associated with **{email}**. Would you like help creating one?"
             return _db_response(bot_response, "account", "customer_not_found")
 
@@ -248,6 +251,7 @@ def chat():
                     bot_response = format_product(products)
                     logger.info(f"Product lookup: {search_term} ({len(products)} found)")
                     return _db_response(bot_response, intent_tag, "product_lookup")
+                logger.debug(f"[DB_LOOKUP_MISS] sku/product_name={search_term!r} — no product match in DB")
 
             # Always try the full message even if an entity was extracted but returned no matches.
             products = lookup_product(message)
