@@ -24,6 +24,7 @@ from ..services.entity_service import (
 from ..services.lookup_service import (
     lookup_order_status, lookup_orders_by_email,
     lookup_product, lookup_customer_by_email, list_products,
+    get_live_tracking,
 )
 from ..services.formatter_service import (
     format_order, format_orders_list, format_product,
@@ -297,7 +298,11 @@ def chat():
             if lookup_num:
                 order = lookup_order_status(lookup_num)
                 if order:
-                    return _db_response(format_order(order), "order_tracking", "order_lookup", {"order": order})
+                    # Fetch live tracking if tracking number available
+                    live_tracking = None
+                    if order.get('tracking_number'):
+                        live_tracking = get_live_tracking(order['tracking_number'])
+                    return _db_response(format_order(order, live_tracking=live_tracking), "order_tracking", "order_lookup", {"order": order})
                 bot_response = (
                     f"❌ Sorry, I couldn't find order **{lookup_num}** in our system. "
                     "Please check the order number and try again. Or contact support@company.com for assistance."
@@ -374,7 +379,11 @@ def chat():
         if order_number:
             order = lookup_order_status(order_number)
             if order:
-                bot_response = format_order(order)
+                # Fetch live tracking if tracking number available
+                live_tracking = None
+                if order.get('tracking_number'):
+                    live_tracking = get_live_tracking(order['tracking_number'])
+                bot_response = format_order(order, live_tracking=live_tracking)
                 logger.info(f"Order lookup: {order_number}")
                 return _db_response(bot_response, "order_tracking", "order_lookup", {"order": order})
             logger.debug(f"[DB_LOOKUP_MISS] order_number={order_number!r} — no match in DB (check RLS / empty table / wrong format)")

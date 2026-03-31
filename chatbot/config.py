@@ -30,6 +30,9 @@ FINETUNED_MODEL_PATH = os.getenv('FINETUNED_MODEL_PATH')  # Optional: path to fi
 SUPABASE_URL = os.getenv('SUPABASE_URL')
 SUPABASE_KEY = os.getenv('SUPABASE_KEY')
 
+# ── Live Tracking ─────────────────────────────────────────
+AFTERSHIP_API_KEY = os.getenv('AFTERSHIP_API_KEY')
+
 # ── Admin Auth ────────────────────────────────────────────
 ADMIN_API_KEY = os.getenv('ADMIN_API_KEY')
 FRONTEND_URL = os.getenv('FRONTEND_URL', '').strip()

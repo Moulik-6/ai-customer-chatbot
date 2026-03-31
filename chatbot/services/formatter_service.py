@@ -8,8 +8,8 @@ _STATUS_EMOJI = {
 }
 
 
-def format_order(order):
-    """Format a single order with items."""
+def format_order(order, live_tracking=None):
+    """Format a single order with items and optional live tracking."""
     if not order:
         return None
 
@@ -24,7 +24,20 @@ def format_order(order):
         f"Order #: {order['order_number']}",
         f"Total: ${total:.2f}",
     ]
-    if tracking:
+    
+    # Add live tracking info if available
+    if tracking and live_tracking:
+        lines.append(f"\n**Live Tracking:**")
+        lines.append(f"{live_tracking['status']}")
+        if live_tracking.get('description'):
+            lines.append(f"{live_tracking['description']}")
+        if live_tracking.get('location'):
+            lines.append(f"📍 Last location: {live_tracking['location']}")
+        if live_tracking.get('message'):
+            lines.append(f"📝 {live_tracking['message']}")
+        if live_tracking.get('estimated_delivery'):
+            lines.append(f"📅 Est. Delivery: {live_tracking['estimated_delivery']}")
+    elif tracking:
         lines.append(f"Tracking: {tracking}")
 
     lines.append(f"\n**Items ({len(items)}):**")

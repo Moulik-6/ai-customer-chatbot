@@ -3,7 +3,10 @@ Database lookups — query orders, products, and customers from Supabase.
 """
 import logging
 import re
+import requests
+import time
 from ..database import supabase
+from ..config import AFTERSHIP_API_KEY
 from .sanitize import sanitize_search
 from .entity_service import extract_sku
 
@@ -149,4 +152,104 @@ def list_products(limit=10, in_stock_only=False):
         return result.data if result.data else None
     except Exception as e:
         logger.error(f"Error listing products: {e}", exc_info=True)
+        return None
+
+
+# ── Live Tracking Cache (TTL: 1 hour) ──────────────────────
+_tracking_cache = {}  # Format: {tracking_number: {'data': {...}, 'timestamp': time.time()}}
+_TRACKING_CACHE_TTL = 3600  # 1 hour
+
+
+def _parse_tracking_response(tracking_data):
+    """Parse AfterShip tracking response into readable format."""
+    if not tracking_data:
+        return None
+    
+    tag = tracking_data.get('tag', 'unknown')  # delivered, in_transit, exception, etc
+    status_map = {
+        'delivered': ('🎉 Delivered', 'Your order has been delivered'),
+        'in_transit': ('📦 In Transit', 'Your order is on the way'),
+        'out_for_delivery': ('🚚 Out for Delivery', 'Your order is being delivered today'),
+        'pending': ('⏳ Pending', 'Your order is being prepared'),
+        'exception': ('⚠️ Issue Detected', 'There\'s an issue with your shipment'),
+        'returned': ('🔄 Returned', 'Your order has been returned'),
+    }
+    
+    status, description = status_map.get(tag, ('📋 Unknown', 'Tracking status unavailable'))
+    
+    checkpoints = tracking_data.get('checkpoints', [])
+    latest_checkpoint = checkpoints[0] if checkpoints else None
+    
+    return {
+        'tag': tag,
+        'status': status,
+        'description': description,
+        'timestamp': tracking_data.get('updated_at'),
+        'location': latest_checkpoint.get('location', {}).get('name') if latest_checkpoint else None,
+        'message': latest_checkpoint.get('message') if latest_checkpoint else None,
+        'latest_event': {
+            'time': latest_checkpoint.get('checkpoint_time') if latest_checkpoint else None,
+            'location': latest_checkpoint.get('location', {}).get('name') if latest_checkpoint else None,
+            'message': latest_checkpoint.get('message') if latest_checkpoint else None,
+        },
+        'estimated_delivery': tracking_data.get('expected_delivery'),
+        'checkpoints': checkpoints[:3],  # Last 3 events
+    }
+
+
+def get_live_tracking(tracking_number, carrier='auto'):
+    """
+    Fetch live tracking from AfterShip (supports 500+ carriers).
+    Caches result for 1 hour to avoid rate limiting.
+    Falls back gracefully if API unavailable.
+    """
+    if not tracking_number or not AFTERSHIP_API_KEY:
+        return None
+    
+    # Check cache first
+    if tracking_number in _tracking_cache:
+        cached = _tracking_cache[tracking_number]
+        if time.time() - cached['timestamp'] < _TRACKING_CACHE_TTL:
+            logger.info(f"Returning cached tracking for {tracking_number}")
+            return cached['data']
+        else:
+            del _tracking_cache[tracking_number]  # Expired
+    
+    try:
+        # AfterShip API endpoint
+        url = f'https://api.aftership.com/v4/trackings/{carrier}/{tracking_number}'
+        
+        headers = {
+            'aftership-api-key': AFTERSHIP_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            tracking_data = response.json().get('data', {}).get('tracking', {})
+            parsed = _parse_tracking_response(tracking_data)
+            
+            # Cache the result
+            _tracking_cache[tracking_number] = {
+                'data': parsed,
+                'timestamp': time.time()
+            }
+            
+            logger.info(f"Live tracking fetched for {tracking_number}: {tracking_data.get('tag')}")
+            return parsed
+        
+        elif response.status_code == 404:
+            logger.warning(f"Tracking number {tracking_number} not found in AfterShip")
+            return None
+        
+        else:
+            logger.warning(f"AfterShip API error {response.status_code}: {response.text}")
+            return None
+    
+    except requests.Timeout:
+        logger.warning(f"AfterShip API timeout for {tracking_number}")
+        return None
+    except Exception as e:
+        logger.error(f"Error fetching live tracking for {tracking_number}: {e}", exc_info=True)
         return None
