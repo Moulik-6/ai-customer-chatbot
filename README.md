@@ -253,6 +253,79 @@ See [training/README.md](training/README.md) for full instructions.
 
 ---
 
+## Smoke Testing
+
+`scripts/live_smoke_test.py` is a stdlib-only smoke test that hits the deployed
+Space and verifies the core endpoints are healthy.
+
+### Run locally
+
+```bash
+# Against the default Space URL
+python scripts/live_smoke_test.py
+
+# Against a custom URL
+BASE_URL=https://your-space.hf.space python scripts/live_smoke_test.py
+```
+
+The script checks:
+
+| # | Endpoint | What is verified |
+|---|----------|-----------------|
+| 1 | `GET /health` | Returns 200 and `status == "healthy"` |
+| 2 | `POST /api/chat` | Intent matching works (greeting / shipping / returns) |
+| 3 | `POST /api/chat` | AI fallback returns a non-empty response |
+| 4 | `GET /api/products` | Returns 200 with a `products` list |
+| 5 | `GET /api/orders` | Returns 200 with an `orders` list |
+
+Each request is retried up to 3 times with exponential backoff.
+Exit code `0` means all checks passed; `1` means at least one failed;
+`2` means the Space was completely unreachable.
+
+### CI (GitHub Actions)
+
+The workflow `.github/workflows/smoke-test.yml` runs the smoke test
+automatically on every pull request and can be triggered manually via
+"Run workflow".
+
+Set a **repository variable** (Settings → Variables → Actions) called
+`BASE_URL` to point the CI job at a different deployment; if the variable
+is absent the default URL is used.
+
+### What `DB_ERROR` likely means
+
+If `/api/products` or `/api/orders` returns:
+
+```json
+{"code": "DB_ERROR", "error": "Failed to fetch products"}
+```
+
+the most common cause is that the **Supabase project is paused**.
+Free-tier Supabase projects are paused automatically after a period of
+inactivity.
+
+The smoke test will print an explicit hint in that case:
+
+```
+⚠️  HINT: Supabase may be paused.
+➜  Unpause the project in the Supabase dashboard: https://supabase.com/dashboard
+```
+
+**Fix**: log in to [Supabase dashboard](https://supabase.com/dashboard),
+open your project, and click **Restore project** (or **Unpause**).
+Once the project is active, re-deploy the Space (or restart it) so the
+new connection can be established.
+
+Other possible causes of `DB_ERROR`:
+
+| Cause | How to confirm | Fix |
+|-------|---------------|-----|
+| `SUPABASE_URL` / `SUPABASE_KEY` not set in Space secrets | `/health` shows no DB fields | Add secrets in HF Space settings |
+| Row Level Security blocks reads | Supabase logs show "permission denied" | Add SELECT policies for `products`, `orders`, `order_items` |
+| Tables not created | `/api/products` returns DB_ERROR even after unpause | Run the SQL in `SUPABASE_SETUP.md` |
+
+---
+
 ## Security & Rate Limiting
 
 - **Chat rate limit**: 30 requests/minute per IP

@@ -1,0 +1,28 @@
+name: Smoke Test
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    name: Live smoke test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run smoke test
+        env:
+          # Use the repository variable/secret BASE_URL when set; fall back to
+          # the hard-coded default inside the script.
+          BASE_URL: ${{ vars.BASE_URL || secrets.BASE_URL || '' }}
+        run: python scripts/live_smoke_test.py
