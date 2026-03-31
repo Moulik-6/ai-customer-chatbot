@@ -10,145 +10,187 @@ pinned: false
 
 # AI Customer Chatbot
 
-A production-ready model showcase for customer-support AI. Organizations can test the live demo, download the model, and tailor it to their own workflows using a simple dataset.
+A Flask-based customer-support chatbot that combines database lookups, intent matching, and a FLAN-T5 AI fallback to answer questions about orders, products, shipping, and more.
 
-## Model Showcase Goal
+**Live demo**: https://huggingface.co/spaces/Seyo009/ai-customer-chatbot
 
-This project is designed as a model adoption funnel:
+---
 
-1. Try the live demo to validate quality.
-2. Download the model from Hugging Face.
-3. Fine-tune with your organization's dataset.
-4. Deploy in your own environment.
+## How Chat Routing Works
 
-Model repo:
-- https://huggingface.co/seyo009/ai-customer-chatbot-flan-small-ft
+Every incoming message is processed through a **three-layer priority system** in `chatbot/routes/chat.py`:
 
-## Organization Customization (Simple Dataset)
+1. **Database lookups (highest priority)**
+   - Explicit product/stock list requests → queries `products` table
+   - Order number detected (e.g. `ORD-123`) → queries `orders` table
+   - Email address detected → queries orders or customer info
+   - Product/SKU/name detected with a product intent → queries `products` table
+   - Product-like keywords in free text → queries `products` table
 
-Use a small instruction dataset in JSONL format:
+2. **Intent matching (fast path)**
+   - Matches 26 precompiled patterns from `chatbot/data/intents.json`
+   - Returns a deterministic canned response immediately
+   - **Intent responses never call the AI model**
 
+3. **FLAN-T5 fallback (last resort)**
+   - Only reached when no DB result and no intent match
+   - Calls `query_model()` in `chatbot/models/ai_model.py`
+   - Defaults to `google/flan-t5-small` (set via `HUGGINGFACE_MODEL`)
+   - Supports local inference (`USE_LOCAL_MODEL=true`) or HF Inference API (`HUGGINGFACE_API_KEY`)
+
+---
+
+## API Endpoints
+
+### Chat
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/chat` | — | Send a message and receive a response |
+| `GET` | `/health` | — | Service health check |
+| `POST` | `/api/feedback` | — | Submit thumbs-up/down on a response |
+
+**Request** (`/api/chat`):
 ```json
-{"input":"Customer asks about resetting MFA","output":"To reset MFA, go to Security Settings > Multi-Factor Authentication and choose Reset."}
-{"input":"Customer asks about invoice export","output":"You can export invoices from Billing > Invoices > Export CSV."}
+{ "message": "Where is my order ORD-123?", "session_id": "optional-uuid" }
 ```
 
-Then run:
-
-```bash
-python training/prepare_data.py
-python training/finetune.py
-python training/upload_model_to_hf.py
+**Response**:
+```json
+{
+  "success": true,
+  "type": "order_lookup",
+  "intent": "order_tracking",
+  "message": "Where is my order ORD-123?",
+  "response": "📦 Order ORD-123 — Status: shipped ...",
+  "model": "database"
+}
 ```
 
-Set your deployment to the tuned model:
+### Products
 
-```bash
-HUGGINGFACE_MODEL=your-org/your-tuned-model
-USE_LOCAL_MODEL=false
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/products` | — | List products (`?search=` & `?category=`) |
+| `GET` | `/api/products/<id>` | — | Get product by ID |
+| `POST` | `/api/products` | `X-API-Key` | Create a product |
+| `PUT` | `/api/products/<id>` | `X-API-Key` | Update a product |
+| `DELETE` | `/api/products/<id>` | `X-API-Key` | Delete a product |
+| `GET` | `/api/products/duplicates` | `X-API-Key` | List duplicate products |
+
+### Orders
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/orders` | — | List orders (`?customer_email=` & `?status=`) |
+| `GET` | `/api/orders/<id>` | — | Get order by ID |
+| `GET` | `/api/orders/number/<num>` | — | Get order by order number |
+| `POST` | `/api/orders` | `X-API-Key` | Create an order with items |
+| `PUT` | `/api/orders/<id>` | `X-API-Key` | Update an order |
+| `PATCH` | `/api/orders/<id>/status` | `X-API-Key` | Update order status + tracking number |
+
+### Admin
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `GET` | `/api/admin/logs` | `X-API-Key` | Conversation logs (`?limit=` & `?session_id=`) |
+| `GET` | `/api/admin/stats` | `X-API-Key` | Usage statistics |
+
+> `X-API-Key` is required on all write and admin endpoints when `ADMIN_API_KEY` is set.
+
+---
+
+## Database Schemas
+
+### Products
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID / serial | Primary key |
+| `name` | text | Product display name |
+| `description` | text | Short product description |
+| `price` | numeric | Price in USD |
+| `category` | text | Product category (e.g. `Electronics`) |
+| `sku` | text | Unique stock-keeping unit identifier |
+| `stock` | integer | Units in stock |
+| `image_url` | text | URL to product image (optional) |
+| `created_at` | timestamp | Row creation time |
+
+### Orders
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID / serial | Primary key |
+| `order_number` | text | Human-readable ID (e.g. `ORD-001`) |
+| `customer_name` | text | Full name of the customer |
+| `customer_email` | text | Customer email address |
+| `status` | text | `pending` / `processing` / `shipped` / `delivered` / `cancelled` / `returned` |
+| `total_amount` | numeric | Total order value in USD |
+| `tracking_number` | text | Carrier tracking number (optional) |
+| `order_date` | timestamp | When the order was placed |
+
+### Order Items
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID / serial | Primary key |
+| `order_id` | UUID / serial | Foreign key → `orders.id` |
+| `product_name` | text | Name of the product ordered |
+| `product_sku` | text | SKU of the product ordered |
+| `quantity` | integer | Number of units |
+| `unit_price` | numeric | Price per unit at time of order |
+| `subtotal` | numeric | `quantity × unit_price` |
+
+---
+
+## Sample Product Catalog
+
+| SKU | Name | Category | Price | Stock |
+|-----|------|----------|-------|-------|
+| `IPHONE-15-PRO` | iPhone 15 Pro | Electronics | $999.99 | 50 |
+| `MACBOOK-AIR-M2` | MacBook Air M2 | Electronics | $1,099.99 | 30 |
+| `IPAD-PRO-12` | iPad Pro 12.9" | Electronics | $1,299.99 | 25 |
+| `AIRPODS-PRO-2` | AirPods Pro 2nd Gen | Electronics | $249.99 | 100 |
+| `APPLE-WATCH-S9` | Apple Watch Series 9 | Electronics | $399.99 | 60 |
+| `SAMSUNG-S24-ULTRA` | Samsung Galaxy S24 Ultra | Electronics | $1,199.99 | 40 |
+| `SONY-WH1000XM5` | Sony WH-1000XM5 Headphones | Electronics | $349.99 | 75 |
+| `LOGITECH-MX-MASTER` | Logitech MX Master 3S Mouse | Accessories | $99.99 | 120 |
+| `ANKER-CHARGER-65W` | Anker 65W USB-C Charger | Accessories | $35.99 | 200 |
+| `SAMSUNG-T7-SSD` | Samsung T7 Portable SSD 1TB | Storage | $89.99 | 85 |
+
+---
+
+## Sample Orders
+
+| Order # | Customer | Email | Status | Total | Tracking |
+|---------|----------|-------|--------|-------|---------|
+| `ORD-001` | Alice Johnson | alice@example.com | `shipped` | $1,249.98 | `1Z999AA10123456784` |
+| `ORD-002` | Bob Smith | bob@example.com | `delivered` | $249.99 | `1Z999AA10987654321` |
+| `ORD-003` | Carol White | carol@example.com | `processing` | $1,099.99 | — |
+| `ORD-004` | David Brown | david@example.com | `pending` | $399.99 | — |
+| `ORD-005` | Eve Davis | eve@example.com | `cancelled` | $35.99 | — |
+
+**Example order payload** (POST `/api/orders`):
+```json
+{
+  "order_number": "ORD-006",
+  "customer_name": "Frank Miller",
+  "customer_email": "frank@example.com",
+  "status": "pending",
+  "total_amount": 1299.99,
+  "items": [
+    {
+      "product_name": "iPad Pro 12.9\"",
+      "product_sku": "IPAD-PRO-12",
+      "quantity": 1,
+      "unit_price": 1299.99,
+      "subtotal": 1299.99
+    }
+  ]
+}
 ```
 
-## Features
-
-- 🤖 **AI Responses** — FLAN-T5-small by default with optional fine-tuned model deployment
-- 🔍 **Smart DB Lookups** — Automatically queries orders, customers, and products based on user input
-- 💬 **Intent Matching** — 26 precompiled intent patterns for instant responses
-- 🛍️ **Product Management** — Full CRUD API with search, category filter, duplicate detection
-- 📦 **Order Management** — Order CRUD, status tracking, tracking numbers
-- 📊 **Conversation Logging** — All chats logged to Supabase (SQLite fallback)
-- 🎨 **Premium UI** — ChatGPT/Claude-inspired dark theme with session persistence
-- 🔐 **API Key Auth** — Admin/write endpoints protected with `X-API-Key` header
-- ⚡ **Rate Limiting** — 30 req/min on chat, 200 req/hr global default
-- 🛡️ **XSS Protection** — HTML-escaped bot responses with safe markdown rendering
-- 🐳 **Docker Deployment** — Ready for Hugging Face Spaces (model weights cached in image)
-
-## Project Structure
-
-```
-ai-customer-chatbot/
-├── run.py                          # Entry point — starts Flask app on configured PORT
-├── chatbot/
-│   ├── config.py                   # Centralized env vars & constants
-│   ├── database.py                 # Supabase client + SQLite fallback + conversation logging
-│   ├── auth.py                     # Admin API-key decorator
-│   ├── models/
-│   ├── __init__.py
-│   └── ai_model.py                 # FLAN-T5 loading, prompt building, inference
-│   ├── services/
-│   ├── __init__.py
-│   ├── intent_service.py           # Load & match intents from intents.json
-│   ├── entity_service.py           # Regex extraction (order #, email, SKU, product name)
-│   ├── lookup_service.py           # Supabase queries (orders, products, customers)
-│   └── formatter_service.py        # Format DB rows into customer-friendly responses
-│   ├── routes/
-│   ├── __init__.py
-│   ├── chat.py                     # /api/chat, /, /health — main chat + smart lookups
-│   ├── admin.py                    # /api/admin/* — logs, stats, debug
-│   ├── products.py                 # /api/products — CRUD
-│   └── orders.py                   # /api/orders — CRUD + status tracking
-│   └── data/intents.json           # Customer service intent categories
-├── frontend/index.html             # Chat frontend UI
-├── requirements.txt                # Python dependencies
-├── Dockerfile                      # Docker config for HF Spaces (port 7860)
-├── SUPABASE_SETUP.md               # Full database schema & setup guide
-├── .env.example                    # Environment variable template
-├── .gitignore                      # Git ignore rules
-├── .gitattributes                  # HF Spaces LFS config
-└── .dockerignore                   # Docker build exclusions
-```
-
-## How the Chat Works
-
-When a user sends a message, the chatbot follows a **6-level priority system**:
-
-1. **Order by number** — Detects `ORD-XXXX` patterns → queries `orders` table
-2. **Customer/Orders by email** — Detects email addresses → queries orders or customer info based on intent
-3. **Product by SKU/name** — For product/pricing/stock intents → queries `products` table
-4. **Order tracking prompt** — Order intent but no order number → asks user for it
-5. **Intent match** — Matches against 26 keyword patterns → returns canned response
-6. **AI fallback** — Sends to configured Hugging Face generation model
-
-## Order Number Format
-
-Order numbers are flexible and easy to use for automatic detection and lookup.
-
-### Pattern
-
-**Format**: `ORD-XXX` (minimum 3 digits) or longer
-
-**Regex**: `ORD[-\s]?\d{3,}`
-
-**Variations accepted**:
-- Short: `ORD-234`, `ORD-999`
-- With dashes: `ORD-0001-234`, `ORD-1234567`
-- With spaces: `ORD 234`, `ORD 0001 234`
-- Case-insensitive: `ord-234`, `ORD-234`
-
-### Examples in Codebase
-
-| Order Number | Source | Context |
-|---|---|---|
-| `ORD-001` | `test_live.py` | Test case: order lookup |
-| `ORD-9999-999` | `test_live.py` | Test case: nonexistent order |
-
-### How Ordering Works
-
-1. **Detection**: User message is scanned for order number pattern via `extract_order_number()` in [chatbot/services/entity_service.py](chatbot/services/entity_service.py#L9)
-2. **Lookup**: Order ID is queried from the `orders` table by `order_number` field
-3. **Response**: Bot returns order details including status, tracking number, and items
-4. **Fallback**: If no order number detected but order intent recognized, bot asks user to provide it
-
-### Order Status Tracking
-
-Orders can have these statuses (customizable):
-- `pending` — Order received, not yet shipped
-- `processing` — Being prepared
-- `shipped` — On the way (tracking number available)
-- `delivered` — Arrived at customer
-- `cancelled` — Order cancelled
-- `returned` — Return received
-
-Update status via: `PATCH /api/orders/<id>/status`
+---
 
 ## Quick Start
 
@@ -158,117 +200,75 @@ Update status via: `PATCH /api/orders/<id>/status`
 pip install -r requirements.txt
 ```
 
-### 2. Setup Supabase
+### 2. Set Up Database
 
-Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to create the `orders`, `order_items`, `products`, and `conversations` tables.
+Follow [SUPABASE_SETUP.md](SUPABASE_SETUP.md) to create the `orders`, `order_items`, `products`, and `conversations` tables in Supabase (a SQLite file is used automatically as fallback).
 
 ### 3. Configure Environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your Supabase URL + key
-# Optionally set ADMIN_API_KEY to protect write/admin endpoints
+# Fill in SUPABASE_URL, SUPABASE_KEY, and optionally ADMIN_API_KEY
 ```
 
 ### 4. Run
 
 ```bash
 python run.py
-# Runs on http://localhost:7860
+# Starts on http://localhost:7860
 ```
 
-## 🧠 Fine-Tuning FLAN-T5-Small (Optional but Recommended)
+---
 
-For better customer service responses, you can fine-tune FLAN-T5 using public datasets:
+## Order Number Format
+
+Order numbers follow the pattern `ORD-XXX` (minimum 3 digits, case-insensitive):
+
+| Format | Example |
+|--------|---------|
+| Standard | `ORD-001`, `ORD-1234` |
+| With spaces | `ORD 001` |
+| Longer | `ORD-0001-234` |
+
+---
+
+## Fine-Tuning FLAN-T5 (Optional)
+
+You can fine-tune the default model on your own dataset:
 
 ```bash
-# 1. Prepare data (Banking77 + synthetic examples)
-python training/prepare_data.py
-
-# 2. Fine-tune (1-2 hours on CPU, 15-30 min on GPU)
-python training/finetune.py
-
-# 3. Test inference
-python training/inference.py
-
-# 4. Upload trained model to HF model repo
-HF_TOKEN=your_write_token \
-HF_MODEL_REPO=seyo009/ai-customer-chatbot-flan-small-ft \
-python training/upload_model_to_hf.py
-
-# 5. Set Space secrets
-# HUGGINGFACE_MODEL=seyo009/ai-customer-chatbot-flan-small-ft
-# USE_LOCAL_MODEL=false
-
-# 6. Restart app
-python run.py
+python training/prepare_data.py   # Prepare training data
+python training/finetune.py       # Fine-tune (15–120 min depending on hardware)
+python training/upload_model_to_hf.py  # Upload to HF Hub
 ```
 
-**What's included**:
-- 📊 Banking77 dataset (13K+ customer service examples)
-- 🔄 Synthetic e-commerce conversations (orders, returns, products)
-- ⚡ Optimized for CPU/GPU training
-- 📈 Automatic model loading on startup
+Then point the app at your fine-tuned model:
 
-See [training/README.md](training/README.md) for detailed instructions and troubleshooting.
+```bash
+HUGGINGFACE_MODEL=your-org/your-model
+USE_LOCAL_MODEL=false
+```
 
-### Chat
+See [training/README.md](training/README.md) for full instructions.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/chat` | Send a message and get a response |
-| `GET` | `/health` | Health check |
-
-### Products
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/products` | List products (`?search=` & `?category=`) |
-| `GET` | `/api/products/<id>` | Get product by ID |
-| `POST` | `/api/products` | Create product |
-| `PUT` | `/api/products/<id>` | Update product |
-| `DELETE` | `/api/products/<id>` | Delete product |
-| `GET` | `/api/products/duplicates` | List duplicate products |
-
-### Orders
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/orders` | List orders (`?customer_email=` & `?status=`) |
-| `GET` | `/api/orders/<id>` | Get order by ID |
-| `GET` | `/api/orders/number/<num>` | Get order by order number |
-| `POST` | `/api/orders` | Create order with items |
-| `PUT` | `/api/orders/<id>` | Update order |
-| `PATCH` | `/api/orders/<id>/status` | Update order status + tracking |
-
-### Admin
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/admin/logs` | Conversation logs (`?limit=` & `?session_id=`) |
-| `GET` | `/api/admin/stats` | Usage statistics |
-
-> **Note**: POST/PUT/DELETE/PATCH endpoints and all `/api/admin/*` routes require an `X-API-Key` header when `ADMIN_API_KEY` is set in the environment.
+---
 
 ## Security & Rate Limiting
 
-- **Rate limiting**: `/api/chat` is limited to 30 requests/minute per IP. Write endpoints are limited to 20/min. Global default is 200/hr.
-- **Admin auth**: Set `ADMIN_API_KEY` in your `.env` to protect all write and admin endpoints. Pass the key via `X-API-Key` header.
-- **XSS protection**: Bot responses are HTML-escaped before rendering. Only safe markdown (`**bold**`, newlines) is rendered.
-- **Auto-detect API URL**: The frontend auto-detects the backend URL from `window.location`, so it works in local dev and production without changes.
+- **Chat rate limit**: 30 requests/minute per IP
+- **Global default**: 200 requests/hour
+- **Write/admin auth**: `X-API-Key` header required when `ADMIN_API_KEY` is set
+- **XSS protection**: All bot responses are HTML-escaped before rendering
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Backend | Flask 2.3, Python 3.11 |
-| AI Model | FLAN-T5-small (default) or fine-tuned model repo |
-| Database | Supabase (PostgreSQL) / SQLite fallback |
+| Backend | Flask 2.3+, Python 3.11 |
+| AI Fallback | FLAN-T5-small (default) via Hugging Face Transformers or Inference API |
+| Database | Supabase (PostgreSQL) with SQLite fallback |
 | Frontend | Vanilla HTML/CSS/JS, dark theme |
-| Deployment | Docker on Hugging Face Spaces |
+| Deployment | Docker on Hugging Face Spaces (port 7860) |
 
-## Deployment
-
-Deployed on Hugging Face Spaces with Docker.
-
-**Live**: https://huggingface.co/spaces/Seyo009/ai-customer-chatbot
