@@ -45,7 +45,7 @@ def lookup_order_status(order_number):
         result = supabase.table('orders').select('*,order_items(*)').eq('order_number', order_number).execute()
         return result.data[0] if result.data else None
     except Exception as e:
-        logger.error(f"Error looking up order: {e}")
+        logger.error(f"Error looking up order {order_number!r}: {e}", exc_info=True)
         return None
 
 
@@ -62,7 +62,7 @@ def lookup_orders_by_email(email):
                   .execute())
         return result.data if result.data else None
     except Exception as e:
-        logger.error(f"Error looking up orders by email: {e}")
+        logger.error(f"Error looking up orders by email {email!r}: {e}", exc_info=True)
         return None
 
 
@@ -91,7 +91,7 @@ def lookup_product(query):
 
         return None
     except Exception as e:
-        logger.error(f"Error looking up product: {e}")
+        logger.error(f"Error looking up product {query!r}: {e}", exc_info=True)
         return None
 
 
@@ -117,7 +117,7 @@ def lookup_customer_by_email(email):
             'orders': result.data,
         }
     except Exception as e:
-        logger.error(f"Error looking up customer: {e}")
+        logger.error(f"Error looking up customer {email!r}: {e}", exc_info=True)
         return None
 
 
@@ -148,5 +148,5 @@ def list_products(limit=10, in_stock_only=False):
         result = query.execute()
         return result.data if result.data else None
     except Exception as e:
-        logger.error(f"Error listing products: {e}")
+        logger.error(f"Error listing products: {e}", exc_info=True)
         return None
