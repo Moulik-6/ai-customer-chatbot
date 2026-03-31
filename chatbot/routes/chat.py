@@ -2,13 +2,13 @@
 Chat routes — main chat endpoint, index page, health check.
 """
 import logging
+import json
 import re
 import time
 from collections import defaultdict
 from pathlib import Path
 
 import requests
-
 from flask import Blueprint, request, jsonify, redirect, send_from_directory
 
 from ..extensions import limiter
@@ -182,6 +182,171 @@ def chat():
             _store_context(bot_response)
             return jsonify(resp), 200
 
+        def _enhance_intent_response(base_response, intent):
+            """Polish intent responses with FLAN when available; otherwise keep base text."""
+            prompt = (
+                "Rewrite this customer support response to sound natural and helpful. "
+                "Keep the meaning the same, avoid inventing new policy/details, and keep it concise (1-2 sentences).\n\n"
+                f"Intent: {intent}\n"
+                f"Customer message: {message}\n"
+                f"Base response: {base_response}\n"
+                "Rewritten response:"
+            )
+            try:
+                enhanced = query_model(prompt, context=context)
+                if (
+                    enhanced.get('type') == 'generation'
+                    and enhanced.get('model') != 'fallback'
+                    and (enhanced.get('result') or '').strip()
+                ):
+                    return enhanced['result'].strip(), enhanced['model']
+            except Exception as exc:
+                logger.warning(f"Intent enhancement skipped: {exc}")
+            return base_response, 'intents'
+
+        def _parse_model_plan(raw_text):
+            """Parse planner JSON from model output, tolerating extra wrapper text."""
+            if not raw_text:
+                return None
+            text = raw_text.strip()
+
+            # Try full text first, then first JSON object block.
+            candidates = [text]
+            start = text.find('{')
+            end = text.rfind('}')
+            if start != -1 and end != -1 and end > start:
+                candidates.append(text[start:end + 1])
+
+            for candidate in candidates:
+                try:
+                    parsed = json.loads(candidate)
+                    action = parsed.get('action', '').strip().lower()
+                    if action in {
+                        'none', 'list_products', 'list_stock_products',
+                        'search_products', 'lookup_order',
+                        'lookup_orders_by_email', 'lookup_customer_by_email',
+                    }:
+                        return parsed
+                except Exception:
+                    continue
+            return None
+
+        # ========== 0. PRIMARY: AI MODEL GENERATION ==========
+        # Let the model choose whether to call a DB lookup tool first.
+        # Intent and DB routes are fallback when model generation is unavailable.
+        context = _conversation_context.get(session_id, [])
+
+        planner_prompt = (
+            "You are a routing planner for customer support tools. "
+            "Choose one DB action for the user's message. "
+            "Return ONLY valid JSON with keys: action, query, order_number, email. "
+            "Allowed actions: none, list_products, list_stock_products, search_products, "
+            "lookup_order, lookup_orders_by_email, lookup_customer_by_email.\n\n"
+            f"User message: {message}\n"
+            f"Extracted order_number: {order_number or ''}\n"
+            f"Extracted email: {email or ''}\n"
+            f"Extracted sku: {sku or ''}\n"
+            f"Extracted product_name: {product_name or ''}\n"
+            "JSON:"
+        )
+
+        planner_response = query_model(planner_prompt, context=context, use_support_prompt=False)
+        plan = _parse_model_plan(planner_response.get('result') if planner_response else None)
+        def _fallback_db_action():
+            if order_number:
+                return 'lookup_order'
+            if email:
+                if intent_tag in ('order_tracking', 'order_status', 'shipping'):
+                    return 'lookup_orders_by_email'
+                return 'lookup_customer_by_email'
+            if _RE_STOCK_LIST_REQUEST.search(message):
+                return 'list_stock_products'
+            if _RE_PRODUCT_LIST_REQUEST.search(message):
+                return 'list_products'
+            if sku or product_name or _RE_PRODUCT_HINT.search(message):
+                return 'search_products'
+            return 'none'
+
+        action = (plan.get('action') if plan else '') or _fallback_db_action()
+        action = action.strip().lower()
+        plan_query = (plan.get('query') if plan else '') or ''
+        plan_order = (plan.get('order_number') if plan else '') or ''
+        plan_email = (plan.get('email') if plan else '') or ''
+        plan_query = plan_query.strip()
+        plan_order = plan_order.strip()
+        plan_email = plan_email.strip().lower()
+
+        if action == 'list_stock_products':
+            stock_products = list_products(in_stock_only=True)
+            if stock_products:
+                return _db_response(format_product_list(stock_products), "stock_availability", "product_list")
+
+        if action == 'list_products':
+            all_products = list_products()
+            if all_products:
+                return _db_response(format_product_list(all_products), "product_info", "product_list")
+
+        if action == 'search_products':
+            search_term = plan_query or sku or product_name or message
+            products = lookup_product(search_term)
+            if products:
+                return _db_response(format_product(products), "product_info", "product_lookup")
+
+        if action == 'lookup_order':
+            lookup_num = plan_order or order_number
+            if lookup_num:
+                order = lookup_order_status(lookup_num)
+                if order:
+                    return _db_response(format_order(order), "order_tracking", "order_lookup", {"order": order})
+                bot_response = (
+                    f"❌ Sorry, I couldn't find order **{lookup_num}** in our system. "
+                    "Please check the order number and try again. Or contact support@company.com for assistance."
+                )
+                return _db_response(bot_response, "order_tracking", "order_not_found")
+
+        if action == 'lookup_orders_by_email':
+            lookup_email = plan_email or email
+            if lookup_email:
+                orders = lookup_orders_by_email(lookup_email)
+                if orders:
+                    return _db_response(format_orders_list(orders, lookup_email), "order_tracking", "orders_by_email")
+                bot_response = (
+                    f"I couldn't find any orders associated with **{lookup_email}**. "
+                    "Please check the email address or provide an order number."
+                )
+                return _db_response(bot_response, "order_tracking", "customer_not_found")
+
+        if action == 'lookup_customer_by_email':
+            lookup_email = plan_email or email
+            if lookup_email:
+                customer = lookup_customer_by_email(lookup_email)
+                if customer:
+                    return _db_response(format_customer(customer), "account", "customer_lookup")
+                bot_response = f"I couldn't find an account associated with **{lookup_email}**. Would you like help creating one?"
+                return _db_response(bot_response, "account", "customer_not_found")
+
+        api_response = query_model(message, context=context)
+        model_generation_ready = (
+            api_response.get('type') == 'generation'
+            and bool((api_response.get('result') or '').strip())
+            and api_response.get('model') != 'fallback'
+        )
+
+        if model_generation_ready:
+            bot_response = api_response['result']
+            log_conversation(
+                session_id=session_id, user_message=message,
+                bot_response=bot_response, intent=None,
+                model_used=api_response['model'], response_type="generation",
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
+            )
+            _store_context(bot_response)
+            return jsonify({
+                "success": True, "type": "generation",
+                "message": message, "response": bot_response,
+                "model": api_response['model'],
+            }), 200
+
         # ========== 0. EXPLICIT PRODUCT LIST REQUESTS (DB-first) ==========
         if _RE_STOCK_LIST_REQUEST.search(message):
             stock_products = list_products(in_stock_only=True)
@@ -296,35 +461,36 @@ def chat():
         # ========== 4. ORDER TRACKING (no order number) ==========
         # Intent responses are deterministic (canned) and do NOT call the AI model.
         if intent_tag == 'order_tracking':
-            bot_response = intent_match['response']
+            bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_tag)
             log_conversation(
                 session_id=session_id, user_message=message,
                 bot_response=bot_response, intent=intent_tag,
-                model_used="intents", response_type="intent",
+                model_used=model_used, response_type="intent",
                 ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
             _store_context(bot_response)
             return jsonify({
                 "success": True, "type": "intent", "intent": intent_tag,
-                "message": message, "response": bot_response, "model": "intents",
+                "message": message, "response": bot_response, "model": model_used,
             }), 200
 
         # ========== 5. OTHER INTENT MATCHES ==========
         # Intent responses are deterministic (canned) and do NOT call the AI model.
         if intent_match:
             logger.info(f"Intent matched: {intent_match['tag']}")
+            bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_match['tag'])
             log_conversation(
                 session_id=session_id, user_message=message,
-                bot_response=intent_match['response'],
+                bot_response=bot_response,
                 intent=intent_match['tag'],
-                model_used="intents", response_type="intent",
+                model_used=model_used, response_type="intent",
                 ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
-            _store_context(intent_match['response'])
+            _store_context(bot_response)
             return jsonify({
                 "success": True, "type": "intent",
                 "intent": intent_match['tag'], "message": message,
-                "response": intent_match['response'], "model": "intents",
+                "response": bot_response, "model": model_used,
             }), 200
 
         # ========== 5.5 PRODUCT SEARCH FALLBACK ==========
@@ -336,11 +502,9 @@ def chat():
                 logger.info(f"Product fallback search: {message[:50]} ({len(products)} found)")
                 return _db_response(bot_response, "product_info", "product_lookup")
 
-        # ========== 6. FALLBACK: AI MODEL ==========
-        context = _conversation_context.get(session_id, [])
-        api_response = query_model(message, context=context)
-
-        if api_response['type'] == 'generation':
+        # ========== 6. FINAL FALLBACK ==========
+        # If model wasn't available for primary generation, return its fallback text.
+        if api_response.get('type') == 'generation':
             response_data = {
                 "success": True, "type": "generation",
                 "message": message, "response": api_response['result'],
