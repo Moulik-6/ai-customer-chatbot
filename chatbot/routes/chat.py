@@ -453,7 +453,7 @@ def chat():
             )
             return _db_response(bot_response, 'order_tracking', 'order_tracking_missing_details')
 
-        if (intent_tag == 'returns' or explicit_return_request) and not order_number and not email:
+        if (intent_tag == 'returns' or explicit_return_request) and not order_number and not email and not _RE_RETURN_POLICY_REQUEST.search(message):
             bot_response = (
                 "I can help with a return. Please share your order number "
                 "(example: **ORD-2026-001**) or the email used when ordering."
@@ -701,7 +701,7 @@ def chat():
             and api_response.get('model') != 'fallback'
         )
 
-        if model_generation_ready:
+        if model_generation_ready and not intent_match:
             bot_response = api_response['result']
             log_conversation(
                 session_id=session_id, user_message=message,
@@ -926,7 +926,7 @@ def chat():
                 "message": message, "response": bot_response, "model": model_used,
             }), 200
 
-        if intent_tag == 'returns' and not order_number and not email:
+        if intent_tag == 'returns' and not order_number and not email and not _RE_RETURN_POLICY_REQUEST.search(message):
             bot_response = (
                 "I can help with a return. Please share your order number "
                 "(example: **ORD-2026-001**) or the email used when ordering."
