@@ -401,12 +401,6 @@ def chat():
             return False
 
         def _clarify_message():
-            if order_number or email or explicit_track_request or explicit_return_request:
-                return (
-                    "I can help with that, but I need your order number or the email used for the order. "
-                    "For example: **ORD-2026-001**."
-                ), 'order_tracking', 'clarification'
-
             if sku or product_name or _RE_PRODUCT_HINT.search(message):
                 return (
                     "Which product do you mean? Share the product name or SKU and I’ll pull up the details."
@@ -415,6 +409,49 @@ def chat():
             return (
                 "Can you tell me a bit more about what you need help with? I can help with orders, returns, shipping, and products."
             ), None, 'clarification'
+
+        def _clarification_response():
+            explicit_track_request = bool(_RE_ORDER_TRACK_REQUEST.search(message))
+            explicit_return_request = bool(_RE_RETURN_REQUEST.search(message)) and not bool(_RE_RETURN_POLICY_REQUEST.search(message))
+            vague_request = _needs_clarification(message)
+
+            if (intent_tag in ('order_tracking', 'order_status') or explicit_track_request) and not order_number and not email:
+                bot_response = (
+                    "I can track that for you. Please share your order number "
+                    "(example: **ORD-2026-001**) or the email used for the order."
+                )
+                return _db_response(bot_response, 'order_tracking', 'order_tracking_missing_details')
+
+            if (intent_tag == 'returns' or explicit_return_request) and not order_number and not email and not _RE_RETURN_POLICY_REQUEST.search(message):
+                bot_response = (
+                    "I can help with a return. Please share your order number "
+                    "(example: **ORD-2026-001**) or the email used when ordering."
+                )
+                return _db_response(bot_response, 'returns', 'returns_missing_details')
+
+            if vague_request and not (
+                order_number
+                or email
+                or sku
+                or product_name
+                or _RE_PRODUCT_HINT.search(message)
+                or _RE_PRODUCT_LIST_REQUEST.search(message)
+                or _RE_STOCK_LIST_REQUEST.search(message)
+                or _RE_CREATE_ORDER_REQUEST.search(message)
+                or explicit_track_request
+                or explicit_return_request
+            ):
+                if intent_tag == 'help':
+                    bot_response = (
+                        "Tell me what you need help with, and I’ll point you to the right answer. "
+                        "I can help with orders, returns, shipping, products, and account questions."
+                    )
+                    return _db_response(bot_response, 'help', 'clarification')
+
+                bot_response, clarification_intent, response_type = _clarify_message()
+                return _db_response(bot_response, clarification_intent, response_type)
+
+            return None
 
         def _get_pending_order_draft():
             draft = _pending_order_drafts.get(session_id)
@@ -464,23 +501,9 @@ def chat():
             )
             return _db_response(bot_response, "order_create", "order_create_failed")
 
-        # Ask for required details before planner routing to avoid accidental lookups.
-        explicit_track_request = bool(_RE_ORDER_TRACK_REQUEST.search(message))
-        explicit_return_request = bool(_RE_RETURN_REQUEST.search(message)) and not bool(_RE_RETURN_POLICY_REQUEST.search(message))
-
-        if (intent_tag in ('order_tracking', 'order_status') or explicit_track_request) and not order_number and not email:
-            bot_response = (
-                "I can track that for you. Please share your order number "
-                "(example: **ORD-2026-001**) or the email used for the order."
-            )
-            return _db_response(bot_response, 'order_tracking', 'order_tracking_missing_details')
-
-        if (intent_tag == 'returns' or explicit_return_request) and not order_number and not email and not _RE_RETURN_POLICY_REQUEST.search(message):
-            bot_response = (
-                "I can help with a return. Please share your order number "
-                "(example: **ORD-2026-001**) or the email used when ordering."
-            )
-            return _db_response(bot_response, 'returns', 'returns_missing_details')
+        clarification = _clarification_response()
+        if clarification:
+            return clarification
 
         # ========== 0. PRIMARY: AI MODEL GENERATION ==========
         # Let the model choose whether to call a DB lookup tool first.
@@ -528,29 +551,6 @@ def chat():
         plan_query = plan_query.strip()
         plan_order = plan_order.strip()
         plan_email = plan_email.strip().lower()
-
-        vague_request = _needs_clarification(message)
-        if vague_request and not (
-            order_number
-            or email
-            or sku
-            or product_name
-            or _RE_PRODUCT_HINT.search(message)
-            or _RE_PRODUCT_LIST_REQUEST.search(message)
-            or _RE_STOCK_LIST_REQUEST.search(message)
-            or _RE_CREATE_ORDER_REQUEST.search(message)
-            or explicit_track_request
-            or explicit_return_request
-        ):
-            if intent_tag == 'help':
-                bot_response = (
-                    "Tell me what you need help with, and I’ll point you to the right answer. "
-                    "I can help with orders, returns, shipping, products, and account questions."
-                )
-                return _db_response(bot_response, 'help', 'clarification')
-
-            bot_response, clarification_intent, response_type = _clarify_message()
-            return _db_response(bot_response, clarification_intent, response_type)
 
         if action == 'create_order':
             create_email = plan_email or email
@@ -928,21 +928,7 @@ def chat():
         # ========== 4. ORDER TRACKING (no order number) ==========
         # Intent responses may be enhanced by the AI model when available.
         if intent_tag == 'order_tracking':
-            if not order_number and not email:
-                bot_response = (
-                    "I can track that for you. Please share your order number "
-                    "(example: **ORD-2026-001**) or the email used for the order."
-                )
-                return _db_response(bot_response, intent_tag, "order_tracking_missing_details")
-
             return _intent_response(intent_tag, intent_match['response'])
-
-        if intent_tag == 'returns' and not order_number and not email and not _RE_RETURN_POLICY_REQUEST.search(message):
-            bot_response = (
-                "I can help with a return. Please share your order number "
-                "(example: **ORD-2026-001**) or the email used when ordering."
-            )
-            return _db_response(bot_response, intent_tag, "returns_missing_details")
 
         # ========== 5. OTHER INTENT MATCHES ==========
         # Intent responses may be enhanced by the AI model when available.
