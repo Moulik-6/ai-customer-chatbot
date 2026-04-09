@@ -225,6 +225,28 @@ def chat():
                 logger.warning(f"Intent enhancement skipped: {exc}")
             return base_response, 'intents'
 
+        def _intent_response(intent, base_response, response_type="intent", extra=None):
+            """Rewrite an intent response with FLAN and return a uniform API payload."""
+            bot_response, model_used = _enhance_intent_response(base_response, intent)
+            log_conversation(
+                session_id=session_id, user_message=message,
+                bot_response=bot_response, intent=intent,
+                model_used=model_used, response_type=response_type,
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
+            )
+            _store_context(bot_response)
+            payload = {
+                "success": True,
+                "type": response_type,
+                "intent": intent,
+                "message": message,
+                "response": bot_response,
+                "model": model_used,
+            }
+            if extra:
+                payload.update(extra)
+            return jsonify(payload), 200
+
         def _normalize_product_cards(products):
             cards = []
             for p in products or []:
@@ -913,18 +935,7 @@ def chat():
                 )
                 return _db_response(bot_response, intent_tag, "order_tracking_missing_details")
 
-            bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_tag)
-            log_conversation(
-                session_id=session_id, user_message=message,
-                bot_response=bot_response, intent=intent_tag,
-                model_used=model_used, response_type="intent",
-                ip_address=ip_address, response_time_ms=_elapsed_ms(),
-            )
-            _store_context(bot_response)
-            return jsonify({
-                "success": True, "type": "intent", "intent": intent_tag,
-                "message": message, "response": bot_response, "model": model_used,
-            }), 200
+            return _intent_response(intent_tag, intent_match['response'])
 
         if intent_tag == 'returns' and not order_number and not email and not _RE_RETURN_POLICY_REQUEST.search(message):
             bot_response = (
@@ -937,20 +948,7 @@ def chat():
         # Intent responses may be enhanced by the AI model when available.
         if intent_match:
             logger.info(f"Intent matched: {intent_match['tag']}")
-            bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_match['tag'])
-            log_conversation(
-                session_id=session_id, user_message=message,
-                bot_response=bot_response,
-                intent=intent_match['tag'],
-                model_used=model_used, response_type="intent",
-                ip_address=ip_address, response_time_ms=_elapsed_ms(),
-            )
-            _store_context(bot_response)
-            return jsonify({
-                "success": True, "type": "intent",
-                "intent": intent_match['tag'], "message": message,
-                "response": bot_response, "model": model_used,
-            }), 200
+            return _intent_response(intent_match['tag'], intent_match['response'])
 
         # ========== 5.5 PRODUCT SEARCH FALLBACK ==========
         # Short messages without intent might be product/category names
