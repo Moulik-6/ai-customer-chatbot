@@ -335,6 +335,13 @@ def chat():
             text = re.sub(r'\s+', ' ', text).strip(' .,:;')
             return text[:80] if text else None
 
+        def _token_in_message(token, raw_message):
+            if not token:
+                return False
+            token_norm = re.sub(r'[^A-Za-z0-9]', '', token).lower()
+            msg_norm = re.sub(r'[^A-Za-z0-9]', '', raw_message or '').lower()
+            return bool(token_norm and token_norm in msg_norm)
+
         def _get_pending_order_draft():
             draft = _pending_order_drafts.get(session_id)
             if not draft:
@@ -382,6 +389,21 @@ def chat():
                 "I couldn't place your order right now. Please try again in a moment."
             )
             return _db_response(bot_response, "order_create", "order_create_failed")
+
+        # Ask for required details before planner routing to avoid accidental lookups.
+        if intent_tag in ('order_tracking', 'order_status') and not order_number and not email:
+            bot_response = (
+                "I can track that for you. Please share your order number "
+                "(example: **ORD-2026-001**) or the email used for the order."
+            )
+            return _db_response(bot_response, 'order_tracking', 'order_tracking_missing_details')
+
+        if intent_tag == 'returns' and not order_number and not email:
+            bot_response = (
+                "I can help with a return. Please share your order number "
+                "(example: **ORD-2026-001**) or the email used when ordering."
+            )
+            return _db_response(bot_response, 'returns', 'returns_missing_details')
 
         # ========== 0. PRIMARY: AI MODEL GENERATION ==========
         # Let the model choose whether to call a DB lookup tool first.
@@ -514,34 +536,45 @@ def chat():
                 )
 
         if action == 'lookup_order':
-            lookup_num = plan_order or order_number
-            if lookup_num:
-                order = lookup_order_status(lookup_num)
-                if order:
-                    # Fetch live tracking if tracking number available
-                    live_tracking = None
-                    if order.get('tracking_number'):
-                        live_tracking = get_live_tracking(
-                            order['tracking_number'],
-                            expected_status=order.get('status'),
-                        )
-                    return _db_response(
-                        format_order(order, live_tracking=live_tracking),
-                        "order_tracking",
-                        "order_lookup",
-                        {
-                            "order": order,
-                            "products": _order_products_for_ui(order),
-                        },
-                    )
+            lookup_num = order_number
+            if not lookup_num and _token_in_message(plan_order, message):
+                lookup_num = plan_order
+
+            if not lookup_num:
                 bot_response = (
-                    f"❌ Sorry, I couldn't find order **{lookup_num}** in our system. "
-                    "Please check the order number and try again. Or contact support@company.com for assistance."
+                    "I can track that for you. Please share your order number "
+                    "(example: **ORD-2026-001**)."
                 )
-                return _db_response(bot_response, "order_tracking", "order_not_found")
+                return _db_response(bot_response, "order_tracking", "order_tracking_missing_number")
+
+            order = lookup_order_status(lookup_num)
+            if order:
+                # Fetch live tracking if tracking number available
+                live_tracking = None
+                if order.get('tracking_number'):
+                    live_tracking = get_live_tracking(
+                        order['tracking_number'],
+                        expected_status=order.get('status'),
+                    )
+                return _db_response(
+                    format_order(order, live_tracking=live_tracking),
+                    "order_tracking",
+                    "order_lookup",
+                    {
+                        "order": order,
+                        "products": _order_products_for_ui(order),
+                    },
+                )
+            bot_response = (
+                f"❌ Sorry, I couldn't find order **{lookup_num}** in our system. "
+                "Please check the order number and try again. Or contact support@company.com for assistance."
+            )
+            return _db_response(bot_response, "order_tracking", "order_not_found")
 
         if action == 'lookup_orders_by_email':
-            lookup_email = plan_email or email
+            lookup_email = email
+            if not lookup_email and _token_in_message(plan_email, message):
+                lookup_email = plan_email
             if lookup_email:
                 orders = lookup_orders_by_email(lookup_email)
                 if orders:
@@ -553,7 +586,9 @@ def chat():
                 return _db_response(bot_response, "order_tracking", "customer_not_found")
 
         if action == 'lookup_customer_by_email':
-            lookup_email = plan_email or email
+            lookup_email = email
+            if not lookup_email and _token_in_message(plan_email, message):
+                lookup_email = plan_email
             if lookup_email:
                 customer = lookup_customer_by_email(lookup_email)
                 if customer:
@@ -793,6 +828,13 @@ def chat():
         # ========== 4. ORDER TRACKING (no order number) ==========
         # Intent responses may be enhanced by the AI model when available.
         if intent_tag == 'order_tracking':
+            if not order_number and not email:
+                bot_response = (
+                    "I can track that for you. Please share your order number "
+                    "(example: **ORD-2026-001**) or the email used for the order."
+                )
+                return _db_response(bot_response, intent_tag, "order_tracking_missing_details")
+
             bot_response, model_used = _enhance_intent_response(intent_match['response'], intent_tag)
             log_conversation(
                 session_id=session_id, user_message=message,
@@ -805,6 +847,13 @@ def chat():
                 "success": True, "type": "intent", "intent": intent_tag,
                 "message": message, "response": bot_response, "model": model_used,
             }), 200
+
+        if intent_tag == 'returns' and not order_number and not email:
+            bot_response = (
+                "I can help with a return. Please share your order number "
+                "(example: **ORD-2026-001**) or the email used when ordering."
+            )
+            return _db_response(bot_response, intent_tag, "returns_missing_details")
 
         # ========== 5. OTHER INTENT MATCHES ==========
         # Intent responses may be enhanced by the AI model when available.
