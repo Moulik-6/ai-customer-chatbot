@@ -5,7 +5,7 @@ import re
 
 # Precompiled patterns
 _RE_ORDER_NUMBER_CANONICAL = re.compile(
-    r'\bORD[-\s]?\d{3,}(?:[-\s]?\d+)*\b',
+    r'\bORD(?:[-\s][A-Z0-9]{2,})+\b',
     re.IGNORECASE,
 )
 _RE_ORDER_NUMBER_LOOSE = re.compile(
@@ -21,7 +21,20 @@ def extract_order_number(message):
     """Extract order number from either canonical or loose phrasing."""
     match = _RE_ORDER_NUMBER_CANONICAL.search(message)
     if match:
-        return match.group(0).replace(' ', '-').upper()
+        raw = match.group(0).replace(' ', '-').upper()
+        parts = [p for p in raw.split('-') if p]
+
+        # Normalize user-typed split date variants:
+        # ORD-2026-0409-ABC123 -> ORD-20260409-ABC123
+        if (
+            len(parts) >= 4
+            and parts[0] == 'ORD'
+            and parts[1].isdigit() and len(parts[1]) == 4
+            and parts[2].isdigit() and len(parts[2]) == 4
+        ):
+            parts = ['ORD', parts[1] + parts[2], *parts[3:]]
+
+        return '-'.join(parts)
 
     loose = _RE_ORDER_NUMBER_LOOSE.search(message)
     return f"ORD-{loose.group(1)}" if loose else None
