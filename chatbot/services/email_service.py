@@ -3,7 +3,10 @@ Email service — send order confirmation emails.
 """
 import logging
 import smtplib
+import socket
 from email.message import EmailMessage
+
+import requests
 
 from ..config import (
     ORDER_EMAIL_ENABLED,
@@ -13,6 +16,7 @@ from ..config import (
     SMTP_PASSWORD,
     SMTP_FROM_EMAIL,
     SMTP_USE_TLS,
+    BREVO_API_KEY,
 )
 
 logger = logging.getLogger(__name__)
@@ -58,6 +62,47 @@ def _build_order_email(order):
     return '\n'.join(lines)
 
 
+def _send_via_brevo_api(customer_email, order):
+    subject = f"Order Confirmation - {order.get('order_number', 'N/A')}"
+    body = _build_order_email(order)
+    payload = {
+        "sender": {"email": SMTP_FROM_EMAIL},
+        "to": [{"email": customer_email}],
+        "subject": subject,
+        "textContent": body,
+    }
+    headers = {
+        "accept": "application/json",
+        "api-key": BREVO_API_KEY,
+        "content-type": "application/json",
+    }
+
+    try:
+        response = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            json=payload,
+            headers=headers,
+            timeout=15,
+        )
+        if response.status_code in (200, 201, 202):
+            logger.info(f"Order confirmation email sent via Brevo API to {customer_email} for {order.get('order_number')}")
+            return {"sent": True}
+
+        err_msg = response.text[:500]
+        logger.error("Brevo API send failed: status=%s body=%s", response.status_code, err_msg)
+        return {
+            "sent": False,
+            "code": "BREVO_API_ERROR",
+            "error": f"Brevo API send failed ({response.status_code}).",
+        }
+    except requests.Timeout:
+        logger.error("Brevo API send timed out", exc_info=True)
+        return {"sent": False, "code": "BREVO_API_TIMEOUT", "error": "Brevo API request timed out."}
+    except requests.RequestException as e:
+        logger.error(f"Brevo API send failed: {e}", exc_info=True)
+        return {"sent": False, "code": "BREVO_API_REQUEST_FAILED", "error": str(e)}
+
+
 def send_order_confirmation_email(customer_email, order):
     """
     Send order confirmation email.
@@ -78,6 +123,17 @@ def send_order_confirmation_email(customer_email, order):
     if not _email_configured():
         logger.warning("Order confirmation email skipped: SMTP settings incomplete")
         return {"sent": False, "code": "SMTP_INCOMPLETE", "error": "SMTP settings incomplete"}
+
+    # Prefer HTTPS delivery from restricted hosting environments (like HF Spaces).
+    if BREVO_API_KEY:
+        api_result = _send_via_brevo_api(customer_email, order)
+        if api_result.get("sent"):
+            return api_result
+        logger.warning(
+            "Brevo API delivery failed; falling back to SMTP. code=%s error=%s",
+            api_result.get("code"),
+            api_result.get("error"),
+        )
 
     try:
         msg = EmailMessage()
@@ -119,6 +175,10 @@ def send_order_confirmation_email(customer_email, order):
     except smtplib.SMTPException as e:
         logger.error(f"Failed to send order confirmation email: SMTP error: {e}", exc_info=True)
         return {"sent": False, "code": "SMTP_ERROR", "error": str(e)}
+
+    except (socket.timeout, TimeoutError):
+        logger.error("Failed to send order confirmation email: SMTP connection timed out", exc_info=True)
+        return {"sent": False, "code": "SMTP_TIMEOUT", "error": "SMTP connection timed out."}
 
     except Exception as e:
         logger.error(f"Failed to send order confirmation email: {e}", exc_info=True)

@@ -46,6 +46,7 @@ SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '').strip()
 SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '').strip()
 SMTP_USE_TLS = os.getenv('SMTP_USE_TLS', 'true').strip().lower() in ('1', 'true', 'yes')
 ORDER_EMAIL_ENABLED = os.getenv('ORDER_EMAIL_ENABLED', 'true').strip().lower() in ('1', 'true', 'yes')
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '').strip()
 
 
 def _parse_int_env(name, default):

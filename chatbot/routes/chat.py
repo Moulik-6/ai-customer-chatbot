@@ -90,12 +90,14 @@ _VAGUE_PHRASES = (
 )
 _RE_QUANTITY = re.compile(r'\b(?:qty|quantity|x)\s*[:=]?\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:units?|pcs|pieces)\b', re.IGNORECASE)
 _RE_NAME = re.compile(r'\b(?:name\s+is|i\s+am|this\s+is)\s+([A-Za-z][A-Za-z\s]{1,50})\b', re.IGNORECASE)
+_RE_SAME_PRODUCT_REQUEST = re.compile(r'\b(?:same\s+(?:product|item|one)|that\s+same\s+(?:product|item|one))\b', re.IGNORECASE)
 
 # ── Conversation context (in-memory, per session) ────────
 # Stores last MAX_CONTEXT_TURNS exchanges per session_id.
 MAX_CONTEXT_TURNS = 5
 _conversation_context = defaultdict(list)  # session_id -> [{user, bot}, ...]
 _pending_order_drafts = {}  # session_id -> {product_query, quantity, customer_name, created_at}
+_last_ordered_product_by_session = {}  # session_id -> product_name
 _PENDING_ORDER_TTL_SECONDS = 20 * 60
 
 
@@ -513,6 +515,21 @@ def chat():
                 'created_at': time.time(),
             }
 
+        def _set_last_ordered_product(order):
+            items = (order or {}).get('order_items') or []
+            if not items:
+                return
+            first_name = (items[0].get('product_name') or '').strip()
+            if first_name:
+                _last_ordered_product_by_session[session_id] = first_name
+
+        def _resolve_order_product_query(raw_message, proposed_query):
+            if _RE_SAME_PRODUCT_REQUEST.search(raw_message or ''):
+                previous = _last_ordered_product_by_session.get(session_id)
+                if previous:
+                    return previous
+            return proposed_query
+
         def _clear_pending_order_draft():
             _pending_order_drafts.pop(session_id, None)
 
@@ -529,14 +546,21 @@ def chat():
             if creation_result.get('success'):
                 _clear_pending_order_draft()
                 created_order = creation_result.get('order')
+                _set_last_ordered_product(created_order)
                 email_sent = creation_result.get('email_sent')
                 email_error = creation_result.get('email_error')
+                email_error_code = creation_result.get('email_error_code')
                 bot_response = format_order_created(created_order, email_sent=email_sent)
                 return _db_response(
                     bot_response,
                     "order_create",
                     "order_created",
-                    {"order": created_order, "email_sent": email_sent, "email_error": email_error},
+                    {
+                        "order": created_order,
+                        "email_sent": email_sent,
+                        "email_error": email_error,
+                        "email_error_code": email_error_code,
+                    },
                 )
 
             bot_response = creation_result.get('error') or (
@@ -547,7 +571,10 @@ def chat():
         explicit_create_request = _is_create_order_message(message)
         if explicit_create_request and not order_number:
             create_email = email
-            create_product_query = sku or product_name or _extract_order_product_query(message)
+            create_product_query = _resolve_order_product_query(
+                message,
+                sku or product_name or _extract_order_product_query(message),
+            )
             create_quantity = _extract_quantity(message)
             create_name = _extract_customer_name(message, create_email or email)
 
@@ -579,8 +606,10 @@ def chat():
 
             if creation_result.get('success'):
                 created_order = creation_result.get('order')
+                _set_last_ordered_product(created_order)
                 email_sent = creation_result.get('email_sent')
                 email_error = creation_result.get('email_error')
+                email_error_code = creation_result.get('email_error_code')
                 bot_response = format_order_created(created_order, email_sent=email_sent)
                 return _db_response(
                     bot_response,
@@ -590,6 +619,7 @@ def chat():
                         "order": created_order,
                         "email_sent": email_sent,
                         "email_error": email_error,
+                        "email_error_code": email_error_code,
                         "products": _order_products_for_ui(created_order),
                     },
                 )
@@ -652,7 +682,10 @@ def chat():
 
         if action == 'create_order':
             create_email = plan_email or email
-            create_product_query = plan_query or sku or product_name or _extract_order_product_query(message)
+            create_product_query = _resolve_order_product_query(
+                message,
+                plan_query or sku or product_name or _extract_order_product_query(message),
+            )
             create_quantity = _extract_quantity(message)
             create_name = _extract_customer_name(message, create_email or email)
 
@@ -684,7 +717,10 @@ def chat():
 
             if creation_result.get('success'):
                 created_order = creation_result.get('order')
+                _set_last_ordered_product(created_order)
                 email_sent = creation_result.get('email_sent')
+                email_error = creation_result.get('email_error')
+                email_error_code = creation_result.get('email_error_code')
                 bot_response = format_order_created(created_order, email_sent=email_sent)
                 return _db_response(
                     bot_response,
@@ -693,6 +729,8 @@ def chat():
                     {
                         "order": created_order,
                         "email_sent": email_sent,
+                        "email_error": email_error,
+                        "email_error_code": email_error_code,
                         "products": _order_products_for_ui(created_order),
                     },
                 )
