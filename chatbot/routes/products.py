@@ -1,9 +1,11 @@
 """
 Product routes — CRUD for the products table.
 """
+import base64
 import logging
 
-from flask import Blueprint, request, jsonify
+import requests
+from flask import Blueprint, request, jsonify, Response
 
 from ..extensions import limiter
 from ..auth import require_admin_key
@@ -68,6 +70,42 @@ def get_product(product_id):
     except Exception as e:
         logger.error(f"Error fetching product: {e}")
         return jsonify({"error": "Failed to fetch product", "code": "DB_ERROR"}), 500
+
+
+@products_bp.route('/api/products/<product_id>/image', methods=['GET'])
+def get_product_image(product_id):
+    """Proxy a product image through the app so the frontend can load it reliably."""
+    err = _require_supabase()
+    if err:
+        return err
+
+    try:
+        result = supabase.table('products').select('id,name,image_url').eq('id', product_id).execute()
+        if not result.data:
+            return jsonify({"error": "Product not found", "code": "NOT_FOUND"}), 404
+
+        image_url = (result.data[0].get('image_url') or '').strip()
+        if not image_url:
+            return jsonify({"error": "Image not found", "code": "NOT_FOUND"}), 404
+
+        if image_url.startswith('data:image/'):
+            header, encoded = image_url.split(',', 1)
+            mime_type = header.split(';', 1)[0].split(':', 1)[1]
+            payload = base64.b64decode(encoded)
+            return Response(payload, mimetype=mime_type, headers={'Cache-Control': 'public, max-age=86400'})
+
+        upstream = requests.get(
+            image_url,
+            timeout=20,
+            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'},
+        )
+        upstream.raise_for_status()
+        content_type = upstream.headers.get('content-type', 'image/jpeg').split(';', 1)[0].strip()
+        return Response(upstream.content, mimetype=content_type, headers={'Cache-Control': 'public, max-age=86400'})
+
+    except Exception as e:
+        logger.warning(f"Error proxying product image {product_id}: {e}")
+        return jsonify({"error": "Failed to fetch product image", "code": "IMAGE_FETCH_FAILED"}), 502
 
 
 @products_bp.route('/api/products', methods=['POST'])

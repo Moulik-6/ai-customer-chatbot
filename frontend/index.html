@@ -792,24 +792,12 @@
 
         function buildImageCandidates(product) {
           const candidates = [];
+          if (product.id) {
+            candidates.push(`${API_BASE}/api/products/${product.id}/image`);
+          }
+
           const direct = normalizeImageUrl(product.image_url);
           if (direct) candidates.push(direct);
-
-          const rawName = (product.name || '').trim().toLowerCase();
-          const rawSku = (product.sku || '').trim().toLowerCase();
-          const token = encodeURIComponent(
-            [rawName, rawSku]
-              .join(' ')
-              .replace(/[^a-z0-9\s-]/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim()
-          );
-
-          if (token) {
-            // Real-photo fallback providers that don't require API keys.
-            candidates.push(`https://loremflickr.com/640/480/${token}`);
-            candidates.push(`https://source.unsplash.com/640x480/?${token}`);
-          }
 
           return [...new Set(candidates)];
         }

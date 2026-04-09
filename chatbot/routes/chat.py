@@ -62,6 +62,21 @@ _RE_CREATE_ORDER_REQUEST = re.compile(
     r'\b(buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b',
     re.IGNORECASE,
 )
+INTENT_SIGNALS = {
+    'product': (
+        _RE_PRODUCT_HINT,
+        _RE_PRODUCT_LIST_REQUEST,
+        _RE_STOCK_LIST_REQUEST,
+    ),
+    'order': (
+        _RE_ORDER_TRACK_REQUEST,
+        _RE_CREATE_ORDER_REQUEST,
+    ),
+    'returns': (
+        _RE_RETURN_REQUEST,
+        _RE_RETURN_POLICY_REQUEST,
+    ),
+}
 _VAGUE_WORDS = {
     'help', 'something', 'anything', 'stuff', 'thing', 'things', 'details', 'info',
     'information', 'more', 'issue', 'problem', 'question', 'questions', 'assist',
@@ -377,6 +392,9 @@ def chat():
             msg_norm = re.sub(r'[^A-Za-z0-9]', '', raw_message or '').lower()
             return bool(token_norm and token_norm in msg_norm)
 
+        def _matches_signal(group_name, raw_message):
+            return any(pattern.search(raw_message) for pattern in INTENT_SIGNALS.get(group_name, ()))
+
         def _needs_clarification(raw_message):
             text = (raw_message or '').strip().lower()
             if not text:
@@ -410,10 +428,8 @@ def chat():
                 or email
                 or sku
                 or product_name
-                or _RE_PRODUCT_HINT.search(message)
-                or _RE_PRODUCT_LIST_REQUEST.search(message)
-                or _RE_STOCK_LIST_REQUEST.search(message)
-                or _RE_CREATE_ORDER_REQUEST.search(message)
+                or _matches_signal('product', message)
+                or _matches_signal('order', message)
             )
 
         def _clarify_message():
