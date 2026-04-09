@@ -561,6 +561,26 @@ def chat():
                 bot_response = f"I couldn't find an account associated with **{lookup_email}**. Would you like help creating one?"
                 return _db_response(bot_response, "account", "customer_not_found")
 
+        # If planner returns none for a product-like short prompt, force a DB lookup.
+        if action == 'none' and not order_number and not email:
+            looks_like_product = (
+                bool(sku)
+                or bool(product_name)
+                or bool(_RE_PRODUCT_HINT.search(message))
+                or len(message.split()) <= 4
+            )
+            if looks_like_product:
+                products = lookup_product(message)
+                if products:
+                    bot_response = format_product(products)
+                    logger.info(f"Product override lookup (planner=none): {message[:50]} ({len(products)} found)")
+                    return _db_response(
+                        bot_response,
+                        "product_info",
+                        "product_lookup",
+                        {"products": _normalize_product_cards(products)},
+                    )
+
         api_response = query_model(message, context=context)
         model_generation_ready = (
             api_response.get('type') == 'generation'
@@ -665,6 +685,27 @@ def chat():
             logger.debug(f"[DB_LOOKUP_MISS] email={email!r} — no customer found in DB")
             bot_response = f"I couldn't find an account associated with **{email}**. Would you like help creating one?"
             return _db_response(bot_response, "account", "customer_not_found")
+
+        # ========== 2.5 PRODUCT LOOKUP OVERRIDE (short/product-like prompts) ==========
+        # Catch messages like "iphone 15" that may otherwise map to a generic intent.
+        if not order_number and not email:
+            looks_like_product = (
+                bool(sku)
+                or bool(product_name)
+                or bool(_RE_PRODUCT_HINT.search(message))
+                or len(message.split()) <= 4
+            )
+            if looks_like_product:
+                products = lookup_product(message)
+                if products:
+                    bot_response = format_product(products)
+                    logger.info(f"Product override lookup: {message[:50]} ({len(products)} found)")
+                    return _db_response(
+                        bot_response,
+                        "product_info",
+                        "product_lookup",
+                        {"products": _normalize_product_cards(products)},
+                    )
 
         # ========== 3. PRODUCT LOOKUP (by SKU or name) ==========
         if intent_tag in ('product_info', 'pricing', 'stock_availability', 'size_fitting'):
