@@ -41,12 +41,22 @@ FRONTEND_URL = os.getenv('FRONTEND_URL', '').strip()
 
 # ── Email (Order Confirmations) ───────────────────────────
 SMTP_HOST = os.getenv('SMTP_HOST', '').strip()
-SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
 SMTP_USERNAME = os.getenv('SMTP_USERNAME', '').strip()
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '').strip()
 SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '').strip()
 SMTP_USE_TLS = os.getenv('SMTP_USE_TLS', 'true').strip().lower() in ('1', 'true', 'yes')
 ORDER_EMAIL_ENABLED = os.getenv('ORDER_EMAIL_ENABLED', 'true').strip().lower() in ('1', 'true', 'yes')
+
+
+def _parse_int_env(name, default):
+    raw_value = os.getenv(name, str(default)).strip()
+    try:
+        return int(raw_value)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be an integer, got {raw_value!r}") from exc
+
+
+SMTP_PORT = _parse_int_env('SMTP_PORT', 587)
 
 # ── Hugging Face / Model ─────────────────────────────────
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
