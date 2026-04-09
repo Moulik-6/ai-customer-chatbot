@@ -24,8 +24,9 @@ import urllib.request
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-BASE_URL = os.environ.get(
-    "BASE_URL", "https://seyo009-ai-customer-chatbot.hf.space"
+BASE_URL = (
+    os.environ.get("BASE_URL", "").strip()
+    or "https://seyo009-ai-customer-chatbot.hf.space"
 ).rstrip("/")
 
 MAX_RETRIES = 3
