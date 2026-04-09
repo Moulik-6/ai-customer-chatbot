@@ -324,6 +324,104 @@
         font-family: var(--mono);
       }
 
+      .product-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+      }
+
+      .product-card {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: linear-gradient(165deg, rgba(15, 29, 44, 0.95), rgba(8, 18, 29, 0.9));
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.24);
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .product-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--line-strong);
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.3);
+      }
+
+      .product-thumb {
+        width: 100%;
+        height: 144px;
+        background: linear-gradient(135deg, rgba(63, 196, 216, 0.22), rgba(255, 179, 92, 0.18));
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.9);
+        letter-spacing: 0.4px;
+      }
+
+      .product-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .product-info {
+        padding: 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .product-name {
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+
+      .product-meta {
+        font-size: 12px;
+        color: var(--text-soft);
+        font-family: var(--mono);
+        line-height: 1.4;
+      }
+
+      .product-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .product-badge {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 11px;
+        color: var(--text-soft);
+        font-family: var(--mono);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .product-badge.price {
+        color: #ffe3ba;
+        border-color: rgba(255, 179, 92, 0.4);
+        background: rgba(255, 179, 92, 0.08);
+      }
+
+      .product-badge.stock-ok {
+        color: #c8ffd9;
+        border-color: rgba(94, 208, 132, 0.5);
+        background: rgba(94, 208, 132, 0.1);
+      }
+
+      .product-badge.stock-low {
+        color: #ffdbb4;
+        border-color: rgba(255, 179, 92, 0.45);
+        background: rgba(255, 179, 92, 0.1);
+      }
+
+      .product-badge.stock-out {
+        color: #ffd2d2;
+        border-color: rgba(255, 108, 108, 0.45);
+        background: rgba(255, 108, 108, 0.1);
+      }
+
       .feedback-row,
       .quick-row {
         display: flex;
@@ -666,14 +764,113 @@
         const history = JSON.parse(sessionStorage.getItem(historyStorageKey) || '[]');
         if (!history.length) return;
         welcomeScreen.classList.add('hidden');
-        history.forEach(msg => renderMessage(msg.text, msg.sender, false, { intent: msg.intent, timestamp: msg.timestamp }));
+        history.forEach(msg => renderMessage(msg.text, msg.sender, false, {
+          intent: msg.intent,
+          timestamp: msg.timestamp,
+          products: msg.products || null
+        }));
         scrollToBottom();
       }
 
-      function saveMessage(text, sender, intent) {
+      function saveMessage(text, sender, intent, products = null) {
         const history = JSON.parse(sessionStorage.getItem(historyStorageKey) || '[]');
-        history.push({ text, sender, intent: intent || null, timestamp: new Date().toISOString() });
+        history.push({ text, sender, intent: intent || null, products: products || null, timestamp: new Date().toISOString() });
         sessionStorage.setItem(historyStorageKey, JSON.stringify(history));
+      }
+
+      function buildProductGallery(products) {
+        if (!Array.isArray(products) || !products.length) return null;
+
+        const gallery = document.createElement('div');
+        gallery.className = 'product-gallery';
+
+        products.slice(0, 8).forEach(product => {
+          const card = document.createElement('article');
+          card.className = 'product-card';
+
+          const thumb = document.createElement('div');
+          thumb.className = 'product-thumb';
+
+          const renderPlaceholder = () => {
+            const rawName = (product.name || '?').trim();
+            const initials = rawName
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map(part => part.charAt(0).toUpperCase())
+              .join('') || '?';
+            thumb.textContent = initials;
+          };
+
+          if (product.image_url) {
+            const img = document.createElement('img');
+            img.src = product.image_url;
+            img.alt = product.name || 'Product image';
+            img.loading = 'lazy';
+            img.referrerPolicy = 'no-referrer';
+            img.onerror = () => {
+              img.remove();
+              renderPlaceholder();
+            };
+            thumb.appendChild(img);
+          } else {
+            renderPlaceholder();
+          }
+
+          const info = document.createElement('div');
+          info.className = 'product-info';
+
+          const name = document.createElement('div');
+          name.className = 'product-name';
+          name.textContent = product.name || 'Product';
+
+          const meta = document.createElement('div');
+          meta.className = 'product-meta';
+          meta.textContent = product.sku ? `SKU: ${product.sku}` : 'Product details';
+
+          const badges = document.createElement('div');
+          badges.className = 'product-badges';
+
+          if (product.price !== null && product.price !== undefined && product.price !== '') {
+            const numericPrice = Number(product.price);
+            const priceBadge = document.createElement('span');
+            priceBadge.className = 'product-badge price';
+            priceBadge.textContent = Number.isFinite(numericPrice)
+              ? `$${numericPrice.toFixed(2)}`
+              : String(product.price);
+            badges.appendChild(priceBadge);
+          }
+
+          if (product.stock !== null && product.stock !== undefined && product.stock !== '') {
+            const stockBadge = document.createElement('span');
+            const stockNum = Number(product.stock);
+            if (Number.isFinite(stockNum)) {
+              if (stockNum <= 0) {
+                stockBadge.className = 'product-badge stock-out';
+                stockBadge.textContent = 'Out of stock';
+              } else if (stockNum <= 5) {
+                stockBadge.className = 'product-badge stock-low';
+                stockBadge.textContent = `${stockNum} left`;
+              } else {
+                stockBadge.className = 'product-badge stock-ok';
+                stockBadge.textContent = `${stockNum} in stock`;
+              }
+            } else {
+              stockBadge.className = 'product-badge';
+              stockBadge.textContent = `Stock: ${product.stock}`;
+            }
+            badges.appendChild(stockBadge);
+          }
+
+          info.appendChild(name);
+          info.appendChild(meta);
+          info.appendChild(badges);
+          card.appendChild(thumb);
+          card.appendChild(info);
+          gallery.appendChild(card);
+        });
+
+        return gallery;
       }
 
       function showClearModal() {
@@ -720,6 +917,11 @@
         bubble.innerHTML = formatText(text);
         body.appendChild(bubble);
 
+        if (sender === 'bot' && Array.isArray(meta.products) && meta.products.length) {
+          const gallery = buildProductGallery(meta.products);
+          if (gallery) body.appendChild(gallery);
+        }
+
         const metaLine = document.createElement('div');
         metaLine.className = 'msg-meta';
         metaLine.textContent = formatTime(meta.timestamp || new Date().toISOString());
@@ -760,7 +962,7 @@
         messagesList.appendChild(row);
         scrollToBottom();
 
-        if (save) saveMessage(text, sender, meta.intent || null);
+        if (save) saveMessage(text, sender, meta.intent || null, meta.products || null);
       }
 
       function showTyping() {
@@ -848,7 +1050,7 @@
             const reply = data.response || 'I did not understand that.';
             const intent = data.intent || null;
             if (intent) lastIntent.textContent = intent;
-            renderMessage(reply, 'bot', true, { intent });
+            renderMessage(reply, 'bot', true, { intent, products: data.products || null });
           } else {
             renderMessage(`Error: ${data.error || 'Unknown error'}`, 'bot', true, {});
           }

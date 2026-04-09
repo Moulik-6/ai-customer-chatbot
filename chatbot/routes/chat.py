@@ -17,6 +17,7 @@ from ..config import (
     CHAT_RATE_LIMIT, FRONTEND_URL, PROJECT_ROOT,
 )
 from ..database import log_conversation
+from ..database import supabase
 from ..services.intent_service import match_intent, INTENTS
 from ..services.entity_service import (
     extract_order_number, extract_email, extract_sku, extract_product_name,
@@ -213,6 +214,70 @@ def chat():
                 logger.warning(f"Intent enhancement skipped: {exc}")
             return base_response, 'intents'
 
+        def _normalize_product_cards(products):
+            cards = []
+            for p in products or []:
+                if not isinstance(p, dict):
+                    continue
+                cards.append({
+                    'id': p.get('id'),
+                    'name': p.get('name') or p.get('product_name'),
+                    'sku': p.get('sku') or p.get('product_sku'),
+                    'price': p.get('price') if p.get('price') is not None else p.get('unit_price'),
+                    'stock': p.get('stock'),
+                    'image_url': p.get('image_url'),
+                })
+            return cards
+
+        def _fetch_product_image_map(order):
+            image_map = {}
+            if not supabase or not order:
+                return image_map
+
+            items = order.get('order_items') or []
+            product_ids = [item.get('product_id') for item in items if item.get('product_id')]
+            product_ids = [pid for pid in product_ids if pid]
+
+            if product_ids:
+                try:
+                    result = supabase.table('products').select('id,name,sku,image_url').in_('id', product_ids).execute()
+                    for p in result.data or []:
+                        image_map[p.get('id')] = p
+                except Exception as exc:
+                    logger.debug(f"Failed to fetch product images by id: {exc}")
+
+            # Fallback by SKU if product_id is missing.
+            for item in items:
+                if item.get('product_id') in image_map:
+                    continue
+                sku_value = item.get('product_sku')
+                if not sku_value:
+                    continue
+                try:
+                    result = supabase.table('products').select('id,name,sku,image_url').eq('sku', sku_value).limit(1).execute()
+                    if result.data:
+                        image_map[sku_value] = result.data[0]
+                except Exception as exc:
+                    logger.debug(f"Failed to fetch product image by sku: {exc}")
+
+            return image_map
+
+        def _order_products_for_ui(order):
+            items = (order or {}).get('order_items') or []
+            image_map = _fetch_product_image_map(order)
+            cards = []
+            for item in items:
+                source = image_map.get(item.get('product_id')) or image_map.get(item.get('product_sku')) or {}
+                cards.append({
+                    'id': item.get('product_id') or source.get('id'),
+                    'name': item.get('product_name') or source.get('name'),
+                    'sku': item.get('product_sku') or source.get('sku'),
+                    'price': item.get('unit_price'),
+                    'stock': None,
+                    'image_url': source.get('image_url'),
+                })
+            return cards
+
         def _parse_model_plan(raw_text):
             """Parse planner JSON from model output, tolerating extra wrapper text."""
             if not raw_text:
@@ -405,7 +470,11 @@ def chat():
                     bot_response,
                     "order_create",
                     "order_created",
-                    {"order": created_order, "email_sent": email_sent},
+                    {
+                        "order": created_order,
+                        "email_sent": email_sent,
+                        "products": _order_products_for_ui(created_order),
+                    },
                 )
 
             bot_response = creation_result.get('error') or (
@@ -416,18 +485,33 @@ def chat():
         if action == 'list_stock_products':
             stock_products = list_products(in_stock_only=True)
             if stock_products:
-                return _db_response(format_product_list(stock_products), "stock_availability", "product_list")
+                return _db_response(
+                    format_product_list(stock_products),
+                    "stock_availability",
+                    "product_list",
+                    {"products": _normalize_product_cards(stock_products)},
+                )
 
         if action == 'list_products':
             all_products = list_products()
             if all_products:
-                return _db_response(format_product_list(all_products), "product_info", "product_list")
+                return _db_response(
+                    format_product_list(all_products),
+                    "product_info",
+                    "product_list",
+                    {"products": _normalize_product_cards(all_products)},
+                )
 
         if action == 'search_products':
             search_term = plan_query or sku or product_name or message
             products = lookup_product(search_term)
             if products:
-                return _db_response(format_product(products), "product_info", "product_lookup")
+                return _db_response(
+                    format_product(products),
+                    "product_info",
+                    "product_lookup",
+                    {"products": _normalize_product_cards(products)},
+                )
 
         if action == 'lookup_order':
             lookup_num = plan_order or order_number
@@ -441,7 +525,15 @@ def chat():
                             order['tracking_number'],
                             expected_status=order.get('status'),
                         )
-                    return _db_response(format_order(order, live_tracking=live_tracking), "order_tracking", "order_lookup", {"order": order})
+                    return _db_response(
+                        format_order(order, live_tracking=live_tracking),
+                        "order_tracking",
+                        "order_lookup",
+                        {
+                            "order": order,
+                            "products": _order_products_for_ui(order),
+                        },
+                    )
                 bot_response = (
                     f"❌ Sorry, I couldn't find order **{lookup_num}** in our system. "
                     "Please check the order number and try again. Or contact support@company.com for assistance."
@@ -496,7 +588,12 @@ def chat():
             stock_products = list_products(in_stock_only=True)
             if stock_products:
                 bot_response = format_product_list(stock_products)
-                return _db_response(bot_response, "stock_availability", "product_list")
+                return _db_response(
+                    bot_response,
+                    "stock_availability",
+                    "product_list",
+                    {"products": _normalize_product_cards(stock_products)},
+                )
             bot_response = (
                 "I couldn't fetch in-stock products right now. "
                 "Please try again in a moment, or ask for a specific product name or SKU."
@@ -507,7 +604,12 @@ def chat():
             all_products = list_products()
             if all_products:
                 bot_response = format_product_list(all_products)
-                return _db_response(bot_response, "product_info", "product_list")
+                return _db_response(
+                    bot_response,
+                    "product_info",
+                    "product_list",
+                    {"products": _normalize_product_cards(all_products)},
+                )
             bot_response = (
                 "I couldn't fetch the product catalog right now. "
                 "Please try again in a moment, or ask for a specific product name or SKU."
@@ -527,7 +629,15 @@ def chat():
                     )
                 bot_response = format_order(order, live_tracking=live_tracking)
                 logger.info(f"Order lookup: {order_number}")
-                return _db_response(bot_response, "order_tracking", "order_lookup", {"order": order})
+                return _db_response(
+                    bot_response,
+                    "order_tracking",
+                    "order_lookup",
+                    {
+                        "order": order,
+                        "products": _order_products_for_ui(order),
+                    },
+                )
             logger.debug(f"[DB_LOOKUP_MISS] order_number={order_number!r} — no match in DB (check RLS / empty table / wrong format)")
             bot_response = (
                 f"❌ Sorry, I couldn't find order **{order_number}** in our system. "
@@ -566,7 +676,12 @@ def chat():
                 if products:
                     bot_response = format_product(products)
                     logger.info(f"Product lookup: {search_term} ({len(products)} found)")
-                    return _db_response(bot_response, intent_tag, "product_lookup")
+                    return _db_response(
+                        bot_response,
+                        intent_tag,
+                        "product_lookup",
+                        {"products": _normalize_product_cards(products)},
+                    )
                 logger.debug(f"[DB_LOOKUP_MISS] sku/product_name={search_term!r} — no product match in DB")
 
             # Always try the full message even if an entity was extracted but returned no matches.
@@ -574,20 +689,35 @@ def chat():
             if products:
                 bot_response = format_product(products)
                 logger.info(f"Product search (raw message): {message[:50]} ({len(products)} found)")
-                return _db_response(bot_response, intent_tag, "product_lookup")
+                return _db_response(
+                    bot_response,
+                    intent_tag,
+                    "product_lookup",
+                    {"products": _normalize_product_cards(products)},
+                )
 
             # For stock intent, surface in-stock catalog when no direct match was found.
             if intent_tag == 'stock_availability':
                 all_products = list_products(in_stock_only=True)
                 if all_products:
                     bot_response = format_product_list(all_products)
-                    return _db_response(bot_response, intent_tag, "product_list")
+                    return _db_response(
+                        bot_response,
+                        intent_tag,
+                        "product_list",
+                        {"products": _normalize_product_cards(all_products)},
+                    )
 
             # For other product intents, surface general catalog before generic intent fallback.
             all_products = list_products()
             if all_products:
                 bot_response = format_product_list(all_products)
-                return _db_response(bot_response, intent_tag, "product_list")
+                return _db_response(
+                    bot_response,
+                    intent_tag,
+                    "product_list",
+                    {"products": _normalize_product_cards(all_products)},
+                )
 
             bot_response = (
                 "I couldn't fetch the product catalog right now. "
@@ -602,12 +732,22 @@ def chat():
             if products:
                 bot_response = format_product(products)
                 logger.info(f"Product DB-first fallback: {message[:50]} ({len(products)} found)")
-                return _db_response(bot_response, "product_info", "product_lookup")
+                return _db_response(
+                    bot_response,
+                    "product_info",
+                    "product_lookup",
+                    {"products": _normalize_product_cards(products)},
+                )
 
             all_products = list_products()
             if all_products:
                 bot_response = format_product_list(all_products)
-                return _db_response(bot_response, "product_info", "product_list")
+                return _db_response(
+                    bot_response,
+                    "product_info",
+                    "product_list",
+                    {"products": _normalize_product_cards(all_products)},
+                )
 
         # ========== 4. ORDER TRACKING (no order number) ==========
         # Intent responses may be enhanced by the AI model when available.
@@ -651,7 +791,12 @@ def chat():
             if products:
                 bot_response = format_product(products)
                 logger.info(f"Product fallback search: {message[:50]} ({len(products)} found)")
-                return _db_response(bot_response, "product_info", "product_lookup")
+                return _db_response(
+                    bot_response,
+                    "product_info",
+                    "product_lookup",
+                    {"products": _normalize_product_cards(products)},
+                )
 
         # ========== 6. FINAL FALLBACK ==========
         # If model wasn't available for primary generation, return its fallback text.

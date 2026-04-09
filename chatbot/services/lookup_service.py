@@ -135,7 +135,7 @@ def list_products(limit=10, in_stock_only=False):
         # Primary path: sort by recency when created_at exists.
         try:
             query = (supabase.table('products')
-                     .select('name,price,category,sku,stock')
+                     .select('id,name,price,category,sku,stock,image_url')
                      .limit(limit)
                      .order('created_at', desc=True))
             if in_stock_only:
@@ -148,7 +148,7 @@ def list_products(limit=10, in_stock_only=False):
             logger.warning(f"Primary list_products query failed, retrying without created_at sort: {e}")
 
         # Fallback path: list without relying on created_at column.
-        query = supabase.table('products').select('name,price,category,sku,stock').limit(limit)
+        query = supabase.table('products').select('id,name,price,category,sku,stock,image_url').limit(limit)
         if in_stock_only:
             query = query.gt('stock', 0)
         result = query.execute()
