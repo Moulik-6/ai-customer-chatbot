@@ -839,22 +839,36 @@
 
           const tryLoadNextImage = () => {
             if (imageCandidateIndex >= imageCandidates.length) {
-              renderPlaceholder();
               return;
             }
 
             const img = document.createElement('img');
-            img.src = imageCandidates[imageCandidateIndex++];
+            const candidate = imageCandidates[imageCandidateIndex++];
+            img.src = candidate;
             img.alt = product.name || 'Product image';
             img.loading = 'lazy';
             img.referrerPolicy = 'no-referrer';
+            let timedOut = false;
+            const timeoutId = window.setTimeout(() => {
+              timedOut = true;
+              img.remove();
+              tryLoadNextImage();
+            }, 2500);
+
+            img.onload = () => {
+              if (timedOut) return;
+              window.clearTimeout(timeoutId);
+              thumb.textContent = '';
+              thumb.appendChild(img);
+            };
             img.onerror = () => {
+              if (!timedOut) window.clearTimeout(timeoutId);
               img.remove();
               tryLoadNextImage();
             };
-            thumb.appendChild(img);
           };
 
+          renderPlaceholder();
           tryLoadNextImage();
 
           const info = document.createElement('div');
