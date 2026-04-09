@@ -244,8 +244,14 @@ def create_order_from_chat(customer_name, customer_email, product_query, quantit
         order = lookup_order_status(created_order['order_number'])
         final_order = order or created_order
 
-        email_sent = send_order_confirmation_email(customer_email, final_order)
-        return {'success': True, 'order': final_order, 'email_sent': email_sent}
+        email_result = send_order_confirmation_email(customer_email, final_order)
+        return {
+            'success': True,
+            'order': final_order,
+            'email_sent': bool(email_result.get('sent')),
+            'email_error': email_result.get('error'),
+            'email_error_code': email_result.get('code'),
+        }
 
     except Exception as e:
         logger.error(f"Error creating order from chat: {e}", exc_info=True)

@@ -530,12 +530,13 @@ def chat():
                 _clear_pending_order_draft()
                 created_order = creation_result.get('order')
                 email_sent = creation_result.get('email_sent')
+                email_error = creation_result.get('email_error')
                 bot_response = format_order_created(created_order, email_sent=email_sent)
                 return _db_response(
                     bot_response,
                     "order_create",
                     "order_created",
-                    {"order": created_order, "email_sent": email_sent},
+                    {"order": created_order, "email_sent": email_sent, "email_error": email_error},
                 )
 
             bot_response = creation_result.get('error') or (
@@ -579,6 +580,7 @@ def chat():
             if creation_result.get('success'):
                 created_order = creation_result.get('order')
                 email_sent = creation_result.get('email_sent')
+                email_error = creation_result.get('email_error')
                 bot_response = format_order_created(created_order, email_sent=email_sent)
                 return _db_response(
                     bot_response,
@@ -587,6 +589,7 @@ def chat():
                     {
                         "order": created_order,
                         "email_sent": email_sent,
+                        "email_error": email_error,
                         "products": _order_products_for_ui(created_order),
                     },
                 )

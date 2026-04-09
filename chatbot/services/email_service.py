@@ -62,19 +62,22 @@ def send_order_confirmation_email(customer_email, order):
     """
     Send order confirmation email.
 
-    Returns True if sent, otherwise False.
+    Returns a dict with keys:
+      sent: bool
+      error: optional human-readable error message
+      code: optional machine-readable failure code
     """
     if not ORDER_EMAIL_ENABLED:
         logger.info("Order confirmation email skipped: ORDER_EMAIL_ENABLED is false")
-        return False
+        return {"sent": False, "code": "EMAIL_DISABLED", "error": "ORDER_EMAIL_ENABLED is false"}
 
     if not customer_email:
         logger.warning("Order confirmation email skipped: missing customer email")
-        return False
+        return {"sent": False, "code": "MISSING_CUSTOMER_EMAIL", "error": "Missing customer email"}
 
     if not _email_configured():
         logger.warning("Order confirmation email skipped: SMTP settings incomplete")
-        return False
+        return {"sent": False, "code": "SMTP_INCOMPLETE", "error": "SMTP settings incomplete"}
 
     try:
         msg = EmailMessage()
@@ -90,8 +93,33 @@ def send_order_confirmation_email(customer_email, order):
             server.send_message(msg)
 
         logger.info(f"Order confirmation email sent to {customer_email} for {order.get('order_number')}")
-        return True
+        return {"sent": True}
+
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(
+            "Failed to send order confirmation email: SMTP authentication failed (code=%s, response=%s)",
+            getattr(e, "smtp_code", None),
+            getattr(e, "smtp_error", None),
+            exc_info=True,
+        )
+        return {
+            "sent": False,
+            "code": "SMTP_AUTHENTICATION_FAILED",
+            "error": "SMTP authentication failed. Check SMTP_USERNAME and SMTP_PASSWORD.",
+        }
+
+    except smtplib.SMTPRecipientsRefused as e:
+        logger.error("Failed to send order confirmation email: recipient refused: %s", e, exc_info=True)
+        return {"sent": False, "code": "SMTP_RECIPIENT_REFUSED", "error": "Recipient address was refused by the SMTP server."}
+
+    except smtplib.SMTPSenderRefused as e:
+        logger.error("Failed to send order confirmation email: sender refused: %s", e, exc_info=True)
+        return {"sent": False, "code": "SMTP_SENDER_REFUSED", "error": "Sender address was refused by the SMTP server. Verify SMTP_FROM_EMAIL."}
+
+    except smtplib.SMTPException as e:
+        logger.error(f"Failed to send order confirmation email: SMTP error: {e}", exc_info=True)
+        return {"sent": False, "code": "SMTP_ERROR", "error": str(e)}
 
     except Exception as e:
         logger.error(f"Failed to send order confirmation email: {e}", exc_info=True)
-        return False
+        return {"sent": False, "code": "UNKNOWN_ERROR", "error": str(e)}
