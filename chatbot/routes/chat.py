@@ -52,6 +52,12 @@ _RE_STOCK_LIST_REQUEST = re.compile(
     r'\b(what is in stock|what products are in stock|in stock|available now)\b',
     re.IGNORECASE,
 )
+_RE_ORDER_TRACK_REQUEST = re.compile(
+    r'\b(track|where|status|check|show|view|list)\b[^\n]{0,40}\borders?\b|\border\s*(?:status|tracking)\b',
+    re.IGNORECASE,
+)
+_RE_RETURN_REQUEST = re.compile(r'\b(return|refund|send\s+back)\b', re.IGNORECASE)
+_RE_RETURN_POLICY_REQUEST = re.compile(r'\b(return|refund)\s+policy\b', re.IGNORECASE)
 _RE_CREATE_ORDER_REQUEST = re.compile(
     r'\b(buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b',
     re.IGNORECASE,
@@ -391,14 +397,17 @@ def chat():
             return _db_response(bot_response, "order_create", "order_create_failed")
 
         # Ask for required details before planner routing to avoid accidental lookups.
-        if intent_tag in ('order_tracking', 'order_status') and not order_number and not email:
+        explicit_track_request = bool(_RE_ORDER_TRACK_REQUEST.search(message))
+        explicit_return_request = bool(_RE_RETURN_REQUEST.search(message)) and not bool(_RE_RETURN_POLICY_REQUEST.search(message))
+
+        if (intent_tag in ('order_tracking', 'order_status') or explicit_track_request) and not order_number and not email:
             bot_response = (
                 "I can track that for you. Please share your order number "
                 "(example: **ORD-2026-001**) or the email used for the order."
             )
             return _db_response(bot_response, 'order_tracking', 'order_tracking_missing_details')
 
-        if intent_tag == 'returns' and not order_number and not email:
+        if (intent_tag == 'returns' or explicit_return_request) and not order_number and not email:
             bot_response = (
                 "I can help with a return. Please share your order number "
                 "(example: **ORD-2026-001**) or the email used when ordering."
