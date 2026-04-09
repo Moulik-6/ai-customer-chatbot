@@ -62,11 +62,13 @@ _RE_CREATE_ORDER_REQUEST = re.compile(
     r'\b(buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b',
     re.IGNORECASE,
 )
-_VAGUE_TERMS = {
+_VAGUE_WORDS = {
     'help', 'something', 'anything', 'stuff', 'thing', 'things', 'details', 'info',
-    'information', 'more', 'that', 'this', 'it', 'there', 'whatever', 'issue', 'problem',
-    'question', 'questions', 'show me', 'tell me more', 'what about', 'can you', 'assist',
+    'information', 'more', 'issue', 'problem', 'question', 'questions', 'assist',
 }
+_VAGUE_PHRASES = (
+    'show me', 'tell me more', 'what about', 'can you',
+)
 _RE_QUANTITY = re.compile(r'\b(?:qty|quantity|x)\s*[:=]?\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:units?|pcs|pieces)\b', re.IGNORECASE)
 _RE_NAME = re.compile(r'\b(?:name\s+is|i\s+am|this\s+is)\s+([A-Za-z][A-Za-z\s]{1,50})\b', re.IGNORECASE)
 
@@ -381,12 +383,14 @@ def chat():
                 return True
 
             words = [w for w in re.split(r'\s+', text) if w]
-            compact = re.sub(r'[^a-z0-9]+', ' ', text)
 
             if len(words) <= 2:
                 return True
 
-            if any(term in text for term in _VAGUE_TERMS):
+            if any(word in _VAGUE_WORDS for word in words):
+                return True
+
+            if any(phrase in text for phrase in _VAGUE_PHRASES):
                 return True
 
             if len(words) <= 4 and not (
@@ -399,6 +403,18 @@ def chat():
                 return True
 
             return False
+
+        def _has_supporting_context():
+            return bool(
+                order_number
+                or email
+                or sku
+                or product_name
+                or _RE_PRODUCT_HINT.search(message)
+                or _RE_PRODUCT_LIST_REQUEST.search(message)
+                or _RE_STOCK_LIST_REQUEST.search(message)
+                or _RE_CREATE_ORDER_REQUEST.search(message)
+            )
 
         def _clarify_message():
             if sku or product_name or _RE_PRODUCT_HINT.search(message):
@@ -429,18 +445,7 @@ def chat():
                 )
                 return _db_response(bot_response, 'returns', 'returns_missing_details')
 
-            if vague_request and not (
-                order_number
-                or email
-                or sku
-                or product_name
-                or _RE_PRODUCT_HINT.search(message)
-                or _RE_PRODUCT_LIST_REQUEST.search(message)
-                or _RE_STOCK_LIST_REQUEST.search(message)
-                or _RE_CREATE_ORDER_REQUEST.search(message)
-                or explicit_track_request
-                or explicit_return_request
-            ):
+            if vague_request and not (_has_supporting_context() or explicit_track_request or explicit_return_request):
                 if intent_tag == 'help':
                     bot_response = (
                         "Tell me what you need help with, and I’ll point you to the right answer. "
