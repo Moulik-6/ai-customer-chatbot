@@ -141,6 +141,8 @@ def run_smoke_test(base=BASE):
     run_check(report, "trending products", code == 200 and data.get("success"), f"intent={data.get('intent')}")
     code, data = chat_with_base("where is order ORD-001")
     run_check(report, "order ORD-001 lookup", code == 200, f"type={data.get('type')}")
+    code, data = chat_with_base("order iphone 15 128GB")
+    run_check(report, "bare order phrase -> order create", code == 200 and data.get("intent") == "order_create" and data.get("type") == "order_create_waiting_email", f"intent={data.get('intent')}, type={data.get('type')}")
     code, data = chat_with_base("order ORD-9999-999")
     run_check(report, "nonexistent order", code == 200 and "couldn't find" in data.get("response", "").lower(), f"resp={data.get('response','')[:60]}")
 

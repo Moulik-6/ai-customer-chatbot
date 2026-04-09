@@ -62,6 +62,10 @@ _RE_CREATE_ORDER_REQUEST = re.compile(
     r'\b(buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b',
     re.IGNORECASE,
 )
+_RE_BARE_ORDER_CREATE_REQUEST = re.compile(
+    r'^\s*order\b(?!\s*(?:status|tracking|track|number|id|#|history|details)\b)',
+    re.IGNORECASE,
+)
 INTENT_SIGNALS = {
     'product': (
         _RE_PRODUCT_HINT,
@@ -379,12 +383,19 @@ def chat():
 
         def _extract_order_product_query(raw_message):
             text = re.sub(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '', raw_message)
-            text = re.sub(r'\b(?:buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'\b(?:buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order|order)\b', '', text, flags=re.IGNORECASE)
             text = re.sub(r'\b(?:qty|quantity|x)\s*[:=]?\s*\d{1,3}\b', '', text, flags=re.IGNORECASE)
             text = re.sub(r'\b\d{1,3}\s*(?:units?|pcs|pieces)\b', '', text, flags=re.IGNORECASE)
             text = re.sub(r'\b(?:for|email|to|please|name\s+is|i\s+am|this\s+is)\b', ' ', text, flags=re.IGNORECASE)
             text = re.sub(r'\s+', ' ', text).strip(' .,:;')
             return text[:80] if text else None
+
+        def _is_create_order_message(raw_message):
+            normalized = (raw_message or '').strip()
+            return bool(
+                _RE_CREATE_ORDER_REQUEST.search(normalized)
+                or _RE_BARE_ORDER_CREATE_REQUEST.search(normalized)
+            )
 
         def _token_in_message(token, raw_message):
             if not token:
@@ -532,7 +543,7 @@ def chat():
             )
             return _db_response(bot_response, "order_create", "order_create_failed")
 
-        explicit_create_request = bool(_RE_CREATE_ORDER_REQUEST.search(message))
+        explicit_create_request = _is_create_order_message(message)
         if explicit_create_request and not order_number:
             create_email = email
             create_product_query = sku or product_name or _extract_order_product_query(message)
@@ -611,7 +622,7 @@ def chat():
         planner_response = query_model(planner_prompt, context=context, use_support_prompt=False)
         plan = _parse_model_plan(planner_response.get('result') if planner_response else None)
         def _fallback_db_action():
-            if _RE_CREATE_ORDER_REQUEST.search(message):
+            if _is_create_order_message(message):
                 return 'create_order'
             if order_number:
                 return 'lookup_order'
