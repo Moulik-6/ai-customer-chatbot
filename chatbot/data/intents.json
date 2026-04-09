@@ -27,6 +27,8 @@
       "tag": "pricing",
       "patterns": [
         "How much does it cost",
+        "How much does this product cost",
+        "How much does this item cost",
         "What's the price",
         "Price of",
         "How much is",

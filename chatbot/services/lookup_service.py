@@ -3,7 +3,11 @@ Database lookups — query orders, products, and customers from Supabase.
 """
 import logging
 import re
+import requests
+import time
+from datetime import datetime, timedelta, timezone
 from ..database import supabase
+from ..config import AFTERSHIP_API_KEY, TRACKING_MOCK_MODE, TRACKING_MOCK_CARRIER
 from .sanitize import sanitize_search
 from .entity_service import extract_sku
 
@@ -45,7 +49,7 @@ def lookup_order_status(order_number):
         result = supabase.table('orders').select('*,order_items(*)').eq('order_number', order_number).execute()
         return result.data[0] if result.data else None
     except Exception as e:
-        logger.error(f"Error looking up order: {e}")
+        logger.error(f"Error looking up order {order_number!r}: {e}", exc_info=True)
         return None
 
 
@@ -62,7 +66,7 @@ def lookup_orders_by_email(email):
                   .execute())
         return result.data if result.data else None
     except Exception as e:
-        logger.error(f"Error looking up orders by email: {e}")
+        logger.error(f"Error looking up orders by email {email!r}: {e}", exc_info=True)
         return None
 
 
@@ -91,7 +95,7 @@ def lookup_product(query):
 
         return None
     except Exception as e:
-        logger.error(f"Error looking up product: {e}")
+        logger.error(f"Error looking up product {query!r}: {e}", exc_info=True)
         return None
 
 
@@ -117,7 +121,7 @@ def lookup_customer_by_email(email):
             'orders': result.data,
         }
     except Exception as e:
-        logger.error(f"Error looking up customer: {e}")
+        logger.error(f"Error looking up customer {email!r}: {e}", exc_info=True)
         return None
 
 
@@ -148,5 +152,210 @@ def list_products(limit=10, in_stock_only=False):
         result = query.execute()
         return result.data if result.data else None
     except Exception as e:
-        logger.error(f"Error listing products: {e}")
+        logger.error(f"Error listing products: {e}", exc_info=True)
+        return None
+
+
+# ── Live Tracking Cache (TTL: 1 hour) ──────────────────────
+_tracking_cache = {}  # Format: {tracking_number: {'data': {...}, 'timestamp': time.time()}}
+_TRACKING_CACHE_TTL = 3600  # 1 hour
+
+
+def _build_mock_tracking(tracking_number, carrier='mock', expected_status=None):
+    """Generate deterministic mock tracking events for local testing."""
+    if not tracking_number:
+        return None
+
+    now = datetime.now(timezone.utc)
+    status_cycle = ['pending', 'in_transit', 'out_for_delivery', 'delivered']
+    idx = sum(ord(ch) for ch in tracking_number) % len(status_cycle)
+    tag = status_cycle[idx]
+
+    status_aliases = {
+        'pending': 'pending',
+        'processing': 'pending',
+        'shipped': 'in_transit',
+        'in_transit': 'in_transit',
+        'out_for_delivery': 'out_for_delivery',
+        'delivered': 'delivered',
+        'cancelled': 'cancelled',
+        'returned': 'returned',
+    }
+    if expected_status:
+        normalized = status_aliases.get(str(expected_status).strip().lower())
+        if normalized:
+            tag = normalized
+
+    checkpoint_templates = {
+        'pending': [
+            (now - timedelta(hours=16), 'Warehouse A', 'Shipment information received'),
+            (now - timedelta(hours=10), 'Sorting Center', 'Package prepared for dispatch'),
+        ],
+        'in_transit': [
+            (now - timedelta(hours=20), 'Origin Facility', 'Package accepted by carrier'),
+            (now - timedelta(hours=9), 'Regional Hub', 'Package in transit'),
+            (now - timedelta(hours=2), 'Destination Hub', 'Arrived at destination facility'),
+        ],
+        'out_for_delivery': [
+            (now - timedelta(hours=18), 'Destination Hub', 'Arrived at destination facility'),
+            (now - timedelta(hours=6), 'Local Depot', 'Loaded on delivery vehicle'),
+            (now - timedelta(minutes=45), 'Local Route', 'Out for delivery'),
+        ],
+        'delivered': [
+            (now - timedelta(hours=22), 'Destination Hub', 'Arrived at destination facility'),
+            (now - timedelta(hours=7), 'Local Route', 'Out for delivery'),
+            (now - timedelta(hours=1), 'Recipient Address', 'Delivered successfully'),
+        ],
+        'cancelled': [
+            (now - timedelta(hours=8), 'Order Management', 'Shipment cancelled by merchant'),
+        ],
+        'returned': [
+            (now - timedelta(days=3), 'Recipient Address', 'Delivery attempt failed'),
+            (now - timedelta(days=1), 'Return Hub', 'Package returned to sender'),
+        ],
+    }
+
+    checkpoints = []
+    for ts, location, message in checkpoint_templates[tag]:
+        checkpoints.append({
+            'checkpoint_time': ts.isoformat(),
+            'message': message,
+            'location': {'name': location},
+        })
+
+    expected_delivery = None
+    if tag in ('pending', 'in_transit'):
+        expected_delivery = (now + timedelta(days=2)).date().isoformat()
+    elif tag == 'out_for_delivery':
+        expected_delivery = now.date().isoformat()
+
+    return {
+        'tag': tag,
+        'status': {
+            'pending': '⏳ Pending',
+            'in_transit': '📦 In Transit',
+            'out_for_delivery': '🚚 Out for Delivery',
+            'delivered': '🎉 Delivered',
+            'cancelled': '❌ Cancelled',
+            'returned': '🔄 Returned',
+        }[tag],
+        'description': f"Mock tracking from {carrier.upper()} for testing",
+        'timestamp': now.isoformat(),
+        'location': checkpoints[-1]['location']['name'] if checkpoints else None,
+        'message': checkpoints[-1]['message'] if checkpoints else None,
+        'latest_event': {
+            'time': checkpoints[-1]['checkpoint_time'] if checkpoints else None,
+            'location': checkpoints[-1]['location']['name'] if checkpoints else None,
+            'message': checkpoints[-1]['message'] if checkpoints else None,
+        },
+        'estimated_delivery': expected_delivery,
+        'checkpoints': list(reversed(checkpoints[-3:])),
+    }
+
+
+def _parse_tracking_response(tracking_data):
+    """Parse AfterShip tracking response into readable format."""
+    if not tracking_data:
+        return None
+    
+    tag = tracking_data.get('tag', 'unknown')  # delivered, in_transit, exception, etc
+    status_map = {
+        'delivered': ('🎉 Delivered', 'Your order has been delivered'),
+        'in_transit': ('📦 In Transit', 'Your order is on the way'),
+        'out_for_delivery': ('🚚 Out for Delivery', 'Your order is being delivered today'),
+        'pending': ('⏳ Pending', 'Your order is being prepared'),
+        'exception': ('⚠️ Issue Detected', 'There\'s an issue with your shipment'),
+        'returned': ('🔄 Returned', 'Your order has been returned'),
+    }
+    
+    status, description = status_map.get(tag, ('📋 Unknown', 'Tracking status unavailable'))
+    
+    checkpoints = tracking_data.get('checkpoints', [])
+    latest_checkpoint = checkpoints[0] if checkpoints else None
+    
+    return {
+        'tag': tag,
+        'status': status,
+        'description': description,
+        'timestamp': tracking_data.get('updated_at'),
+        'location': latest_checkpoint.get('location', {}).get('name') if latest_checkpoint else None,
+        'message': latest_checkpoint.get('message') if latest_checkpoint else None,
+        'latest_event': {
+            'time': latest_checkpoint.get('checkpoint_time') if latest_checkpoint else None,
+            'location': latest_checkpoint.get('location', {}).get('name') if latest_checkpoint else None,
+            'message': latest_checkpoint.get('message') if latest_checkpoint else None,
+        },
+        'estimated_delivery': tracking_data.get('expected_delivery'),
+        'checkpoints': checkpoints[:3],  # Last 3 events
+    }
+
+
+def get_live_tracking(tracking_number, carrier='auto', expected_status=None):
+    """
+    Fetch live tracking from AfterShip (supports 500+ carriers).
+    Caches result for 1 hour to avoid rate limiting.
+    Falls back gracefully if API unavailable.
+    """
+    if not tracking_number:
+        return None
+
+    if TRACKING_MOCK_MODE:
+        mock_data = _build_mock_tracking(
+            tracking_number,
+            carrier=TRACKING_MOCK_CARRIER,
+            expected_status=expected_status,
+        )
+        if mock_data:
+            logger.info(f"Using mock tracking for {tracking_number}")
+        return mock_data
+
+    if not AFTERSHIP_API_KEY:
+        return None
+    
+    # Check cache first
+    if tracking_number in _tracking_cache:
+        cached = _tracking_cache[tracking_number]
+        if time.time() - cached['timestamp'] < _TRACKING_CACHE_TTL:
+            logger.info(f"Returning cached tracking for {tracking_number}")
+            return cached['data']
+        else:
+            del _tracking_cache[tracking_number]  # Expired
+    
+    try:
+        # AfterShip API endpoint
+        url = f'https://api.aftership.com/v4/trackings/{carrier}/{tracking_number}'
+        
+        headers = {
+            'aftership-api-key': AFTERSHIP_API_KEY,
+            'Content-Type': 'application/json'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            tracking_data = response.json().get('data', {}).get('tracking', {})
+            parsed = _parse_tracking_response(tracking_data)
+            
+            # Cache the result
+            _tracking_cache[tracking_number] = {
+                'data': parsed,
+                'timestamp': time.time()
+            }
+            
+            logger.info(f"Live tracking fetched for {tracking_number}: {tracking_data.get('tag')}")
+            return parsed
+        
+        elif response.status_code == 404:
+            logger.warning(f"Tracking number {tracking_number} not found in AfterShip")
+            return None
+        
+        else:
+            logger.warning(f"AfterShip API error {response.status_code}: {response.text}")
+            return None
+    
+    except requests.Timeout:
+        logger.warning(f"AfterShip API timeout for {tracking_number}")
+        return None
+    except Exception as e:
+        logger.error(f"Error fetching live tracking for {tracking_number}: {e}", exc_info=True)
         return None

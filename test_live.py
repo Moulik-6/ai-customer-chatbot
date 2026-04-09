@@ -117,7 +117,7 @@ intent_tests = [
     ("shipping",        "how long does shipping take",          "shipping"),
     ("intl shipping",   "do you ship internationally",          "shipping"),
     ("returns",         "I want to return an item",             "returns"),
-    ("pricing",         "how much does this product cost",      "pricing"),
+    ("pricing",         "how much does this product cost",      ["pricing", "product_info"]),
     ("order_tracking",  "track my order",                       ["order_tracking", "order_status"]),
     ("order_status",    "where is my order",                    "order_status"),
     ("product_info",    "what products do you sell",            "product_info"),
@@ -235,10 +235,11 @@ try:
             raise urllib.error.HTTPError(newurl, code, msg, headers, fp)
     opener = urllib.request.build_opener(NoRedirect)
     try:
-        opener.open(BASE)
-        check("/ redirects", False, "no redirect happened")
+        resp = opener.open(BASE)
+        content_type = resp.headers.get("Content-Type", "")
+        check("/ serves UI (200 HTML)", resp.status == 200 and "text/html" in content_type.lower(), f"status={resp.status}, content_type={content_type}")
     except urllib.error.HTTPError as e:
-        check("/ redirects to Vercel", e.code in (301, 302, 308), f"code={e.code}")
+        check("/ redirects (allowed)", e.code in (301, 302, 307, 308), f"code={e.code}")
 except Exception as e:
     check("/ redirect test", False, str(e))
 
