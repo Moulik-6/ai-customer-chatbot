@@ -38,14 +38,23 @@ def get_products():
         limit = min(int(request.args.get('limit', 100)), 500)
         offset = int(request.args.get('offset', 0))
 
-        query = supabase.table('products').select('*')
-        if search:
-            query = query.or_(f"name.ilike.%{search}%,description.ilike.%{search}%,sku.ilike.%{search}%")
-        if category:
-            query = query.eq('category', category)
+        def _build_query(with_sort=True):
+            query = supabase.table('products').select('*')
+            if search:
+                query = query.or_(f"name.ilike.%{search}%,description.ilike.%{search}%,sku.ilike.%{search}%")
+            if category:
+                query = query.eq('category', category)
 
-        query = query.range(offset, offset + limit - 1).order('created_at', desc=True)
-        result = query.execute()
+            query = query.range(offset, offset + limit - 1)
+            if with_sort:
+                query = query.order('created_at', desc=True)
+            return query
+
+        try:
+            result = _build_query(with_sort=True).execute()
+        except Exception as e:
+            logger.warning(f"Product query with created_at sort failed, retrying without sort: {e}")
+            result = _build_query(with_sort=False).execute()
 
         return jsonify({"success": True, "count": len(result.data), "products": result.data}), 200
 
@@ -96,12 +105,18 @@ def get_product_image(product_id):
 
         upstream = requests.get(
             image_url,
-            timeout=20,
-            headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'},
+            timeout=(3.05, 8),
+            headers={
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+                'Accept': 'image/*,*/*;q=0.8',
+            },
         )
         upstream.raise_for_status()
         content_type = upstream.headers.get('content-type', 'image/jpeg').split(';', 1)[0].strip()
-        return Response(upstream.content, mimetype=content_type, headers={'Cache-Control': 'public, max-age=86400'})
+        if not content_type.startswith('image/'):
+            logger.warning(f"Upstream content type is not an image for product {product_id}: {content_type}")
+            return jsonify({"error": "Image not available", "code": "IMAGE_FETCH_FAILED"}), 502
+        return Response(upstream.content, mimetype=content_type, headers={'Cache-Control': 'public, max-age=604800, stale-while-revalidate=86400'})
 
     except Exception as e:
         logger.warning(f"Error proxying product image {product_id}: {e}")

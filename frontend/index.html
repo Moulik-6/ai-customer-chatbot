@@ -710,6 +710,7 @@
         greeting: ['Track my order', 'Show me your products'],
         _default: ['Track my order', 'Return item', 'Shipping policy', 'Show products']
       };
+      const failedImageUrls = new Set();
 
       function fallbackSessionId() {
         return 'sid-' + Math.random().toString(36).slice(2) + '-' + Date.now();
@@ -826,6 +827,10 @@
           };
 
           const tryLoadNextImage = () => {
+            while (imageCandidateIndex < imageCandidates.length && failedImageUrls.has(imageCandidates[imageCandidateIndex])) {
+              imageCandidateIndex += 1;
+            }
+
             if (imageCandidateIndex >= imageCandidates.length) {
               return;
             }
@@ -839,6 +844,7 @@
             let timedOut = false;
             const timeoutId = window.setTimeout(() => {
               timedOut = true;
+              failedImageUrls.add(candidate);
               img.remove();
               tryLoadNextImage();
             }, 2500);
@@ -851,6 +857,7 @@
             };
             img.onerror = () => {
               if (!timedOut) window.clearTimeout(timeoutId);
+              failedImageUrls.add(candidate);
               img.remove();
               tryLoadNextImage();
             };

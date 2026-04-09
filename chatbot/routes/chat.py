@@ -655,10 +655,10 @@ def chat():
         planner_response = query_model(planner_prompt, context=context, use_support_prompt=False)
         plan = _parse_model_plan(planner_response.get('result') if planner_response else None)
         def _fallback_db_action():
-            if _is_create_order_message(message):
-                return 'create_order'
             if order_number:
                 return 'lookup_order'
+            if _is_create_order_message(message):
+                return 'create_order'
             if email:
                 if intent_tag in ('order_tracking', 'order_status', 'shipping'):
                     return 'lookup_orders_by_email'
@@ -673,6 +673,8 @@ def chat():
 
         action = (plan.get('action') if plan else '') or _fallback_db_action()
         action = action.strip().lower()
+        if action == 'create_order' and order_number:
+            action = 'lookup_order'
         plan_query = (plan.get('query') if plan else '') or ''
         plan_order = (plan.get('order_number') if plan else '') or ''
         plan_email = (plan.get('email') if plan else '') or ''

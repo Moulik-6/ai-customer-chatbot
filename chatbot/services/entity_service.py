@@ -12,6 +12,10 @@ _RE_ORDER_NUMBER_LOOSE = re.compile(
     r'\b(?:ord|order)\s*(?:number\s*)?[-:#]?\s*(\d{3,})\b',
     re.IGNORECASE,
 )
+_RE_ORDER_NUMBER_COMPACT = re.compile(
+    r'\bORD([0-9]{8})([A-Z0-9]{4,})\b',
+    re.IGNORECASE,
+)
 _RE_EMAIL = re.compile(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}')
 _RE_SKU = re.compile(r'\b[A-Z]{2,}[-][A-Z0-9][-A-Z0-9]{2,}\b')
 _RE_PHONE = re.compile(r'(?:\+?1[-\.\s]?)?\(?\d{3}\)?[-\.\s]?\d{3}[-\.\s]?\d{4}')
@@ -35,6 +39,12 @@ def extract_order_number(message):
             parts = ['ORD', parts[1] + parts[2], *parts[3:]]
 
         return '-'.join(parts)
+
+    compact = _RE_ORDER_NUMBER_COMPACT.search(message)
+    if compact:
+        date_part = compact.group(1)
+        suffix_part = compact.group(2).upper()
+        return f"ORD-{date_part}-{suffix_part}"
 
     loose = _RE_ORDER_NUMBER_LOOSE.search(message)
     return f"ORD-{loose.group(1)}" if loose else None
