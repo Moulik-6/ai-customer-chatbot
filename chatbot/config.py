@@ -39,6 +39,15 @@ TRACKING_MOCK_CARRIER = os.getenv('TRACKING_MOCK_CARRIER', 'mock').strip()
 ADMIN_API_KEY = os.getenv('ADMIN_API_KEY')
 FRONTEND_URL = os.getenv('FRONTEND_URL', '').strip()
 
+# ── Email (Order Confirmations) ───────────────────────────
+SMTP_HOST = os.getenv('SMTP_HOST', '').strip()
+SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+SMTP_USERNAME = os.getenv('SMTP_USERNAME', '').strip()
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '').strip()
+SMTP_FROM_EMAIL = os.getenv('SMTP_FROM_EMAIL', '').strip()
+SMTP_USE_TLS = os.getenv('SMTP_USE_TLS', 'true').strip().lower() in ('1', 'true', 'yes')
+ORDER_EMAIL_ENABLED = os.getenv('ORDER_EMAIL_ENABLED', 'true').strip().lower() in ('1', 'true', 'yes')
+
 # ── Hugging Face / Model ─────────────────────────────────
 HUGGINGFACE_API_KEY = os.getenv('HUGGINGFACE_API_KEY')
 HUGGINGFACE_MODEL = os.getenv('HUGGINGFACE_MODEL', 'google/flan-t5-small').strip()

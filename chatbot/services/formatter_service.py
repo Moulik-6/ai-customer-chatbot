@@ -136,3 +136,34 @@ def format_customer(customer):
             lines.append(f"{emoji} {o['order_number']} — {status.upper()} — ${o['total_amount']:.2f}")
 
     return '\n'.join(lines)
+
+
+def format_order_created(order, email_sent=None):
+    """Format chatbot order confirmation."""
+    if not order:
+        return "✅ Your order has been created."
+
+    items = order.get('order_items', [])
+    total = float(order.get('total_amount') or 0)
+
+    lines = [
+        "✅ **Order placed successfully!**",
+        f"Order #: {order.get('order_number', 'N/A')}",
+        f"Status: {str(order.get('status', 'pending')).upper()}",
+        f"Total: ${total:.2f}",
+    ]
+
+    if items:
+        lines.append("\n**Items:**")
+        for item in items:
+            lines.append(
+                f"• {item.get('product_name', 'Product')} x{item.get('quantity', 1)} @ ${float(item.get('unit_price') or 0):.2f}"
+            )
+
+    if email_sent is True:
+        lines.append("\n📧 Confirmation email sent to your inbox.")
+    elif email_sent is False:
+        lines.append("\n⚠️ Order placed, but confirmation email could not be sent right now.")
+
+    lines.append("\nReply with 'track order <order-number>' anytime for updates.")
+    return '\n'.join(lines)

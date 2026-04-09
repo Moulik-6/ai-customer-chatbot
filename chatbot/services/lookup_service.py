@@ -5,11 +5,13 @@ import logging
 import re
 import requests
 import time
+import uuid
 from datetime import datetime, timedelta, timezone
 from ..database import supabase
 from ..config import AFTERSHIP_API_KEY, TRACKING_MOCK_MODE, TRACKING_MOCK_CARRIER
 from .sanitize import sanitize_search
 from .entity_service import extract_sku
+from .email_service import send_order_confirmation_email
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +156,104 @@ def list_products(limit=10, in_stock_only=False):
     except Exception as e:
         logger.error(f"Error listing products: {e}", exc_info=True)
         return None
+
+
+def _generate_order_number():
+    """Generate an order number with low collision risk."""
+    return f"ORD-{datetime.now(timezone.utc):%Y%m%d}-{uuid.uuid4().hex[:6].upper()}"
+
+
+def _pick_order_product(product_query):
+    """Pick the best in-stock product match for order placement."""
+    matches = lookup_product(product_query)
+    if not matches:
+        return None
+
+    # Prefer in-stock items and keep deterministic selection by highest stock.
+    in_stock = [p for p in matches if int(p.get('stock') or 0) > 0]
+    if in_stock:
+        return sorted(in_stock, key=lambda p: int(p.get('stock') or 0), reverse=True)[0]
+
+    return matches[0]
+
+
+def create_order_from_chat(customer_name, customer_email, product_query, quantity=1):
+    """
+    Create a pending order from chat context and reserve stock.
+
+    Returns dict:
+      {"success": True, "order": {...}} on success
+      {"success": False, "code": "...", "error": "..."} on failure
+    """
+    try:
+        if not supabase:
+            return {
+                "success": False,
+                "code": "DB_NOT_CONFIGURED",
+                "error": "Database is not configured right now.",
+            }
+
+        qty = max(1, int(quantity or 1))
+        product = _pick_order_product(product_query)
+        if not product:
+            return {
+                "success": False,
+                "code": "PRODUCT_NOT_FOUND",
+                "error": f"I couldn't find a product matching '{product_query}'.",
+            }
+
+        stock = int(product.get('stock') or 0)
+        if stock < qty:
+            return {
+                "success": False,
+                "code": "OUT_OF_STOCK",
+                "error": (
+                    f"Not enough stock for {product.get('name', 'that product')}. "
+                    f"Requested {qty}, available {stock}."
+                ),
+            }
+
+        unit_price = float(product.get('price') or 0)
+        subtotal = round(unit_price * qty, 2)
+
+        order_payload = {
+            'order_number': _generate_order_number(),
+            'customer_name': customer_name,
+            'customer_email': customer_email,
+            'status': 'pending',
+            'total_amount': subtotal,
+            'notes': 'Order created via chatbot',
+        }
+
+        created_order = supabase.table('orders').insert(order_payload).execute().data[0]
+
+        item_payload = {
+            'order_id': created_order['id'],
+            'product_id': product.get('id'),
+            'product_name': product.get('name'),
+            'product_sku': product.get('sku'),
+            'quantity': qty,
+            'unit_price': unit_price,
+            'subtotal': subtotal,
+        }
+        supabase.table('order_items').insert(item_payload).execute()
+
+        # Reserve stock for this order.
+        supabase.table('products').update({'stock': stock - qty}).eq('id', product['id']).execute()
+
+        order = lookup_order_status(created_order['order_number'])
+        final_order = order or created_order
+
+        email_sent = send_order_confirmation_email(customer_email, final_order)
+        return {'success': True, 'order': final_order, 'email_sent': email_sent}
+
+    except Exception as e:
+        logger.error(f"Error creating order from chat: {e}", exc_info=True)
+        return {
+            "success": False,
+            "code": "DB_ERROR",
+            "error": "Failed to create order. Please try again.",
+        }
 
 
 # ── Live Tracking Cache (TTL: 1 hour) ──────────────────────

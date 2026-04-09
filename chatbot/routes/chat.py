@@ -24,11 +24,11 @@ from ..services.entity_service import (
 from ..services.lookup_service import (
     lookup_order_status, lookup_orders_by_email,
     lookup_product, lookup_customer_by_email, list_products,
-    get_live_tracking,
+    get_live_tracking, create_order_from_chat,
 )
 from ..services.formatter_service import (
     format_order, format_orders_list, format_product,
-    format_product_list, format_customer,
+    format_product_list, format_customer, format_order_created,
 )
 from ..services.sanitize import sanitize_chat_input
 from ..models.ai_model import query_model
@@ -51,11 +51,19 @@ _RE_STOCK_LIST_REQUEST = re.compile(
     r'\b(what is in stock|what products are in stock|in stock|available now)\b',
     re.IGNORECASE,
 )
+_RE_CREATE_ORDER_REQUEST = re.compile(
+    r'\b(buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b',
+    re.IGNORECASE,
+)
+_RE_QUANTITY = re.compile(r'\b(?:qty|quantity|x)\s*[:=]?\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:units?|pcs|pieces)\b', re.IGNORECASE)
+_RE_NAME = re.compile(r'\b(?:name\s+is|i\s+am|this\s+is)\s+([A-Za-z][A-Za-z\s]{1,50})\b', re.IGNORECASE)
 
 # ── Conversation context (in-memory, per session) ────────
 # Stores last MAX_CONTEXT_TURNS exchanges per session_id.
 MAX_CONTEXT_TURNS = 5
 _conversation_context = defaultdict(list)  # session_id -> [{user, bot}, ...]
+_pending_order_drafts = {}  # session_id -> {product_query, quantity, customer_name, created_at}
+_PENDING_ORDER_TTL_SECONDS = 20 * 60
 
 
 @chat_bp.route('/', methods=['GET'])
@@ -226,11 +234,89 @@ def chat():
                         'none', 'list_products', 'list_stock_products',
                         'search_products', 'lookup_order',
                         'lookup_orders_by_email', 'lookup_customer_by_email',
+                        'create_order',
                     }:
                         return parsed
                 except Exception:
                     continue
             return None
+
+        def _extract_quantity(raw_message):
+            match = _RE_QUANTITY.search(raw_message)
+            if not match:
+                return 1
+            qty = match.group(1) or match.group(2)
+            try:
+                return max(1, min(int(qty), 50))
+            except Exception:
+                return 1
+
+        def _extract_customer_name(raw_message, customer_email):
+            match = _RE_NAME.search(raw_message)
+            if match:
+                return match.group(1).strip().title()
+            if customer_email and '@' in customer_email:
+                local = customer_email.split('@', 1)[0].replace('.', ' ').replace('_', ' ').strip()
+                if local:
+                    return local.title()
+            return 'Customer'
+
+        def _extract_order_product_query(raw_message):
+            text = re.sub(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '', raw_message)
+            text = re.sub(r'\b(?:buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'\b(?:qty|quantity|x)\s*[:=]?\s*\d{1,3}\b', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'\b\d{1,3}\s*(?:units?|pcs|pieces)\b', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'\b(?:for|email|to|please|name\s+is|i\s+am|this\s+is)\b', ' ', text, flags=re.IGNORECASE)
+            text = re.sub(r'\s+', ' ', text).strip(' .,:;')
+            return text[:80] if text else None
+
+        def _get_pending_order_draft():
+            draft = _pending_order_drafts.get(session_id)
+            if not draft:
+                return None
+            age = time.time() - draft.get('created_at', 0)
+            if age > _PENDING_ORDER_TTL_SECONDS:
+                _pending_order_drafts.pop(session_id, None)
+                return None
+            return draft
+
+        def _set_pending_order_draft(product_query, quantity, customer_name):
+            _pending_order_drafts[session_id] = {
+                'product_query': product_query,
+                'quantity': quantity,
+                'customer_name': customer_name,
+                'created_at': time.time(),
+            }
+
+        def _clear_pending_order_draft():
+            _pending_order_drafts.pop(session_id, None)
+
+        # Complete a pending order draft when the user provides email in a follow-up message.
+        pending_draft = _get_pending_order_draft()
+        if pending_draft and email:
+            creation_result = create_order_from_chat(
+                customer_name=pending_draft.get('customer_name') or _extract_customer_name(message, email),
+                customer_email=email,
+                product_query=pending_draft.get('product_query'),
+                quantity=pending_draft.get('quantity') or 1,
+            )
+
+            if creation_result.get('success'):
+                _clear_pending_order_draft()
+                created_order = creation_result.get('order')
+                email_sent = creation_result.get('email_sent')
+                bot_response = format_order_created(created_order, email_sent=email_sent)
+                return _db_response(
+                    bot_response,
+                    "order_create",
+                    "order_created",
+                    {"order": created_order, "email_sent": email_sent},
+                )
+
+            bot_response = creation_result.get('error') or (
+                "I couldn't place your order right now. Please try again in a moment."
+            )
+            return _db_response(bot_response, "order_create", "order_create_failed")
 
         # ========== 0. PRIMARY: AI MODEL GENERATION ==========
         # Let the model choose whether to call a DB lookup tool first.
@@ -242,7 +328,7 @@ def chat():
             "Choose one DB action for the user's message. "
             "Return ONLY valid JSON with keys: action, query, order_number, email. "
             "Allowed actions: none, list_products, list_stock_products, search_products, "
-            "lookup_order, lookup_orders_by_email, lookup_customer_by_email.\n\n"
+            "lookup_order, lookup_orders_by_email, lookup_customer_by_email, create_order.\n\n"
             f"User message: {message}\n"
             f"Extracted order_number: {order_number or ''}\n"
             f"Extracted email: {email or ''}\n"
@@ -254,6 +340,8 @@ def chat():
         planner_response = query_model(planner_prompt, context=context, use_support_prompt=False)
         plan = _parse_model_plan(planner_response.get('result') if planner_response else None)
         def _fallback_db_action():
+            if _RE_CREATE_ORDER_REQUEST.search(message):
+                return 'create_order'
             if order_number:
                 return 'lookup_order'
             if email:
@@ -276,6 +364,54 @@ def chat():
         plan_query = plan_query.strip()
         plan_order = plan_order.strip()
         plan_email = plan_email.strip().lower()
+
+        if action == 'create_order':
+            create_email = plan_email or email
+            create_product_query = plan_query or sku or product_name or _extract_order_product_query(message)
+            create_quantity = _extract_quantity(message)
+            create_name = _extract_customer_name(message, create_email or email)
+
+            if not create_product_query:
+                bot_response = (
+                    "I can place the order for you. Please tell me which product you want, "
+                    "for example: `buy iPhone 15 qty 1`."
+                )
+                return _db_response(bot_response, "order_create", "order_create_missing_details")
+
+            if not create_email:
+                _set_pending_order_draft(
+                    product_query=create_product_query,
+                    quantity=create_quantity,
+                    customer_name=create_name,
+                )
+                bot_response = (
+                    f"Great choice. I can place **{create_quantity} x {create_product_query}**. "
+                    "Please share your email to complete the order."
+                )
+                return _db_response(bot_response, "order_create", "order_create_waiting_email")
+
+            creation_result = create_order_from_chat(
+                customer_name=create_name,
+                customer_email=create_email,
+                product_query=create_product_query,
+                quantity=create_quantity,
+            )
+
+            if creation_result.get('success'):
+                created_order = creation_result.get('order')
+                email_sent = creation_result.get('email_sent')
+                bot_response = format_order_created(created_order, email_sent=email_sent)
+                return _db_response(
+                    bot_response,
+                    "order_create",
+                    "order_created",
+                    {"order": created_order, "email_sent": email_sent},
+                )
+
+            bot_response = creation_result.get('error') or (
+                "I couldn't place your order right now. Please try again in a moment."
+            )
+            return _db_response(bot_response, "order_create", "order_create_failed")
 
         if action == 'list_stock_products':
             stock_products = list_products(in_stock_only=True)
