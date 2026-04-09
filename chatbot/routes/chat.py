@@ -222,6 +222,7 @@ def chat():
 
         def _enhance_intent_response(base_response, intent):
             """Polish intent responses with FLAN when available; otherwise keep base text."""
+            current_context = _conversation_context.get(session_id, [])
             prompt = (
                 "Rewrite this customer support response to sound natural and helpful. "
                 "Keep the meaning the same, avoid inventing new policy/details, and keep it concise (1-2 sentences).\n\n"
@@ -231,7 +232,7 @@ def chat():
                 "Rewritten response:"
             )
             try:
-                enhanced = query_model(prompt, context=context)
+                enhanced = query_model(prompt, context=current_context)
                 if (
                     enhanced.get('type') == 'generation'
                     and enhanced.get('model') != 'fallback'
@@ -447,7 +448,16 @@ def chat():
             explicit_return_request = bool(_RE_RETURN_REQUEST.search(message)) and not bool(_RE_RETURN_POLICY_REQUEST.search(message))
             vague_request = _needs_clarification(message)
 
-            if (intent_tag in ('order_tracking', 'order_status') or explicit_track_request) and not order_number and not email:
+            if intent_tag == 'order_status' and not order_number and not email and intent_match:
+                return _intent_response('order_status', intent_match['response'])
+
+            if intent_match and intent_tag in (
+                'greeting', 'goodbye', 'thanks', 'shipping', 'payment',
+                'complaint', 'live_agent', 'hours_location', 'warranty',
+            ):
+                return _intent_response(intent_tag, intent_match['response'])
+
+            if (intent_tag == 'order_tracking' or explicit_track_request) and not order_number and not email:
                 bot_response = (
                     "I can track that for you. Please share your order number "
                     "(example: **ORD-2026-001**) or the email used for the order."
@@ -515,6 +525,59 @@ def chat():
                     "order_create",
                     "order_created",
                     {"order": created_order, "email_sent": email_sent},
+                )
+
+            bot_response = creation_result.get('error') or (
+                "I couldn't place your order right now. Please try again in a moment."
+            )
+            return _db_response(bot_response, "order_create", "order_create_failed")
+
+        explicit_create_request = bool(_RE_CREATE_ORDER_REQUEST.search(message))
+        if explicit_create_request and not order_number:
+            create_email = email
+            create_product_query = sku or product_name or _extract_order_product_query(message)
+            create_quantity = _extract_quantity(message)
+            create_name = _extract_customer_name(message, create_email or email)
+
+            if not create_product_query:
+                bot_response = (
+                    "I can place the order for you. Please tell me which product you want, "
+                    "for example: `buy iPhone 15 qty 1`."
+                )
+                return _db_response(bot_response, "order_create", "order_create_missing_details")
+
+            if not create_email:
+                _set_pending_order_draft(
+                    product_query=create_product_query,
+                    quantity=create_quantity,
+                    customer_name=create_name,
+                )
+                bot_response = (
+                    f"Great choice. I can place **{create_quantity} x {create_product_query}**. "
+                    "Please share your email to complete the order."
+                )
+                return _db_response(bot_response, "order_create", "order_create_waiting_email")
+
+            creation_result = create_order_from_chat(
+                customer_name=create_name,
+                customer_email=create_email,
+                product_query=create_product_query,
+                quantity=create_quantity,
+            )
+
+            if creation_result.get('success'):
+                created_order = creation_result.get('order')
+                email_sent = creation_result.get('email_sent')
+                bot_response = format_order_created(created_order, email_sent=email_sent)
+                return _db_response(
+                    bot_response,
+                    "order_create",
+                    "order_created",
+                    {
+                        "order": created_order,
+                        "email_sent": email_sent,
+                        "products": _order_products_for_ui(created_order),
+                    },
                 )
 
             bot_response = creation_result.get('error') or (

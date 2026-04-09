@@ -7,6 +7,10 @@ import urllib.error
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+if __name__ != "__main__":
+    import pytest
+    pytest.skip("standalone live smoke script; run directly", allow_module_level=True)
+
 BASE = "https://seyo009-ai-customer-chatbot.hf.space"
 CHAT = f"{BASE}/api/chat"
 FEEDBACK = f"{BASE}/api/feedback"
