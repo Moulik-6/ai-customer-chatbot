@@ -49,7 +49,7 @@ def create_app():
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            "img-src 'self' data:; "
+            "img-src 'self' data: https:; "
             "font-src 'self' https://fonts.gstatic.com; "
             "connect-src 'self' https://ai-customer-chatbot-tau.vercel.app https://seyo009-ai-customer-chatbot.hf.space; "
             "frame-ancestors 'self' https://huggingface.co https://*.huggingface.co"
