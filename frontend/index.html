@@ -781,6 +781,39 @@
       function buildProductGallery(products) {
         if (!Array.isArray(products) || !products.length) return null;
 
+        function normalizeImageUrl(url) {
+          if (!url || typeof url !== 'string') return null;
+          const trimmed = url.trim();
+          if (!trimmed) return null;
+          // Ignore known placeholder domains that won't render useful images.
+          if (/^https?:\/\/(?:www\.)?example\.com\//i.test(trimmed)) return null;
+          return trimmed;
+        }
+
+        function buildImageCandidates(product) {
+          const candidates = [];
+          const direct = normalizeImageUrl(product.image_url);
+          if (direct) candidates.push(direct);
+
+          const rawName = (product.name || '').trim().toLowerCase();
+          const rawSku = (product.sku || '').trim().toLowerCase();
+          const token = encodeURIComponent(
+            [rawName, rawSku]
+              .join(' ')
+              .replace(/[^a-z0-9\s-]/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim()
+          );
+
+          if (token) {
+            // Real-photo fallback providers that don't require API keys.
+            candidates.push(`https://loremflickr.com/640/480/${token}`);
+            candidates.push(`https://source.unsplash.com/640x480/?${token}`);
+          }
+
+          return [...new Set(candidates)];
+        }
+
         const gallery = document.createElement('div');
         gallery.className = 'product-gallery';
 
@@ -790,6 +823,8 @@
 
           const thumb = document.createElement('div');
           thumb.className = 'product-thumb';
+          const imageCandidates = buildImageCandidates(product);
+          let imageCandidateIndex = 0;
 
           const renderPlaceholder = () => {
             const rawName = (product.name || '?').trim();
@@ -802,20 +837,25 @@
             thumb.textContent = initials;
           };
 
-          if (product.image_url) {
+          const tryLoadNextImage = () => {
+            if (imageCandidateIndex >= imageCandidates.length) {
+              renderPlaceholder();
+              return;
+            }
+
             const img = document.createElement('img');
-            img.src = product.image_url;
+            img.src = imageCandidates[imageCandidateIndex++];
             img.alt = product.name || 'Product image';
             img.loading = 'lazy';
             img.referrerPolicy = 'no-referrer';
             img.onerror = () => {
               img.remove();
-              renderPlaceholder();
+              tryLoadNextImage();
             };
             thumb.appendChild(img);
-          } else {
-            renderPlaceholder();
-          }
+          };
+
+          tryLoadNextImage();
 
           const info = document.createElement('div');
           info.className = 'product-info';
