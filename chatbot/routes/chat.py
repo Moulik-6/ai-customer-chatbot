@@ -62,6 +62,11 @@ _RE_CREATE_ORDER_REQUEST = re.compile(
     r'\b(buy|purchase|place\s+an?\s+order|order\s+now|i\s+want\s+to\s+order)\b',
     re.IGNORECASE,
 )
+_VAGUE_TERMS = {
+    'help', 'something', 'anything', 'stuff', 'thing', 'things', 'details', 'info',
+    'information', 'more', 'that', 'this', 'it', 'there', 'whatever', 'issue', 'problem',
+    'question', 'questions', 'show me', 'tell me more', 'what about', 'can you', 'assist',
+}
 _RE_QUANTITY = re.compile(r'\b(?:qty|quantity|x)\s*[:=]?\s*(\d{1,3})\b|\b(\d{1,3})\s*(?:units?|pcs|pieces)\b', re.IGNORECASE)
 _RE_NAME = re.compile(r'\b(?:name\s+is|i\s+am|this\s+is)\s+([A-Za-z][A-Za-z\s]{1,50})\b', re.IGNORECASE)
 
@@ -348,6 +353,47 @@ def chat():
             msg_norm = re.sub(r'[^A-Za-z0-9]', '', raw_message or '').lower()
             return bool(token_norm and token_norm in msg_norm)
 
+        def _needs_clarification(raw_message):
+            text = (raw_message or '').strip().lower()
+            if not text:
+                return True
+
+            words = [w for w in re.split(r'\s+', text) if w]
+            compact = re.sub(r'[^a-z0-9]+', ' ', text)
+
+            if len(words) <= 2:
+                return True
+
+            if any(term in text for term in _VAGUE_TERMS):
+                return True
+
+            if len(words) <= 4 and not (
+                order_number
+                or email
+                or sku
+                or product_name
+                or _RE_PRODUCT_HINT.search(message)
+            ):
+                return True
+
+            return False
+
+        def _clarify_message():
+            if order_number or email or explicit_track_request or explicit_return_request:
+                return (
+                    "I can help with that, but I need your order number or the email used for the order. "
+                    "For example: **ORD-2026-001**."
+                ), 'order_tracking', 'clarification'
+
+            if sku or product_name or _RE_PRODUCT_HINT.search(message):
+                return (
+                    "Which product do you mean? Share the product name or SKU and I’ll pull up the details."
+                ), 'product_info', 'clarification'
+
+            return (
+                "Can you tell me a bit more about what you need help with? I can help with orders, returns, shipping, and products."
+            ), None, 'clarification'
+
         def _get_pending_order_draft():
             draft = _pending_order_drafts.get(session_id)
             if not draft:
@@ -460,6 +506,29 @@ def chat():
         plan_query = plan_query.strip()
         plan_order = plan_order.strip()
         plan_email = plan_email.strip().lower()
+
+        vague_request = _needs_clarification(message)
+        if vague_request and not (
+            order_number
+            or email
+            or sku
+            or product_name
+            or _RE_PRODUCT_HINT.search(message)
+            or _RE_PRODUCT_LIST_REQUEST.search(message)
+            or _RE_STOCK_LIST_REQUEST.search(message)
+            or _RE_CREATE_ORDER_REQUEST.search(message)
+            or explicit_track_request
+            or explicit_return_request
+        ):
+            if intent_tag == 'help':
+                bot_response = (
+                    "Tell me what you need help with, and I’ll point you to the right answer. "
+                    "I can help with orders, returns, shipping, products, and account questions."
+                )
+                return _db_response(bot_response, 'help', 'clarification')
+
+            bot_response, clarification_intent, response_type = _clarify_message()
+            return _db_response(bot_response, clarification_intent, response_type)
 
         if action == 'create_order':
             create_email = plan_email or email
