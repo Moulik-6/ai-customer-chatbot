@@ -319,6 +319,41 @@ Space and verifies the core endpoints are healthy.
 # Against the default Space URL
 python scripts/live_smoke_test.py
 
+---
+
+## Organization Onboarding (Any E-commerce Catalog)
+
+You can onboard a new organization by importing its catalog export directly from command line.
+No code changes are required for most datasets.
+
+Supported source formats:
+- CSV (`.csv`)
+- JSON (`.json`)
+- SQLite DB (`.db`, `.sqlite`, `.sqlite3`)
+
+The importer normalizes common column names automatically (`name/title`, `price/cost`, `category/type`, `sku/code`, `stock/quantity`, etc.) and writes into the `products` table so the chatbot can answer product and service questions immediately.
+
+### Commands
+
+```bash
+# Dry run (recommended first)
+python scripts/import_catalog.py --source ./catalog.csv --dry-run
+
+# Upsert by SKU (safe default)
+python scripts/import_catalog.py --source ./catalog.csv --mode upsert
+
+# Replace current catalog
+python scripts/import_catalog.py --source ./catalog.json --mode replace
+
+# Import from SQLite table
+python scripts/import_catalog.py --source ./org.db --source-table catalog_items --mode upsert
+```
+
+### Notes
+
+- Services are also supported. If your source contains `service/type/kind` indicators, the importer maps them into catalog entries (typically category `Services`).
+- Existing APIs and routes remain unchanged, so current integrations continue to work.
+
 # Against a custom URL
 BASE_URL=https://your-space.hf.space python scripts/live_smoke_test.py
 ```

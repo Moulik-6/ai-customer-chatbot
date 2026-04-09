@@ -41,11 +41,11 @@ chat_bp = Blueprint('chat', __name__)
 
 _LOCAL_FRONTEND_DIR = Path(PROJECT_ROOT) / 'frontend'
 _RE_PRODUCT_HINT = re.compile(
-    r'\b(product|products|catalog|inventory|stock|price|pricing|cost|electronics|phone|laptop|ipad|apple)\b',
+    r'\b(product|products|service|services|catalog|inventory|stock|price|pricing|cost|plan|plans|subscription|subscriptions|electronics|phone|laptop|ipad|apple)\b',
     re.IGNORECASE,
 )
 _RE_PRODUCT_LIST_REQUEST = re.compile(
-    r'\b(list all products|list products|show products|show me products|show me your products|what products do you have|product catalog)\b',
+    r'\b(list all products|list products|show products|show me products|show me your products|what products do you have|product catalog|list services|show services|what services do you offer|service catalog)\b',
     re.IGNORECASE,
 )
 _RE_STOCK_LIST_REQUEST = re.compile(
