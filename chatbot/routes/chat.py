@@ -208,37 +208,24 @@ def chat():
             if len(ctx) > MAX_CONTEXT_TURNS:
                 _conversation_context[session_id] = ctx[-MAX_CONTEXT_TURNS:]
 
-        # Helper — build & return a DB-backed response
-        def _db_response(bot_response, intent, response_type, extra=None):
-            resp = {
-                "success": True, "type": response_type,
-                "intent": intent, "message": message,
-                "response": bot_response, "model": "database",
-            }
-            if extra:
-                resp.update(extra)
-            log_conversation(
-                session_id=session_id, user_message=message,
-                bot_response=bot_response, intent=intent,
-                model_used="database", response_type=response_type,
-                ip_address=ip_address, response_time_ms=_elapsed_ms(),
-            )
-            _store_context(bot_response)
-            return jsonify(resp), 200
+        def _enhance_support_response(base_response, response_kind, intent_label):
+            """Polish DB and intent responses with FLAN when available; otherwise keep base text."""
+            if MOCK_MODE:
+                return base_response, response_kind
 
-        def _enhance_intent_response(base_response, intent):
-            """Polish intent responses with FLAN when available; otherwise keep base text."""
             current_context = _conversation_context.get(session_id, [])
             prompt = (
                 "Rewrite this customer support response to sound natural and helpful. "
-                "Keep the meaning the same, avoid inventing new policy/details, and keep it concise (1-2 sentences).\n\n"
-                f"Intent: {intent}\n"
+                "Keep the meaning the same, avoid inventing new policy/details, and keep it concise (1-2 sentences). "
+                "Preserve order numbers, product names, SKUs, prices, statuses, and markdown structure exactly.\n\n"
+                f"Response kind: {response_kind}\n"
+                f"Intent or topic: {intent_label}\n"
                 f"Customer message: {message}\n"
                 f"Base response: {base_response}\n"
                 "Rewritten response:"
             )
             try:
-                enhanced = query_model(prompt, context=current_context)
+                enhanced = query_model(prompt, context=current_context, use_support_prompt=False)
                 if (
                     enhanced.get('type') == 'generation'
                     and enhanced.get('model') != 'fallback'
@@ -246,16 +233,43 @@ def chat():
                 ):
                     return enhanced['result'].strip(), enhanced['model']
             except Exception as exc:
-                logger.warning(f"Intent enhancement skipped: {exc}")
-            return base_response, 'intents'
+                logger.warning(f"Response enhancement skipped: {exc}")
+            return base_response, response_kind
 
-        def _intent_response(intent, base_response, response_type="intent", extra=None):
-            """Rewrite an intent response with FLAN and return a uniform API payload."""
-            bot_response, model_used = _enhance_intent_response(base_response, intent)
+        def _response_source_label(response_kind, model_used):
+            if model_used == response_kind:
+                return response_kind
+            return f"{response_kind}+llm"
+
+        # Helper — build & return a DB-backed response
+        def _db_response(bot_response, intent, response_type, extra=None):
+            bot_response, model_used = _enhance_support_response(bot_response, "database", intent)
+            response_source = _response_source_label("database", model_used)
+            resp = {
+                "success": True, "type": response_type,
+                "intent": intent, "message": message,
+                "response": bot_response, "model": model_used,
+                "response_source": response_source,
+            }
+            if extra:
+                resp.update(extra)
             log_conversation(
                 session_id=session_id, user_message=message,
                 bot_response=bot_response, intent=intent,
-                model_used=model_used, response_type=response_type,
+                model_used=response_source, response_type=response_type,
+                ip_address=ip_address, response_time_ms=_elapsed_ms(),
+            )
+            _store_context(bot_response)
+            return jsonify(resp), 200
+
+        def _intent_response(intent, base_response, response_type="intent", extra=None):
+            """Rewrite an intent response with FLAN and return a uniform API payload."""
+            bot_response, model_used = _enhance_support_response(base_response, "intents", intent)
+            response_source = _response_source_label("intent", model_used)
+            log_conversation(
+                session_id=session_id, user_message=message,
+                bot_response=bot_response, intent=intent,
+                model_used=response_source, response_type=response_type,
                 ip_address=ip_address, response_time_ms=_elapsed_ms(),
             )
             _store_context(bot_response)
@@ -266,6 +280,7 @@ def chat():
                 "message": message,
                 "response": bot_response,
                 "model": model_used,
+                "response_source": response_source,
             }
             if extra:
                 payload.update(extra)
